@@ -96,7 +96,7 @@ class MyFrame(wx.Frame):
         self.num_targ_CB = wx.ComboBox(self, wx.ID_ANY, value="3", choices=self.num_target_list, style=wx.CB_DROPDOWN)
         
         self.num_trials_statictext = wx.StaticText(self, wx.ID_ANY, ("# Trials"))
-        self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=1, max=1000, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
+        self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=1, max=150, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
         
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, (" Rotation Angle CW"))
         self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
@@ -304,6 +304,7 @@ class MyFrame(wx.Frame):
         self.max_angle_CB.Show()
         self.max_angle_statictext.Show()
         self.max_arrow_staticline.Show()
+        self.target_distance_slider.Show()
         ### Show ###
         self.pause_static_text.Hide()
         self.pause_txt.Hide()
@@ -334,6 +335,7 @@ class MyFrame(wx.Frame):
         self.max_angle_CB.Hide()
         self.max_angle_statictext.Hide()
         self.max_arrow_staticline.Hide()
+        self.target_distance_slider.Hide()
         ### Show ###
         self.pause_static_text.Show()
         self.pause_txt.Show()
@@ -704,10 +706,13 @@ class MyFrame(wx.Frame):
         
 
     def num_trial_choose(self, event):  # wxGlade: MyFrame.<event_handler>
-        if event.GetInt() > self.valid_trial_num and event.GetInt() < (self.valid_trial_num + self.num_trial_mult):
+        print self.valid_trial_num
+        if event.GetInt() == 1:
+            self.num_trial_CB.SetValue(self.valid_trial_num)
+        if event.GetInt() > self.valid_trial_num and event.GetInt() < (self.valid_trial_num + self.num_trial_mult) and event.GetInt() + self.num_trial_mult <= 151 :
             self.num_trial_CB.SetValue(self.valid_trial_num + self.num_trial_mult)
             self.valid_trial_num = self.valid_trial_num + self.num_trial_mult
-        elif event.GetInt() < self.valid_trial_num and event.GetInt() > (self.valid_trial_num - self.num_trial_mult) and (self.valid_trial_num - self.num_trial_mult) > 0:
+        elif event.GetInt() < self.valid_trial_num and event.GetInt() > (self.valid_trial_num - self.num_trial_mult) and (self.valid_trial_num - self.num_trial_mult) > 0 and event.GetInt() - self.num_trial_mult > 0:
             self.num_trial_CB.SetValue(self.valid_trial_num - self.num_trial_mult)
             self.valid_trial_num = self.valid_trial_num - self.num_trial_mult
         else:
