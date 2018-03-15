@@ -711,8 +711,8 @@ class MyFrame(wx.Frame):
             self.num_trial_CB.SetValue(self.valid_trial_num - self.num_trial_mult)
             self.valid_trial_num = self.valid_trial_num - self.num_trial_mult
         else:
-            self.num_trial_CB.SetValue(myRounder(event.GetInt(), self.num_trial_mult))
-            self.valid_trial_num = myRounder(event.GetInt(), self.num_trial_mult)
+            self.num_trial_CB.SetValue(exp.myRounder(event.GetInt(), self.num_trial_mult))
+            self.valid_trial_num =exp.myRounder(event.GetInt(), self.num_trial_mult)
         self.num_trial_chosen = self.valid_trial_num
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_chosen
         ## SAVE        
