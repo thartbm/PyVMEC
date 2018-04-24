@@ -80,11 +80,13 @@ class MyFrame(wx.Frame):
         self.rotation_change_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.target_distance_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         
+        self.rename_experiment_button = wx.Button(self, wx.ID_ANY, ("Rename"))
+        self.rename_task_button = wx.Button(self, wx.ID_ANY, ("Rename"))
         
         self.static_line2 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.task_list_box = wx.ListBox(self, wx.ID_ANY, choices=self.task_list)
-        self.Plus_Button = wx.Button(self, wx.ID_ANY, ("+"))
-        self.Minus_Button = wx.Button(self, wx.ID_ANY, ("-"))
+        self.Plus_Button = wx.Button(self, wx.ID_ANY, ("New"))
+        self.Minus_Button = wx.Button(self, wx.ID_ANY, ("Delete"))
         self.radio_box_1 = wx.RadioBox(self, wx.ID_ANY, ("Task Type"), choices=[("Cursor"), ("No Cursor"), ("Pause"), ("Error Clamp")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.static_line_3 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.min_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Minimum T-Angle"))        
@@ -141,6 +143,8 @@ class MyFrame(wx.Frame):
         
         self.Bind(wx.EVT_BUTTON, self.Move_Up, self.Move_Up_Button)
         self.Bind(wx.EVT_BUTTON, self.Move_Down, self.Move_Down_Button)
+        self.Bind(wx.EVT_BUTTON, self.rename_experiment, self.rename_experiment_button)
+        self.Bind(wx.EVT_BUTTON, self.rename_task, self.rename_task_button)
         self.Bind(wx.EVT_COMBOBOX, self.num_target_choose, self.num_targ_CB)
         self.Bind(wx.EVT_SPINCTRL, self.num_trial_choose, self.num_trial_CB)
         self.Bind(wx.EVT_COMBOBOX, self.rot_angle_choose, self.Rotation_angle_CB)
@@ -157,7 +161,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.task_list_box_dclick, self.task_list_box)
         self.Bind(wx.EVT_LISTBOX, self.task_list_box_click, self.task_list_box)
         # end wxGlade
-
+        
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
         self.SetTitle(("Visuomotor"))
@@ -172,12 +176,16 @@ class MyFrame(wx.Frame):
         self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
         self.Save_Button.SetMinSize((85, 29))
+        self.rename_experiment_button.SetMinSize((55, 29))
+        self.rename_task_button.SetMinSize((55, 29))        
         
-        self.New_Button.SetMinSize((85, 29))
+        
+        self.New_Button.SetMinSize((55, 29))
+        self.Delete_Button.SetMinSize((55, 29))
         self.Load_Button.SetMinSize((85, 29))
 
-        self.Plus_Button.SetMinSize((85, 29))
-        self.Minus_Button.SetMinSize((85, 29))        
+        self.Plus_Button.SetMinSize((55, 29))
+        self.Minus_Button.SetMinSize((55, 29))        
         
         self.static_line2.SetMinSize((175, 22))
         self.min_max_staticline.SetMinSize((175, 22))
@@ -228,6 +236,7 @@ class MyFrame(wx.Frame):
         sizer_2.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
         sizer_2.Add(self.participants_list_box, 0, wx.RIGHT, 1)
         sizer_5.Add(self.New_Button, 0, wx.ALL, 2)
+        sizer_5.Add(self.rename_experiment_button, 0, wx.ALL, 2)
         sizer_5.Add(self.Delete_Button, 0, wx.ALL, 2)
         sizer_2.Add(sizer_5, 1, 0, 0)
         sizer_13.Add(self.Load_Button, 0, wx.ALL, 2)
@@ -238,8 +247,9 @@ class MyFrame(wx.Frame):
         sizer_1.Add(sizer_2, 1, 0, 0)
         sizer_3.Add(self.Task_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.static_line2, 0, wx.BOTTOM, 5)
-        sizer_3.Add(self.task_list_box, 0, wx.LEFT, 1)
+        sizer_3.Add(self.task_list_box, 0, wx.LEFT, 1)   
         sizer_4.Add(self.Plus_Button, 0, wx.ALL, 2)
+        sizer_4.Add(self.rename_task_button, 0, wx.ALL, 2)
         sizer_4.Add(self.Minus_Button, 0, wx.ALL, 2)
         sizer_3.Add(sizer_4, 1, 0, 0)
         sizer_1.Add(sizer_3, 1, 0, 0)
@@ -309,6 +319,7 @@ class MyFrame(wx.Frame):
         self.max_angle_statictext.Show()
         self.max_arrow_staticline.Show()
         self.target_distance_slider.Show()
+        self.target_distance_txt.Show()
         ### Show ###
         self.pause_static_text.Hide()
         self.pause_txt.Hide()
@@ -340,6 +351,7 @@ class MyFrame(wx.Frame):
         self.max_angle_statictext.Hide()
         self.max_arrow_staticline.Hide()
         self.target_distance_slider.Hide()
+        self.target_distance_txt.Hide()
         ### Show ###
         self.pause_static_text.Show()
         self.pause_txt.Show()
@@ -351,6 +363,7 @@ class MyFrame(wx.Frame):
         
         
     def list_box_dclick(self, event):
+        
         experimentFolder = self.highlit_experiment
         self.current_experiment_name = event.GetString()
         with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
@@ -445,6 +458,7 @@ class MyFrame(wx.Frame):
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
                 self.current_experiment = json.load(f)
                 del self.task_list[:]
+            self.current_experiment['rotation_change_type'] = self.rot_change_statictext.GetStringSelection().lower()
             self.task_list_box.Set(["Empty"])
         dlg.Destroy()
         event.Skip()
@@ -467,7 +481,7 @@ class MyFrame(wx.Frame):
             self.current_experiment = json.load(f)
             del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
-            self.task_list.append(exp.task_namer(self.current_experiment[i]["trial_type"], True))
+            self.task_list.append(self.current_experiment[i]["task_name"])
         if len(self.task_list) == 0:
             self.task_list_box.Set(['Empty'])
         else:
@@ -486,8 +500,8 @@ class MyFrame(wx.Frame):
         event.Skip()
 
     def Save_Press(self, event):
-        dlg = wx.MessageDialog(self, "Save Experiment", style=wx.CENTRE|wx.ICON_QUESTION)
-        if dlg.ShowModal() == wx.ID_OK:
+        dlg = wx.MessageDialog(self, "Save Experiment?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
+        if dlg.ShowModal() == wx.ID_YES:
             with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
                 json.dump(self.current_experiment, f)
                 f.close()
@@ -739,7 +753,8 @@ class MyFrame(wx.Frame):
         event.Skip()
 
     def Rot_Change_Press(self, event):  # wxGlade: MyFrame.<event_handler>
-        print "Event handler 'Rot_Change_Press' not implemented!"
+#        print self.rot_change_statictext.GetStringSelection()
+        self.current_experiment[self.highlit_task_num]['rotation_change_type'] = (event.GetString()).lower()
         
         event.Skip()
 
@@ -789,6 +804,35 @@ class MyFrame(wx.Frame):
         event.Skip()
     
     def target_distance_choose(self, event):
+        event.Skip()
+        
+    def rename_experiment(self, event):
+        dlg = wx.TextEntryDialog(self, 'Enter Name', 'Rename experiment')
+        dlg.SetValue("") 
+        if dlg.ShowModal() == wx.ID_OK:
+            os.rename(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
+            self.experiment_list = os.listdir(self.experiment_folder)
+            del self.experiment_list_trimmed[:]
+            for i in self.experiment_list:
+                self.experiment_list_trimmed.append(i.replace(".json", ""))
+            self.exp_list_box.Set(self.experiment_list_trimmed)
+#            self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
+            self.current_experiment_name = dlg.GetValue()
+            with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
+                self.current_experiment = json.load(f)
+        dlg.Destroy()
+        event.Skip()
+        
+    def rename_task(self, event):
+        dlg = wx.TextEntryDialog(self, 'Change Task Name', 'Rename')
+        dlg.SetValue("Default")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
+        del self.task_list[:]
+        for i in range (0, len(self.current_experiment)):
+            self.task_list.append(self.current_experiment[i]['task_name'])
+        self.task_list_box.Set(self.task_list)
+        dlg.Destroy()
         event.Skip()
         
 ############################### EXPERIMENT CODE ##############################
