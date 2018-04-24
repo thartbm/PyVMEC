@@ -3,6 +3,7 @@ import wx
 
 import gettext
 import os
+import json
 import pickle
 import pandas as pd
 import os.path
@@ -23,7 +24,7 @@ class MyFrame(wx.Frame):
         self.experiment_list = os.listdir(self.experiment_folder)
         self.experiment_list_trimmed = []
         for i in self.experiment_list:
-            self.experiment_list_trimmed.append(i.replace(".pickle", ""))
+            self.experiment_list_trimmed.append(i.replace(".json", ""))
         if len(self.experiment_list_trimmed) == 0:
             self.experiment_list_trimmed = ["Empty"]
         ### Tasks
@@ -54,6 +55,9 @@ class MyFrame(wx.Frame):
         
         ################### General Configuration Settings ###################
         self.general_cfg = {}
+        self.FULLSCREEN = False
+        self.MAX_TRIALS = 150
+        self.MIN_TRIALS = 1
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -96,7 +100,7 @@ class MyFrame(wx.Frame):
         self.num_targ_CB = wx.ComboBox(self, wx.ID_ANY, value="3", choices=self.num_target_list, style=wx.CB_DROPDOWN)
         
         self.num_trials_statictext = wx.StaticText(self, wx.ID_ANY, ("# Trials"))
-        self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=1, max=150, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
+        self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=self.MIN_TRIALS, max=self.MAX_TRIALS, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
         
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, (" Rotation Angle CW"))
         self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
@@ -109,7 +113,7 @@ class MyFrame(wx.Frame):
         self.pause_message_txt = wx.TextCtrl(self, wx.ID_ANY, ("Text"))
         self.pause_check = wx.CheckBox(self, wx.ID_ANY, ("Space to continue"))
         self.target_distance_txt = wx.StaticText(self, wx.ID_ANY, ("Target Distance %"))
-        self.target_distance_slider = wx.Slider(self, wx.ID_ANY, minValue = 50, maxValue = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.target_distance_slider = wx.Slider(self, wx.ID_ANY, minValue = 50, maxValue = 100, value=100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
         
         # Hide pause stuff
         self.pause_static_text.Hide()
@@ -349,8 +353,8 @@ class MyFrame(wx.Frame):
     def list_box_dclick(self, event):
         experimentFolder = self.highlit_experiment
         self.current_experiment_name = event.GetString()
-        with open(self.experiment_folder + self.current_experiment_name + ".pickle", "rb") as f:
-            self.current_experiment = pickle.load(f)
+        with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
+            self.current_experiment = json.load(f)
             del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(self.current_experiment[i]["task_name"])
@@ -431,15 +435,15 @@ class MyFrame(wx.Frame):
             del self.experiment_list_trimmed[:]
         if dlg.ShowModal() == wx.ID_OK:
             new_experiment = []
-            with open(self.experiment_folder + dlg.GetValue() + ".pickle", "wb") as f:
-                pickle.dump(new_experiment, f)
+            with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
+                json.dump(new_experiment, f)
             f.close()
             self.experiment_list_trimmed.append(dlg.GetValue())
             self.exp_list_box.Set(self.experiment_list_trimmed)
             self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
             self.current_experiment_name = dlg.GetValue()
-            with open(self.experiment_folder + self.current_experiment_name + ".pickle", "rb") as f:
-                self.current_experiment = pickle.load(f)
+            with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
+                self.current_experiment = json.load(f)
                 del self.task_list[:]
             self.task_list_box.Set(["Empty"])
         dlg.Destroy()
@@ -449,7 +453,7 @@ class MyFrame(wx.Frame):
         dlg = wx.MessageDialog(self, 'Confirm Deleting %s\n' % self.highlit_experiment,
                                'Delete Confirmation')
         if dlg.ShowModal() == wx.ID_OK:
-            os.remove(self.experiment_folder + self.highlit_experiment + ".pickle")
+            os.remove(self.experiment_folder + self.highlit_experiment + ".json")
             self.experiment_list_trimmed.remove(self.highlit_experiment)
             if os.listdir(self.experiment_folder) == []:
                 self.experiment_list_trimmed = ["Empty"]
@@ -459,8 +463,8 @@ class MyFrame(wx.Frame):
 
     def Load_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         experimentFolder = self.highlit_experiment
-        with open(self.experiment_folder+self.highlit_experiment+".pickle", "rb") as f:
-            self.current_experiment = pickle.load(f)
+        with open(self.experiment_folder+self.highlit_experiment+".json", "rb") as f:
+            self.current_experiment = json.load(f)
             del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(exp.task_namer(self.current_experiment[i]["trial_type"], True))
@@ -484,8 +488,8 @@ class MyFrame(wx.Frame):
     def Save_Press(self, event):
         dlg = wx.MessageDialog(self, "Save Experiment", style=wx.CENTRE|wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_OK:
-            with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-                pickle.dump(self.current_experiment, f)
+            with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+                json.dump(self.current_experiment, f)
                 f.close()
         dlg.Destroy()
         event.Skip()
@@ -503,7 +507,7 @@ class MyFrame(wx.Frame):
             if not(os.path.exists("data/" + experimentFolder + "/" + dlg.GetValue())):
                 os.makedirs("data/" + experimentFolder + "/" + dlg.GetValue())
             
-            self.experiment_run = exp.run_experiment(True, self.current_experiment)
+            self.experiment_run = exp.run_experiment(self.FULLSCREEN, self.current_experiment)
             self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv")
         else:
             pass
@@ -524,14 +528,14 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Task Name', 'New Task')
         dlg.SetValue("Default")
         if dlg.ShowModal() == wx.ID_OK:
-            with open("general_configurations.pickle", "rb") as f:
-                new_task = pickle.load(f)
+            with open("general_configurations.json", "rb") as f:
+                new_task = json.load(f)
                 self.current_experiment.append(new_task[0])
                 self.highlit_task_num = len(self.current_experiment) - 1
                 self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
                 f.close()
-            with open(self.experiment_folder + self.current_experiment_name + ".pickle", "wb") as f:
-                pickle.dump(self.current_experiment, f)
+            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
+                json.dump(self.current_experiment, f)
                 f.close()
             del self.task_list[:]
             for i in range (0, len(self.current_experiment)):
@@ -570,8 +574,8 @@ class MyFrame(wx.Frame):
     def Minus_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         del self.current_experiment[self.highlit_task_num] # remove current task
         self.highlit_task_num = len(self.current_experiment) - 1
-        with open(self.experiment_folder + self.current_experiment_name + ".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f) #remove current task from file
+        with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
+            json.dump(self.current_experiment, f) #remove current task from file
             f.close()
         del self.task_list[:]
         # refresh task list
@@ -598,8 +602,8 @@ class MyFrame(wx.Frame):
         elif(chosen_trial == "Error Clamp"):
             self.current_experiment[self.highlit_task_num]["trial_type"] = "error_clamp"
             self.regular_experiment_show()
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         # refresh task list
         del self.task_list[:]
@@ -625,8 +629,8 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['min_angle'] = self.min_angle_chosen
         self.current_experiment[self.highlit_task_num]['max_angle'] = self.max_angle_chosen      
         #save
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         event.Skip()
         
@@ -641,8 +645,8 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['min_angle'] = self.min_angle_chosen
         self.current_experiment[self.highlit_task_num]['max_angle'] = self.max_angle_chosen      
         #save        
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
@@ -650,8 +654,8 @@ class MyFrame(wx.Frame):
         if (self.highlit_task_num > 0):
             self.current_experiment[self.highlit_task_num], self.current_experiment[self.highlit_task_num - 1] = self.current_experiment[self.highlit_task_num - 1], self.current_experiment[self.highlit_task_num]
             self.highlit_task_num = self.highlit_task_num - 1
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         # refresh task list
         del self.task_list[:]
@@ -668,8 +672,8 @@ class MyFrame(wx.Frame):
         if (self.highlit_task_num < len(self.task_list) - 1):
             self.current_experiment[self.highlit_task_num], self.current_experiment[self.highlit_task_num + 1] = self.current_experiment[self.highlit_task_num + 1], self.current_experiment[self.highlit_task_num]
             self.highlit_task_num = self.highlit_task_num + 1
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         # refresh task list
         del self.task_list[:]
@@ -699,20 +703,20 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_CB.GetValue()
         self.valid_trial_num = self.num_trial_CB.GetValue()
         ## SAVE
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()        
         event.Skip()
         
 
     def num_trial_choose(self, event):  # wxGlade: MyFrame.<event_handler>
-        print self.valid_trial_num
-        if event.GetInt() == 1:
+        print event.GetInt()
+        if event.GetInt() == 1 or event.GetInt() == self.MAX_TRIALS + 1:
             self.num_trial_CB.SetValue(self.valid_trial_num)
-        if event.GetInt() > self.valid_trial_num and event.GetInt() < (self.valid_trial_num + self.num_trial_mult) and event.GetInt() + self.num_trial_mult <= 151 :
+        elif event.GetInt() > self.valid_trial_num and event.GetInt() < (self.valid_trial_num + self.num_trial_mult) and (event.GetInt() + self.num_trial_mult) <= self.MAX_TRIALS :
             self.num_trial_CB.SetValue(self.valid_trial_num + self.num_trial_mult)
             self.valid_trial_num = self.valid_trial_num + self.num_trial_mult
-        elif event.GetInt() < self.valid_trial_num and event.GetInt() > (self.valid_trial_num - self.num_trial_mult) and (self.valid_trial_num - self.num_trial_mult) > 0 and event.GetInt() - self.num_trial_mult > 0:
+        elif event.GetInt() < self.valid_trial_num and event.GetInt() > (self.valid_trial_num - self.num_trial_mult) and (self.valid_trial_num - self.num_trial_mult) > 0 and (event.GetInt() - self.num_trial_mult) > 0:
             self.num_trial_CB.SetValue(self.valid_trial_num - self.num_trial_mult)
             self.valid_trial_num = self.valid_trial_num - self.num_trial_mult
         else:
@@ -721,21 +725,22 @@ class MyFrame(wx.Frame):
         self.num_trial_chosen = self.valid_trial_num
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_chosen
         ## SAVE        
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
     def rot_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
         self.rotation_angle_chosen = int(event.GetString())
         self.current_experiment[self.highlit_task_num]['rotation_angle'] = self.rotation_angle_chosen
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
     def Rot_Change_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         print "Event handler 'Rot_Change_Press' not implemented!"
+        
         event.Skip()
 
     def Lag_Enter(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -750,8 +755,8 @@ class MyFrame(wx.Frame):
         else:
             self.current_experiment[self.highlit_task_num]['lag'] = int(int(event.GetString())*lag_conversion_factor)
             self.current_experiment[self.highlit_task_num]['lag_value'] = int(event.GetString())
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()
             
         event.Skip()
@@ -766,15 +771,15 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['pausetime'] = 0
         else:
             self.current_experiment[self.highlit_task_num]['pausetime'] = int(event.GetString())
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()        
         event.Skip()
 
     def pause_message_make(self, event):  # wxGlade: MyFrame.<event_handler>
         self.current_experiment[self.highlit_task_num]['pause_instruction'] = event.GetString()
-        with open(self.experiment_folder+self.current_experiment_name+".pickle", "wb") as f:
-            pickle.dump(self.current_experiment, f)
+        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+            json.dump(self.current_experiment, f)
             f.close()   
         event.Skip()
     
@@ -799,7 +804,8 @@ class MyApp(wx.App):
 
 # end of class MyApp
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
+def start():
     gettext.install("app") # replace with the appropriate catalog name
     
     app = MyApp(0)
