@@ -2,6 +2,7 @@
 import wx
 
 import gettext
+import math
 import os
 import json
 import pickle
@@ -55,9 +56,10 @@ class MyFrame(wx.Frame):
         
         ################### General Configuration Settings ###################
         self.general_cfg = {}
-        self.FULLSCREEN = False
+        self.FULLSCREEN = True
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
+        self.MIN_TRIAL_BOOL = False
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -105,14 +107,14 @@ class MyFrame(wx.Frame):
         self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=self.MIN_TRIALS, max=self.MAX_TRIALS, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
         
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, (" Rotation Angle CW"))
-        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
+        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
         self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
         self.pause_static_text = wx.StaticText(self, wx.ID_ANY, ("Pause Time(s)"))
         self.pause_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
         self.PM_static_text = wx.StaticText(self, wx.ID_ANY, (" Pause Message"))
-        self.pause_message_txt = wx.TextCtrl(self, wx.ID_ANY, ("Text"))
+        self.pause_message_txt = wx.TextCtrl(self, wx.ID_ANY, (""))
         self.pause_check = wx.CheckBox(self, wx.ID_ANY, ("Space to continue"))
         self.target_distance_txt = wx.StaticText(self, wx.ID_ANY, ("Target Distance %"))
         self.target_distance_slider = wx.Slider(self, wx.ID_ANY, minValue = 50, maxValue = 100, value=100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
@@ -521,7 +523,7 @@ class MyFrame(wx.Frame):
             if not(os.path.exists("data/" + experimentFolder + "/" + dlg.GetValue())):
                 os.makedirs("data/" + experimentFolder + "/" + dlg.GetValue())
             
-            self.experiment_run = exp.run_experiment(self.FULLSCREEN, self.current_experiment)
+            self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
             self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv")
         else:
             pass
@@ -547,6 +549,8 @@ class MyFrame(wx.Frame):
                 self.current_experiment.append(new_task[0])
                 self.highlit_task_num = len(self.current_experiment) - 1
                 self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
+                self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(self.target_distance_slider.GetValue()/100)
+                self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
                 f.close()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
                 json.dump(self.current_experiment, f)
@@ -562,7 +566,7 @@ class MyFrame(wx.Frame):
             ### Set Current Task Settings
             self.radio_box_1.SetSelection(exp.task_num(self.current_experiment[self.highlit_task_num]['trial_type'], True))
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['num_trials'])
-            self.num_targ_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['num_targets']))    
+            self.num_targ_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['num_targets']))
             # Show or hide Pause menu
             if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
                 self.pause_experiment_show()
@@ -594,7 +598,7 @@ class MyFrame(wx.Frame):
         del self.task_list[:]
         # refresh task list
         for i in range (0, len(self.current_experiment)):
-            self.task_list.append(exp.task_namer(self.current_experiment[i]["trial_type"], True))
+            self.task_list.append(self.current_experiment[i]["task_name"])
         if len(self.task_list) == 0:
             self.task_list_box.Set(['None'])
         else:
@@ -704,6 +708,7 @@ class MyFrame(wx.Frame):
         self.num_target_chosen = int(event.GetString())
         
         self.current_experiment[self.highlit_task_num]['num_targets'] = self.num_target_chosen
+        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue()))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())        
         ## Set num trial default
         if self.num_target_chosen > 2:
             self.num_trial_CB.SetValue(self.num_target_chosen)
@@ -716,6 +721,11 @@ class MyFrame(wx.Frame):
             self.num_trial_mult = 4
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_CB.GetValue()
         self.valid_trial_num = self.num_trial_CB.GetValue()
+        
+        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
+            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+            
         ## SAVE
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
             json.dump(self.current_experiment, f)
@@ -724,8 +734,8 @@ class MyFrame(wx.Frame):
         
 
     def num_trial_choose(self, event):  # wxGlade: MyFrame.<event_handler>
-        print event.GetInt()
-        if event.GetInt() == 1 or event.GetInt() == self.MAX_TRIALS + 1:
+#        print self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+        if event.GetInt() == self.MIN_TRIALS or event.GetInt() >= self.MAX_TRIALS + 1:
             self.num_trial_CB.SetValue(self.valid_trial_num)
         elif event.GetInt() > self.valid_trial_num and event.GetInt() < (self.valid_trial_num + self.num_trial_mult) and (event.GetInt() + self.num_trial_mult) <= self.MAX_TRIALS :
             self.num_trial_CB.SetValue(self.valid_trial_num + self.num_trial_mult)
@@ -735,7 +745,11 @@ class MyFrame(wx.Frame):
             self.valid_trial_num = self.valid_trial_num - self.num_trial_mult
         else:
             self.num_trial_CB.SetValue(exp.myRounder(event.GetInt(), self.num_trial_mult))
-            self.valid_trial_num =exp.myRounder(event.GetInt(), self.num_trial_mult)
+            self.valid_trial_num = exp.myRounder(event.GetInt(), self.num_trial_mult)
+        if event.GetInt() < self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] and self.MIN_TRIAL_BOOL == True:
+#            print ("IM HERE!!!")
+            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+            self.valid_trial_num = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
         self.num_trial_chosen = self.valid_trial_num
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_chosen
         ## SAVE        
@@ -747,15 +761,26 @@ class MyFrame(wx.Frame):
     def rot_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
         self.rotation_angle_chosen = int(event.GetString())
         self.current_experiment[self.highlit_task_num]['rotation_angle'] = self.rotation_angle_chosen
+        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
+            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+                
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
             json.dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
     def Rot_Change_Press(self, event):  # wxGlade: MyFrame.<event_handler>
-#        print self.rot_change_statictext.GetStringSelection()
         self.current_experiment[self.highlit_task_num]['rotation_change_type'] = (event.GetString()).lower()
-        
+        if (event.GetString().lower() == 'abrupt'):
+            self.MIN_TRIAL_BOOL = False
+        elif (event.GetString().lower() == 'gradual'):
+            self.MIN_TRIAL_BOOL = True
+        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
+            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+                
         event.Skip()
 
     def Lag_Enter(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -800,10 +825,11 @@ class MyFrame(wx.Frame):
     
     def pause_check_press(self, event):
         self.current_experiment[self.highlit_task_num]['pause_button_wait'] = event.IsChecked()
-        print event.IsChecked()        
+#        print event.IsChecked()        
         event.Skip()
     
     def target_distance_choose(self, event):
+        self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(event.GetInt())/100
         event.Skip()
         
     def rename_experiment(self, event):
