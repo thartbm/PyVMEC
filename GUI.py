@@ -5,12 +5,10 @@ import gettext
 import math
 import os
 import json
-import pickle
 import pandas as pd
 import os.path
 import Tkinter as tk
 import Exp as exp
-from ctypes import *
 #import VMEC16 as vm
 root = tk.Tk()
 class MyFrame(wx.Frame):
@@ -91,6 +89,7 @@ class MyFrame(wx.Frame):
         self.Minus_Button = wx.Button(self, wx.ID_ANY, ("Delete"))
         self.radio_box_1 = wx.RadioBox(self, wx.ID_ANY, ("Task Type"), choices=[("Cursor"), ("No Cursor"), ("Pause"), ("Error Clamp")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.static_line_3 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
+        self.terminalfeedback_Radio_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.min_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Minimum T-Angle"))        
         self.min_angle_CB = wx.Slider(self, wx.ID_ANY, minValue = 40, maxValue = 140, value = 40, style=wx.SL_HORIZONTAL | wx.SL_LABELS)
         
@@ -109,6 +108,7 @@ class MyFrame(wx.Frame):
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, (" Rotation Angle CW"))
         self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+        self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
         self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
         self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
         self.pause_static_text = wx.StaticText(self, wx.ID_ANY, ("Pause Time(s)"))
@@ -152,6 +152,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.rot_angle_choose, self.Rotation_angle_CB)
         self.Bind(wx.EVT_RADIOBOX, self.Rot_Change_Press, self.rot_change_statictext)
         self.Bind(wx.EVT_TEXT, self.Lag_Enter, self.lag_txt)
+        self.Bind(wx.EVT_CHECKBOX, self.terminalfeedback_check_press, self.terminalfeedback_Radio)
         ### Pause events
         self.Bind(wx.EVT_TEXT, self.Pause_Enter, self.pause_txt)
         self.Bind(wx.EVT_TEXT, self.pause_message_make, self.pause_message_txt)
@@ -197,6 +198,7 @@ class MyFrame(wx.Frame):
         self.num_trials_staticline.SetMinSize((175, 22))
         self.rotation_angle_staticline.SetMinSize((175, 22))
         self.rotation_change_staticline.SetMinSize((175, 22))
+        self.terminalfeedback_Radio_staticline.SetMinSize((175, 22))
         
         self.task_list_box.SetMinSize((175, 332))
         self.task_list_box.SetSelection(0)
@@ -287,6 +289,8 @@ class MyFrame(wx.Frame):
         sizer_9.Add(self.rotation_change_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
         sizer_9.Add(self.lag_txt, 0, wx.LEFT, 2)
+        sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.BOTTOM, 2)
+        sizer_9.Add(self.terminalfeedback_Radio, 0, wx.LEFT, 2)
         sizer_8.Add(sizer_9, 1, 0, 0)
         sizer_1.Add(sizer_8, 1, 0, 0)
 #        sizer_7.Add(self.lag_static_text, 0, 0, 0)
@@ -397,37 +401,43 @@ class MyFrame(wx.Frame):
         lag_conversion_factor = 37.2495/1000
         self.highlit_task = event.GetString()
         self.highlit_task_num = event.GetSelection()
-        
-        ### Trial number stuff
-        self.valid_trial_num = self.current_experiment[self.highlit_task_num]['num_trials']
-        if self.current_experiment[self.highlit_task_num]['num_targets'] > 2:
-            self.num_trial_mult = self.current_experiment[self.highlit_task_num]['num_targets']
-        elif self.current_experiment[self.highlit_task_num]['num_targets'] == 1:
-            self.num_trial_mult = 3
-        elif self.current_experiment[self.highlit_task_num]['num_targets'] == 2:
-            self.num_trial_mult = 4
-        ### Set Current Task Settings
-        self.radio_box_1.SetSelection(exp.task_num(self.current_experiment[self.highlit_task_num]['trial_type'], True))
-        self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['num_trials'])
-        self.num_targ_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['num_targets']))    
-        # Show or hide Pause menu
-        if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
-            self.pause_experiment_show()
-            try:
-                self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
-                self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
-            except:
-                self.pause_txt.SetValue('0')
-                self.pause_message_txt.SetValue('')
-        else:
-            self.regular_experiment_show()     
-        
-        self.min_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['min_angle'])                        
-        self.max_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['max_angle'])
         try:
-            self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
+            ### Trial number stuff
+            self.valid_trial_num = self.current_experiment[self.highlit_task_num]['num_trials']
+            if self.current_experiment[self.highlit_task_num]['num_targets'] > 2:
+                self.num_trial_mult = self.current_experiment[self.highlit_task_num]['num_targets']
+            elif self.current_experiment[self.highlit_task_num]['num_targets'] == 1:
+                self.num_trial_mult = 3
+            elif self.current_experiment[self.highlit_task_num]['num_targets'] == 2:
+                self.num_trial_mult = 4
+            ### Set Current Task Settings
+            self.radio_box_1.SetSelection(exp.task_num(self.current_experiment[self.highlit_task_num]['trial_type'], True))
+            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['num_trials'])
+            self.num_targ_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['num_targets']))  
+            self.terminalfeedback_Radio.SetValue(self.current_experiment[self.highlit_task_num]['terminal_feedback'])
+            self.target_distance_slider.SetValue(self.current_experiment[self.highlit_task_num]['target_distance_ratio']*100)
+            self.rot_change_statictext.SetSelection(exp.rotation_num(self.current_experiment[self.highlit_task_num]['rotation_change_type'], True))
+            self.Rotation_angle_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['rotation_angle']))
+            # Show or hide Pause menu
+            if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
+                self.pause_experiment_show()
+                try:
+                    self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
+                    self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
+                except:
+                    self.pause_txt.SetValue('0')
+                    self.pause_message_txt.SetValue('')
+            else:
+                self.regular_experiment_show()     
+            
+            self.min_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['min_angle'])                        
+            self.max_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['max_angle'])
+            try:
+                self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
+            except:
+                self.lag_txt.SetValue("0")
         except:
-            self.lag_txt.SetValue("0")
+            pass
         event.Skip()
     
     def task_list_box_dclick(self, event):
@@ -460,7 +470,7 @@ class MyFrame(wx.Frame):
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
                 self.current_experiment = json.load(f)
                 del self.task_list[:]
-            self.current_experiment['rotation_change_type'] = self.rot_change_statictext.GetStringSelection().lower()
+            
             self.task_list_box.Set(["Empty"])
         dlg.Destroy()
         event.Skip()
@@ -524,7 +534,7 @@ class MyFrame(wx.Frame):
                 os.makedirs("data/" + experimentFolder + "/" + dlg.GetValue())
             
             self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
-            self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv")
+            self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv", index=False)
         else:
             pass
         #### REFRESH PARTICIPANT LIST #####
@@ -551,6 +561,7 @@ class MyFrame(wx.Frame):
                 self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
                 self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(self.target_distance_slider.GetValue()/100)
                 self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+                self.current_experiment[self.highlit_task_num]['rotation_change_type'] = self.rot_change_statictext.GetStringSelection().lower()
                 f.close()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
                 json.dump(self.current_experiment, f)
@@ -608,30 +619,33 @@ class MyFrame(wx.Frame):
 
     def Trial_Type_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         chosen_trial = event.GetString()
-        if (chosen_trial == "Cursor"):
-            self.current_experiment[self.highlit_task_num]["trial_type"] = "cursor"
-            self.regular_experiment_show()
-        elif(chosen_trial == "No Cursor"):
-            self.current_experiment[self.highlit_task_num]["trial_type"] = "no_cursor"
-            self.regular_experiment_show()
-        elif(chosen_trial == "Pause"):
-            self.current_experiment[self.highlit_task_num]["trial_type"] = "pause"
-            self.pause_experiment_show()
-        elif(chosen_trial == "Error Clamp"):
-            self.current_experiment[self.highlit_task_num]["trial_type"] = "error_clamp"
-            self.regular_experiment_show()
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
-            f.close()
-        # refresh task list
-        del self.task_list[:]
-        for i in range (0, len(self.current_experiment)):
-            self.task_list.append(self.current_experiment[i]['task_name'])
-        if len(self.task_list) == 0:
-            self.task_list_box.Set(['None'])
-        else:
-            self.task_list_box.Set(self.task_list)
-        self.task_list_box.SetSelection(self.highlit_task_num)
+        try:
+            if (chosen_trial == "Cursor"):
+                self.current_experiment[self.highlit_task_num]["trial_type"] = "cursor"
+                self.regular_experiment_show()
+            elif(chosen_trial == "No Cursor"):
+                self.current_experiment[self.highlit_task_num]["trial_type"] = "no_cursor"
+                self.regular_experiment_show()
+            elif(chosen_trial == "Pause"):
+                self.current_experiment[self.highlit_task_num]["trial_type"] = "pause"
+                self.pause_experiment_show()
+            elif(chosen_trial == "Error Clamp"):
+                self.current_experiment[self.highlit_task_num]["trial_type"] = "error_clamp"
+                self.regular_experiment_show()
+            with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+                json.dump(self.current_experiment, f)
+                f.close()
+            # refresh task list
+            del self.task_list[:]
+            for i in range (0, len(self.current_experiment)):
+                self.task_list.append(self.current_experiment[i]['task_name'])
+            if len(self.task_list) == 0:
+                self.task_list_box.Set(['None'])
+            else:
+                self.task_list_box.Set(self.task_list)
+            self.task_list_box.SetSelection(self.highlit_task_num)
+        except:
+            pass
         # save change
 
         event.Skip()
@@ -824,8 +838,7 @@ class MyFrame(wx.Frame):
         event.Skip()
     
     def pause_check_press(self, event):
-        self.current_experiment[self.highlit_task_num]['pause_button_wait'] = event.IsChecked()
-#        print event.IsChecked()        
+        self.current_experiment[self.highlit_task_num]['pause_button_wait'] = event.IsChecked()       
         event.Skip()
     
     def target_distance_choose(self, event):
@@ -859,6 +872,9 @@ class MyFrame(wx.Frame):
             self.task_list.append(self.current_experiment[i]['task_name'])
         self.task_list_box.Set(self.task_list)
         dlg.Destroy()
+        event.Skip()
+    def terminalfeedback_check_press(self, event):
+        self.current_experiment[self.highlit_task_num]['terminal_feedback'] = event.IsChecked()
         event.Skip()
         
 ############################### EXPERIMENT CODE ##############################
