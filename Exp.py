@@ -18,13 +18,12 @@ def addWorkSpaceLimits(cfg = {}):
     screen_height = root.winfo_screenheight()
     trimmed_width = int((float(2)/float(3))*float(screen_width))
     trimmed_height = int((float(2)/float(3))*float(screen_height))
-    if (trimmed_width < 2*trimmed_height):
-        active_height = trimmed_width/2
+    if (trimmed_height*2 < trimmed_width):
+        trimmed_width = trimmed_height*2
     else:
-        active_height = trimmed_height/2   
-    active_width = trimmed_width
-    cfg['active_width'] = active_width
-    cfg['active_height'] = active_height
+        trimmed_height = trimmed_width/2   
+    cfg['active_width'] = trimmed_width
+    cfg['active_height'] = trimmed_height
     return cfg
 
 class myMouse:
@@ -193,6 +192,7 @@ def trial_runner(cfg={}):
     ### Define Parameters here
     startPos=cfg['starting_pos']
     arrow=cfg['arrow_stim']
+    arrowFill=cfg['arrowFill_stim']
     
     endPos=[end_X, end_Y]   
     ### Instantiating Checking Variables Here
@@ -202,6 +202,7 @@ def trial_runner(cfg={}):
     show_home = True
     show_cursor = True
     show_arrow = False
+    show_arrowFill = False
     nc_check_1 = False
     timerSet = False
     timer_timestamp = 0
@@ -225,6 +226,7 @@ def trial_runner(cfg={}):
     ### starting circle 
     startCircle.setPos(startPos)
     arrow.setPos(startPos)
+    arrowFill.setPos(startPos)
     while (core.getTime() - cfg['time']) < 60:
         ### mouse Position
         if (cfg['poll_type'] == 'psychopy'):
@@ -275,15 +277,18 @@ def trial_runner(cfg={}):
 ########################### SPECIAL ARROW CONDITIONS #########################
         if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
             arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
+            arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
 ################################ SHOW OBJECTS ################################
         if (show_home == True):
             startCircle.draw()
         if (show_target == True):
             endCircle.draw()
-        if (show_cursor == True):
-            myCircle.draw()
         if (show_arrow == True):
             arrow.draw()
+            arrowFill.draw()
+        if (show_cursor == True):
+            myCircle.draw()
+            
 ################################ PHASE 1 #####################################
         if (phase_1 == False):
             if (cfg['trial_type'] == 'cursor'):
@@ -369,8 +374,10 @@ def trial_runner(cfg={}):
             
             if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
                 show_arrow = True
+                show_arrowFill = True
             elif ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
                 show_arrow = False
+                show_arrowFill = False
             if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
                 show_cursor = False
                 
@@ -436,6 +443,19 @@ def run_experiment_2(fulls, experiment = []):
     addWorkSpaceLimits(cfg)
     Win = visual.Window([cfg['active_width'], (cfg['active_height']*3)/2], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')    
     ### Configure visual feedback settings here
+    arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
+    arrowFill = visual.ShapeStim(win=Win,
+                                 vertices=arrowFillVert,
+                                 fillColor=[-1,-1,-1],
+                                 size=7,
+                                 lineColor=[-1,-1,-1])
+    arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
+    arrow = visual.ShapeStim(win=Win,
+                             vertices=arrowVert,
+                             fillColor=[0, 0, 0],
+                             size=7,
+                             lineColor=[0,0,0])
+    
     myCircle = visual.Circle(win=Win,
                              radius=12,
                              edges=32,
@@ -456,12 +476,8 @@ def run_experiment_2(fulls, experiment = []):
                               units='pix',
                               fillColor=[-1, -1, -1],
                               lineColor=[0, 0, 0]) 
-    arrowVert = [(-0.9, 1),(-0.6,0),(-0.9,-1),(1.1,0)]
-    arrow = visual.ShapeStim(win=Win,
-                             vertices=arrowVert,
-                             fillColor=[0, 0, 0],
-                             size=7,
-                             lineColor=[0,0,0])
+
+    
     Mouse = event.Mouse(win=Win, visible=False)
     for i in range (0, len(experiment)):
         running[i]['x11_mouse'] = myMouse()
@@ -471,13 +487,14 @@ def run_experiment_2(fulls, experiment = []):
         running[i]['mouse'] = Mouse
         running[i]['win'] = Win
         running[i]['arrow_stim'] = arrow
+        running[i]['arrowFill_stim'] = arrowFill
         running[i]['task_num'] = i + 1
         running[i]['max_distance'] = cfg['active_height']
         targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         fulltargetList = tuple(targetList)
         if (running[i]['trial_type'] != 'pause'):
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])          
-            for trial_num in range (0, running[i]['num_trials']):
+            for trial_num in range (0, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)

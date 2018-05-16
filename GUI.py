@@ -765,7 +765,7 @@ class MyFrame(wx.Frame):
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
             self.valid_trial_num = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
         self.num_trial_chosen = self.valid_trial_num
-        self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_chosen
+        self.current_experiment[self.highlit_task_num]['num_trials'] = int(self.num_trial_chosen)
         ## SAVE        
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
             json.dump(self.current_experiment, f)
