@@ -24,6 +24,7 @@ def addWorkSpaceLimits(cfg = {}):
         trimmed_height = trimmed_width/2   
     cfg['active_width'] = trimmed_width
     cfg['active_height'] = trimmed_height
+    cfg['circle_radius'] = trimmed_height*0.025
     return cfg
 
 class myMouse:
@@ -292,29 +293,29 @@ def trial_runner(cfg={}):
 ################################ PHASE 1 #####################################
         if (phase_1 == False):
             if (cfg['trial_type'] == 'cursor'):
-                if (get_dist(circle_pos, startPos) < 5 and velocity < 35):
+                if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
                     phase_1 = True
                     show_home = False
                     show_target = True
                     if (cfg['terminal_feedback'] == True):
                         show_cursor = False
             elif (cfg['trial_type'] == 'no_cursor'):
-                if (get_dist(circle_pos, startPos) < 5 and velocity < 35):
+                if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
                     phase_1 = True
                     show_target = True
             elif (cfg['trial_type'] == 'error_clamp'):
-                if (get_dist(circle_pos, startPos) < 4 and velocity < 35):
+                if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
                     phase_1 = True
                     show_target = True
                     show_home = False
 ################################ PHASE 2 #####################################
         if (phase_1 == True and phase_2 == False):
             if (cfg['trial_type'] == 'cursor'):
-                if (get_dist(circle_pos, endPos) < 5 and velocity < 35 and cfg['terminal_feedback'] == False):
+                if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35 and cfg['terminal_feedback'] == False):
                     phase_2 = True
                     show_home = True
                     show_target = False
-                if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos) + 5) and phase_1 == True):
+                if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
                     timer = core.getTime()
                     phase_2 = True
                     show_home = True
@@ -341,7 +342,7 @@ def trial_runner(cfg={}):
                 if (velocity > 30 and timerSet == True):
                     timerSet = False
                     stop_time = 0  
-                if (get_dist(circle_pos, startPos) > 10 and nc_check_1 == False):
+                if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):
                     show_home = False
                     show_target = True
                     nc_check_1 = True
@@ -351,7 +352,7 @@ def trial_runner(cfg={}):
                     show_target = False
                     show_home = True   
             if (cfg['trial_type'] == 'error_clamp'):
-                if (get_dist(circle_pos, endPos) < 5 and velocity < 35):
+                if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
                     phase_2 = True
                     show_home = True
                     show_cursor = False
@@ -381,7 +382,7 @@ def trial_runner(cfg={}):
             if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
                 show_cursor = False
                 
-            if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < 5 and velocity < 35 and cfg['terminal_feedback'] == False):
+            if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35 and cfg['terminal_feedback'] == False):
                 timePos_dict['task_num'] = cfg['task_num']
                 timePos_dict['task_name'] = cfg['task_name']
                 timePos_dict['trial_num'] = cfg['trial_num']
@@ -402,7 +403,7 @@ def trial_runner(cfg={}):
                 
             elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
                 show_cursor = True
-                if (get_dist(circle_pos, startPos) < 5):
+                if (get_dist(circle_pos, startPos) < cfg['circle_radius']):
                     timePos_dict['task_num'] = cfg['task_num']
                     timePos_dict['task_name'] = cfg['task_name']
                     timePos_dict['trial_num'] = cfg['trial_num']
@@ -447,30 +448,30 @@ def run_experiment_2(fulls, experiment = []):
     arrowFill = visual.ShapeStim(win=Win,
                                  vertices=arrowFillVert,
                                  fillColor=[-1,-1,-1],
-                                 size=7,
+                                 size=cfg['circle_radius']*0.6,
                                  lineColor=[-1,-1,-1])
     arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
     arrow = visual.ShapeStim(win=Win,
                              vertices=arrowVert,
                              fillColor=[0, 0, 0],
-                             size=7,
+                             size=cfg['circle_radius']*0.6,
                              lineColor=[0,0,0])
     
     myCircle = visual.Circle(win=Win,
-                             radius=12,
+                             radius=cfg['circle_radius'],
                              edges=32,
                              units='pix',
                              fillColor=[0, 0, 0],
                              lineColor=[0, 0, 0])
     startCircle = visual.Circle(win=Win,
-                                radius=12,
+                                radius=cfg['circle_radius'],
                                 lineWidth=2,
                                 edges=32,
                                 units='pix',
                                 fillColor=[-1, -1, -1],
                                  lineColor=[0, 0, 0])
     endCircle = visual.Circle(win=Win,
-                              radius=12,
+                              radius=cfg['circle_radius'],
                               lineWidth=2,
                               edges=32,
                               units='pix',
@@ -486,6 +487,7 @@ def run_experiment_2(fulls, experiment = []):
         running[i]['end_circle'] = endCircle
         running[i]['mouse'] = Mouse
         running[i]['win'] = Win
+        running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
         running[i]['arrowFill_stim'] = arrowFill
         running[i]['task_num'] = i + 1
