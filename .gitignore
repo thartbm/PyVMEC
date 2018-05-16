@@ -1,6 +1,6 @@
 data/
 experiments/
-*.json
+#*.json
 *.csv
 
 
