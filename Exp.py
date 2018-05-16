@@ -25,8 +25,6 @@ def addWorkSpaceLimits(cfg = {}):
     cfg['active_width'] = trimmed_width
     cfg['active_height'] = trimmed_height
     cfg['circle_radius'] = trimmed_height*0.025
-    print ('active width is: ' + str(cfg['active_width']))
-    print ('active height is: ' + str(cfg['active_height']))
     return cfg
 
 class myMouse:
@@ -165,11 +163,13 @@ def trial_runner(cfg={}):
         while ((core.getTime() - cfg['time']) < cfg['pausetime']):
             counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
             instruction_text.draw()
-            counter_text.draw()
+            if (cfg['pausetime'] != 0):           
+                counter_text.draw()
             myWin.flip()
         if (cfg['pause_button_wait'] == True):
             instruction_text.draw()
-            counter_text.draw()
+            if (cfg['pausetime'] != 0):
+                counter_text.draw()
             end_text.draw()
             myWin.flip()
             event.waitKeys(keyList=['space'])      
@@ -230,8 +230,6 @@ def trial_runner(cfg={}):
     startCircle.setPos(startPos)
     arrow.setPos(startPos)
     arrowFill.setPos(startPos)
-    print('home position is: ' + str(startPos))
-    print('end position is: ' + str(endPos))
     while (core.getTime() - cfg['time']) < 60:
         ### mouse Position
         if (cfg['poll_type'] == 'psychopy'):

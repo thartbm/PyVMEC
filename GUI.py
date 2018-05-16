@@ -326,7 +326,19 @@ class MyFrame(wx.Frame):
         self.max_arrow_staticline.Show()
         self.target_distance_slider.Show()
         self.target_distance_txt.Show()
+        self.terminalfeedback_Radio.Show()
+        self.terminalfeedback_Radio_staticline.Show()
         ### Show ###
+        if (self.current_experiment[self.highlit_task_num]['trial_type'] == 'no_cursor'):
+            self.Rotation_angle_statictext.Hide()     
+            self.Rotation_angle_CB.Hide()
+            self.rotation_angle_staticline.Hide()
+            self.rot_change_statictext.Hide()
+            self.rotation_change_staticline.Hide()
+            self.lag_static_text.Hide()
+            self.lag_txt.Hide() 
+            self.terminalfeedback_Radio.Hide()
+            self.terminalfeedback_Radio_staticline.Hide()
         self.pause_static_text.Hide()
         self.pause_txt.Hide()
         self.PM_static_text.Hide()
@@ -358,6 +370,8 @@ class MyFrame(wx.Frame):
         self.max_arrow_staticline.Hide()
         self.target_distance_slider.Hide()
         self.target_distance_txt.Hide()
+        self.terminalfeedback_Radio.Hide()
+        self.terminalfeedback_Radio_staticline.Hide()
         ### Show ###
         self.pause_static_text.Show()
         self.pause_txt.Show()
@@ -418,6 +432,7 @@ class MyFrame(wx.Frame):
             self.target_distance_slider.SetValue(self.current_experiment[self.highlit_task_num]['target_distance_ratio']*100)
             self.rot_change_statictext.SetSelection(exp.rotation_num(self.current_experiment[self.highlit_task_num]['rotation_change_type'], True))
             self.Rotation_angle_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['rotation_angle']))
+            self.pause_check.SetValue(self.current_experiment[self.highlit_task_num]['pause_button_wait'])
             # Show or hide Pause menu
             if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
                 self.pause_experiment_show()
@@ -425,7 +440,7 @@ class MyFrame(wx.Frame):
                     self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
                     self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
                 except:
-                    self.pause_txt.SetValue('0')
+                    self.pause_txt.SetValue('3')
                     self.pause_message_txt.SetValue('')
             else:
                 self.regular_experiment_show()     
@@ -532,9 +547,12 @@ class MyFrame(wx.Frame):
                 return
             if not(os.path.exists("data/" + experimentFolder + "/" + dlg.GetValue())):
                 os.makedirs("data/" + experimentFolder + "/" + dlg.GetValue())
+            try:
+                self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
+                self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv", index=False)
+            except:
+                pass
             
-            self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
-            self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv", index=False)
         else:
             pass
         #### REFRESH PARTICIPANT LIST #####
@@ -554,15 +572,26 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Task Name', 'New Task')
         dlg.SetValue("Default")
         if dlg.ShowModal() == wx.ID_OK:
-            with open("general_configurations.json", "rb") as f:
-                new_task = json.load(f)
-                self.current_experiment.append(new_task[0])
-                self.highlit_task_num = len(self.current_experiment) - 1
-                self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
-                self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(self.target_distance_slider.GetValue()/100)
-                self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
-                self.current_experiment[self.highlit_task_num]['rotation_change_type'] = self.rot_change_statictext.GetStringSelection().lower()
-                f.close()
+            new_task = {}
+            self.current_experiment.append(new_task)
+            self.highlit_task_num = len(self.current_experiment) - 1
+            self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
+            self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(100/100)
+            self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+            self.current_experiment[self.highlit_task_num]['rotation_change_type'] = 'abrupt'
+            self.current_experiment[self.highlit_task_num]['rotation_angle'] = 0
+            self.current_experiment[self.highlit_task_num]['trial_type'] = 'cursor'
+            self.current_experiment[self.highlit_task_num]['terminal_feedback_time'] = 0.5
+            self.current_experiment[self.highlit_task_num]['num_targets'] = 3
+            self.current_experiment[self.highlit_task_num]['lag'] = 0
+            self.current_experiment[self.highlit_task_num]['num_trials'] = 3
+            self.current_experiment[self.highlit_task_num]['terminal_multiplier'] = 1.025
+            self.current_experiment[self.highlit_task_num]['pause_button_wait'] = False
+            self.current_experiment[self.highlit_task_num]['min_angle'] = 40
+            self.current_experiment[self.highlit_task_num]['max_angle'] = 140
+            self.current_experiment[self.highlit_task_num]['terminal_feedback'] = False
+            self.current_experiment[self.highlit_task_num]['pausetime'] = 3
+            self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
             with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
                 json.dump(self.current_experiment, f)
                 f.close()
