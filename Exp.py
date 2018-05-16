@@ -273,7 +273,7 @@ def trial_runner(cfg={}):
             stablize = True
         myCircle.setPos(circle_pos)
 ########################### SPECIAL ARROW CONDITIONS #########################
-        if (cfg['trial_type'] == 'no_cursor'):
+        if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
             arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
 ################################ SHOW OBJECTS ################################
         if (show_home == True):
@@ -291,6 +291,8 @@ def trial_runner(cfg={}):
                     phase_1 = True
                     show_home = False
                     show_target = True
+                    if (cfg['terminal_feedback'] == True):
+                        show_cursor = False
             elif (cfg['trial_type'] == 'no_cursor'):
                 if (get_dist(circle_pos, startPos) < 5 and velocity < 35):
                     phase_1 = True
@@ -303,17 +305,35 @@ def trial_runner(cfg={}):
 ################################ PHASE 2 #####################################
         if (phase_1 == True and phase_2 == False):
             if (cfg['trial_type'] == 'cursor'):
-                if (get_dist(circle_pos, endPos) < 5 and velocity < 35):
+                if (get_dist(circle_pos, endPos) < 5 and velocity < 35 and cfg['terminal_feedback'] == False):
                     phase_2 = True
                     show_home = True
                     show_target = False
+                if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos) + 5) and phase_1 == True):
+                    timer = core.getTime()
+                    phase_2 = True
+                    show_home = True
+                    show_target = False
+                    while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
+                        myCircle.draw()
+                        if (cfg['poll_type'] == 'psychopy'):
+                            timeArray.append(core.getTime() - myTime)
+                            mouseposXArray.append(myMouse.getPos()[0])
+                            mouseposYArray.append(myMouse.getPos()[1] + cfg['active_height']/2)
+                        elif (cfg['poll_type'] == 'x11'):
+                            timeArray.append(myMouse.Pos()[2] - myTime)
+                            mouseposXArray.append(myMouse.Pos()[0])
+                            mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
+                        cursorposXArray.append(rotated_X)
+                        cursorposYArray.append(rotated_Y + cfg['active_height']/2)
+                        myWin.flip()
             if (cfg['trial_type'] == 'no_cursor'):
                 ##### STOP WATCH ####
-                if (velocity < 30 and timerSet == False and cfg['terminal_feedback'] == False):
+                if (velocity < 30 and timerSet == False):
                     timer_timestamp = current_timestamp
                     timerSet = True
                 stop_time = current_timestamp - timer_timestamp
-                if (velocity > 30 and timerSet == True and cfg['terminal_feedback'] == False):
+                if (velocity > 30 and timerSet == True):
                     timerSet = False
                     stop_time = 0  
                 if (get_dist(circle_pos, startPos) > 10 and nc_check_1 == False):
@@ -344,48 +364,17 @@ def trial_runner(cfg={}):
         cursorposYArray.append(circle_pos[1] + cfg['active_height']/2)
         myWin.flip()
 ################################ PHASE 3 #####################################
-        if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos) + 5) and phase_1 == True):
-                timer = core.getTime()
-                while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
-                    myCircle.draw()
-                    if (cfg['poll_type'] == 'psychopy'):
-                        timeArray.append(core.getTime() - myTime)
-                        mouseposXArray.append(myMouse.getPos()[0])
-                        mouseposYArray.append(myMouse.getPos()[1] + cfg['active_height']/2)
-                    elif (cfg['poll_type'] == 'x11'):
-                        timeArray.append(myMouse.Pos()[2] - myTime)
-                        mouseposXArray.append(myMouse.Pos()[0])
-                        mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
-                    cursorposXArray.append(rotated_X)
-                    cursorposYArray.append(rotated_Y + cfg['active_height']/2)
-                    myWin.flip()
-                timePos_dict['task_num'] = cfg['task_num']
-                timePos_dict['task_name'] = cfg['task_name']
-                timePos_dict['trial_num'] = cfg['trial_num']
-                timePos_dict['trial_type'] = cfg['trial_type']
-                timePos_dict['targetangle_deg'] = cfg['target_angle']
-                timePos_dict['homex_px'] = startPos[0]
-                timePos_dict['homey_px'] = startPos[1] + cfg['active_height']/2
-                timePos_dict['targetx_px'] = endPos[0]
-                timePos_dict['targety_px'] = endPos[1] + cfg['active_height']/2
-                timePos_dict['time_s'] = timeArray
-                timePos_dict['mousex_px'] = mouseposXArray
-                timePos_dict['mousey_px'] = mouseposYArray
-                timePos_dict['cursorx_px'] = cursorposXArray
-                timePos_dict['cursory_px'] = cursorposYArray
-                timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
-                timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
-                return timePos_dict  
+        
         if (phase_1 == True and phase_2 == True):
             
-            if (cfg['trial_type'] == 'no_cursor' and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
+            if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
                 show_arrow = True
-            elif (cfg['trial_type'] == 'no_cursor' and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
+            elif ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
                 show_arrow = False
-            if (cfg['trial_type'] == 'no_cursor' and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
+            if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
                 show_cursor = False
                 
-            if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < 5 and velocity < 35):
+            if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < 5 and velocity < 35 and cfg['terminal_feedback'] == False):
                 timePos_dict['task_num'] = cfg['task_num']
                 timePos_dict['task_name'] = cfg['task_name']
                 timePos_dict['trial_num'] = cfg['trial_num']
@@ -404,7 +393,7 @@ def trial_runner(cfg={}):
                 timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)            
                 return timePos_dict
                 
-            elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp') and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
+            elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
                 show_cursor = True
                 if (get_dist(circle_pos, startPos) < 5):
                     timePos_dict['task_num'] = cfg['task_num']
