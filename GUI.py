@@ -108,6 +108,7 @@ class MyFrame(wx.Frame):
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, (" Rotation Angle CW"))
         self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
         self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
         self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
@@ -151,6 +152,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_SPINCTRL, self.num_trial_choose, self.num_trial_CB)
         self.Bind(wx.EVT_COMBOBOX, self.rot_angle_choose, self.Rotation_angle_CB)
         self.Bind(wx.EVT_RADIOBOX, self.Rot_Change_Press, self.rot_change_statictext)
+        self.Bind(wx.EVT_RADIOBOX, self.rotation_angle_direction_press, self.rotation_angle_direction)        
         self.Bind(wx.EVT_TEXT, self.Lag_Enter, self.lag_txt)
         self.Bind(wx.EVT_CHECKBOX, self.terminalfeedback_check_press, self.terminalfeedback_Radio)
         ### Pause events
@@ -285,6 +287,7 @@ class MyFrame(wx.Frame):
         sizer_9.Add(self.Rotation_angle_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.Rotation_angle_CB, 0, wx.LEFT, 2)
         sizer_9.Add(self.rotation_angle_staticline, 0, wx.BOTTOM, 2)
+        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
         sizer_9.Add(self.rot_change_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.rotation_change_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
@@ -328,11 +331,13 @@ class MyFrame(wx.Frame):
         self.target_distance_txt.Show()
         self.terminalfeedback_Radio.Show()
         self.terminalfeedback_Radio_staticline.Show()
+        self.rotation_angle_direction.Show()
         ### Show ###
         if (self.current_experiment[self.highlit_task_num]['trial_type'] == 'no_cursor'):
             self.Rotation_angle_statictext.Hide()     
             self.Rotation_angle_CB.Hide()
             self.rotation_angle_staticline.Hide()
+            self.rotation_angle_direction.Hide()
             self.rot_change_statictext.Hide()
             self.rotation_change_staticline.Hide()
             self.lag_static_text.Hide()
@@ -372,6 +377,7 @@ class MyFrame(wx.Frame):
         self.target_distance_txt.Hide()
         self.terminalfeedback_Radio.Hide()
         self.terminalfeedback_Radio_staticline.Hide()
+        self.rotation_angle_direction.Hide()
         ### Show ###
         self.pause_static_text.Show()
         self.pause_txt.Show()
@@ -432,6 +438,7 @@ class MyFrame(wx.Frame):
             self.target_distance_slider.SetValue(self.current_experiment[self.highlit_task_num]['target_distance_ratio']*100)
             self.rot_change_statictext.SetSelection(exp.rotation_num(self.current_experiment[self.highlit_task_num]['rotation_change_type'], True))
             self.Rotation_angle_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['rotation_angle']))
+            self.rotation_angle_direction.SetSelection(exp.rotation_direction_num(self.current_experiment[self.highlit_task_num]['rotation_angle_direction'], True))
             self.pause_check.SetValue(self.current_experiment[self.highlit_task_num]['pause_button_wait'])
             # Show or hide Pause menu
             if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
@@ -592,6 +599,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['terminal_feedback'] = False
             self.current_experiment[self.highlit_task_num]['pausetime'] = 3
             self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
+            self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
             with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
                 json.dump(self.current_experiment, f)
                 f.close()
@@ -904,6 +912,10 @@ class MyFrame(wx.Frame):
         event.Skip()
     def terminalfeedback_check_press(self, event):
         self.current_experiment[self.highlit_task_num]['terminal_feedback'] = event.IsChecked()
+        event.Skip()
+    
+    def rotation_angle_direction_press(self, event):
+        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
         event.Skip()
         
 ############################### EXPERIMENT CODE ##############################

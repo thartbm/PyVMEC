@@ -97,6 +97,19 @@ def rotation_num(rotation_type, function):
             return 'abrupt'
         if (rotation_type == 1):
             return 'gradual'
+            
+def rotation_direction_num(rotation_direction, function):
+    if (function == True):
+        if (rotation_direction == 'Counter-clockwise'):
+            return 0
+        elif (rotation_direction == 'Clockwise'):
+            return 1
+    if (function == False):
+        if (rotation_direction == 0):
+            return 'Counter-clockwise'
+        if (rotation_direction == 1):
+            return 'Clockwise'
+
 
 def cart2pol(coord=[]):
     rho = np.sqrt(coord[0]**2 + coord[1]**2)
@@ -174,6 +187,10 @@ def trial_runner(cfg={}):
             myWin.flip()
             event.waitKeys(keyList=['space'])      
         return None
+    try:
+        cfg['x11_mouse'].Pos()[2]
+    except:
+        cfg['poll_type'] == 'psychopy'
         
     end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
     end_Y = (cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))) - cfg['active_height']/2
