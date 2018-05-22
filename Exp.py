@@ -187,10 +187,6 @@ def trial_runner(cfg={}):
             myWin.flip()
             event.waitKeys(keyList=['space'])      
         return None
-    try:
-        cfg['x11_mouse'].Pos()[2]
-    except:
-        cfg['poll_type'] == 'psychopy'
         
     end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
     end_Y = (cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))) - cfg['active_height']/2
@@ -500,7 +496,10 @@ def run_experiment_2(fulls, experiment = []):
     
     Mouse = event.Mouse(win=Win, visible=False)
     for i in range (0, len(experiment)):
-        running[i]['x11_mouse'] = myMouse()
+        try:
+            running[i]['x11_mouse'] = myMouse()
+        except:
+            running[i]['poll_type'] = 'psychopy'
         running[i]['cursor_circle'] = myCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
