@@ -8,7 +8,10 @@ import os.path
 import random
 import Tkinter as tk
 import copy
-from ctypes import *
+try:
+    from ctypes import *
+except:
+    pass
 from time import time
 
 
@@ -27,23 +30,25 @@ def addWorkSpaceLimits(cfg = {}):
     cfg['circle_radius'] = trimmed_height*0.025
     return cfg
 
-class myMouse:
-  Xlib = CDLL("libX11.so.6")
-  display = Xlib.XOpenDisplay(None)
-  if display == 0: sys.exit(2)
-  w = Xlib.XRootWindow(display, c_int(0))
-  (root_id, child_id) = (c_uint32(), c_uint32())
-  (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
-  mask = c_uint()
-  
-  width = root.winfo_screenwidth()
-  height = root.winfo_screenheight()
-
-  def Pos(self):
-    ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
-    if ret == 0: sys.exit(1)
-    return [self.root_x.value - (self.width/2), -1 * (self.root_y.value - (self.height/2)), time()] # c_int can't be used by regular Python to do math, but the values of c_ints are ints - also, we return the current time
-
+try:
+    class myMouse:
+      Xlib = CDLL("libX11.so.6")
+      display = Xlib.XOpenDisplay(None)
+      if display == 0: sys.exit(2)
+      w = Xlib.XRootWindow(display, c_int(0))
+      (root_id, child_id) = (c_uint32(), c_uint32())
+      (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
+      mask = c_uint()
+      
+      width = root.winfo_screenwidth()
+      height = root.winfo_screenheight()
+    
+      def Pos(self):
+        ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
+        if ret == 0: sys.exit(1)
+        return [self.root_x.value - (self.width/2), -1 * (self.root_y.value - (self.height/2)), time()] # c_int can't be used by regular Python to do math, but the values of c_ints are ints - also, we return the current time
+except:
+    pass
 def myRounder(x, base):
     return int(base * round(float(x)/base))    
     
@@ -73,9 +78,9 @@ def task_num(given_task, function):
             return 0
         if (given_task == "no_cursor"):
             return 1
-        if (given_task == "pause"):
-            return 2
         if (given_task == "error_clamp"):
+            return 2
+        if (given_task == "pause"):
             return 3
     elif (function == False):
         if (given_task == 0):
@@ -83,9 +88,9 @@ def task_num(given_task, function):
         if (given_task == 1):
             return "no_cursor"
         if (given_task == 2):
-            return "pause"
-        if (given_task == 3):
             return "error_clamp"
+        if (given_task == 3):
+            return "pause"
 def rotation_num(rotation_type, function):
     if (function == True):
         if (rotation_type == 'abrupt'):
@@ -243,6 +248,11 @@ def trial_runner(cfg={}):
     startCircle.setPos(startPos)
     arrow.setPos(startPos)
     arrowFill.setPos(startPos)
+    ### Rotation direction
+    if cfg['rotation_angle_direction'] == 'Counter-clockwise':
+        rot_dir = 1
+    elif cfg['rotation_angle_direction'] == 'Clockwise':
+        rot_dir = -1
     while (core.getTime() - cfg['time']) < 60:
         ### mouse Position
         if (cfg['poll_type'] == 'psychopy'):
@@ -257,8 +267,8 @@ def trial_runner(cfg={}):
         if (prev_timestamp != 0):
             change_in_time = current_timestamp - prev_timestamp
             velocity = (np.linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
-        rotated_X = current_pos[0]*math.cos(math.radians(cfg['rotation_angle'])) - current_pos[1]*math.sin(math.radians(cfg['rotation_angle']))
-        rotated_Y = current_pos[0]*math.sin(math.radians(cfg['rotation_angle'])) + current_pos[1]*math.cos(math.radians(cfg['rotation_angle']))    
+        rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['rotation_angle']))
+        rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['rotation_angle']))    
         if (cfg['trial_type'] == 'cursor'):
             if (cfg['rotation_angle'] == 0):
                 circle_pos = mousePos
@@ -350,11 +360,11 @@ def trial_runner(cfg={}):
                         myWin.flip()
             if (cfg['trial_type'] == 'no_cursor'):
                 ##### STOP WATCH ####
-                if (velocity < 30 and timerSet == False):
+                if (velocity < 1 and timerSet == False):
                     timer_timestamp = current_timestamp
                     timerSet = True
                 stop_time = current_timestamp - timer_timestamp
-                if (velocity > 30 and timerSet == True):
+                if (velocity > 1 and timerSet == True):
                     timerSet = False
                     stop_time = 0  
                 if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):

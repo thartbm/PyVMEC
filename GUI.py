@@ -54,7 +54,7 @@ class MyFrame(wx.Frame):
         
         ################### General Configuration Settings ###################
         self.general_cfg = {}
-        self.FULLSCREEN = True
+        self.FULLSCREEN = False
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
@@ -87,7 +87,7 @@ class MyFrame(wx.Frame):
         self.task_list_box = wx.ListBox(self, wx.ID_ANY, choices=self.task_list)
         self.Plus_Button = wx.Button(self, wx.ID_ANY, ("New"))
         self.Minus_Button = wx.Button(self, wx.ID_ANY, ("Delete"))
-        self.radio_box_1 = wx.RadioBox(self, wx.ID_ANY, ("Task Type"), choices=[("Cursor"), ("No Cursor"), ("Pause"), ("Error Clamp")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+        self.radio_box_1 = wx.RadioBox(self, wx.ID_ANY, ("Task Type"), choices=[("Cursor"), ("No Cursor"), ("Error Clamp"), ("Pause")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.static_line_3 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.terminalfeedback_Radio_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.min_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Minimum T-Angle"))        
