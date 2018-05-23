@@ -235,6 +235,7 @@ def trial_runner(cfg={}):
     prev_X_cursor = 0
     prev_Y_cursor = 0
     velocity = 0
+    pixels_per_sample = 0
     ### Instantiating return dictionary and arrays within it
     timePos_dict = {}
     timeArray = []
@@ -267,8 +268,9 @@ def trial_runner(cfg={}):
         if (prev_timestamp != 0):
             change_in_time = current_timestamp - prev_timestamp
             velocity = (np.linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
-        rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['rotation_angle']))
-        rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['rotation_angle']))    
+            pixels_per_sample = velocity*change_in_time
+        rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
+        rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
         if (cfg['trial_type'] == 'cursor'):
             if (cfg['rotation_angle'] == 0):
                 circle_pos = mousePos
@@ -360,11 +362,11 @@ def trial_runner(cfg={}):
                         myWin.flip()
             if (cfg['trial_type'] == 'no_cursor'):
                 ##### STOP WATCH ####
-                if (velocity < 1 and timerSet == False):
+                if (pixels_per_sample <= 1 and timerSet == False):
                     timer_timestamp = current_timestamp
                     timerSet = True
                 stop_time = current_timestamp - timer_timestamp
-                if (velocity > 1 and timerSet == True):
+                if (pixels_per_sample > 1 and timerSet == True):
                     timerSet = False
                     stop_time = 0  
                 if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):
@@ -413,6 +415,7 @@ def trial_runner(cfg={}):
                 timePos_dict['trial_num'] = cfg['trial_num']
                 timePos_dict['trial_type'] = cfg['trial_type']
                 timePos_dict['targetangle_deg'] = cfg['target_angle']
+                timePos_dict['rotation_angle'] = rot_dir*cfg['rotation_angle']
                 timePos_dict['homex_px'] = startPos[0]
                 timePos_dict['homey_px'] = startPos[1] + cfg['active_height']/2
                 timePos_dict['targetx_px'] = endPos[0]
@@ -446,20 +449,6 @@ def trial_runner(cfg={}):
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                     timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
                     return timePos_dict
-################################## CREATE EXPERIMENT ###############
-# This function utilizes the above function to create a list of tasks
-# to be used to generate a full experiment
-def create_experiment(general_cfg = {}):
-    experiment= []
-    add_task = raw_input("Would you like to create an experiment?(Y/N): ")
-    task_poll_type = raw_input("Set polling method?(x11/psychopy): ")
-    while (add_task.lower() == 'y'):
-        new_task = create_task(general_cfg)
-        new_task['poll_type'] = task_poll_type.lower()
-        experiment.append(new_task)
-        add_task = raw_input("Would you like to create another task?(Y/N): ")
-    return experiment
-
 
 ############################# RUN EXPERIMENT V2 ###############################
 def run_experiment_2(fulls, experiment = []):
@@ -523,6 +512,7 @@ def run_experiment_2(fulls, experiment = []):
         running[i]['min_distance'] = cfg['active_height']/2
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, -cfg['active_height']/2)
+        running[i]['current_rotation_angle'] = 0
         targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         fulltargetList = tuple(targetList)
         if (running[i]['trial_type'] != 'pause'):
@@ -531,17 +521,21 @@ def run_experiment_2(fulls, experiment = []):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
+                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != 'rotation_angle' and trial_num > 0):
+                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
+                elif (running[i]['rotation_change_type'] == 'abrupt'):
+                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 chosen_target = random.choice(targetList)
                 running[i]['target_angle'] = chosen_target
                 targetList.remove(chosen_target)
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
                 exp = trial_runner(running[i])
-                df_exp = pd.DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
+                df_exp = pd.DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
                 end_exp = pd.concat([end_exp, df_exp])
         if (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
     running[i]['win'].close()
-    end_exp.drop(end_exp.index[0])
     return end_exp
