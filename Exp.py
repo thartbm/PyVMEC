@@ -525,7 +525,7 @@ def run_experiment_2(fulls, experiment = []):
                     running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
+#                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 chosen_target = random.choice(targetList)
                 running[i]['target_angle'] = chosen_target
                 targetList.remove(chosen_target)
