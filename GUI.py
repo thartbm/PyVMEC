@@ -169,7 +169,7 @@ class MyFrame(wx.Frame):
         
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
-        self.SetTitle(("Visuomotor"))
+        self.SetTitle(("PyVMEC"))
 #        self.SetSize((798, 462)) ## Set size to this when Pause is selected
         self.SetSize((698, 500))
         self.Experiment_statictext.SetMinSize((70, 17))
@@ -398,9 +398,9 @@ class MyFrame(wx.Frame):
         else:
             self.task_list_box.Set(self.task_list)
         #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists("data"+ os.path.sep + experimentFolder)):
-            os.makedirs("data"+ os.path.sep + experimentFolder)
-        self.participant_list = os.listdir("data"+ os.path.sep + self.current_experiment_name)
+        if not(os.path.exists(os.path.join("data", experimentFolder))):
+            os.makedirs(os.path.join("data",experimentFolder))
+        self.participant_list = os.listdir(os.path.join("data", self.current_experiment_name))
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -920,9 +920,9 @@ class MyFrame(wx.Frame):
 # end of class MyFrame
 class MyApp(wx.App):
     def OnInit(self):
-        Virtuomotor = MyFrame(None, wx.ID_ANY, "")
-        self.SetTopWindow(Virtuomotor)
-        Virtuomotor.Show()
+        PyVMEC = MyFrame(None, wx.ID_ANY, "")
+        self.SetTopWindow(PyVMEC)
+        PyVMEC.Show()
         return True
 
 # end of class MyApp
