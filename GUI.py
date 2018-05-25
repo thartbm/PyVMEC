@@ -39,7 +39,7 @@ class MyFrame(wx.Frame):
         self.highlit_task_num = 0
         self.min_angle_chosen = 40
         self.max_angle_chosen = 140
-        self.num_trial_mult = 0
+        self.num_trial_mult = 3
         self.num_target_chosen = 1
         self.num_trial_chosen = 1
         self.rotation_angle_chosen = 0
@@ -580,7 +580,7 @@ class MyFrame(wx.Frame):
             self.highlit_task_num = len(self.current_experiment) - 1
             self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
             self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(100/100)
-            self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+            self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = 33
             self.current_experiment[self.highlit_task_num]['rotation_change_type'] = 'abrupt'
             self.current_experiment[self.highlit_task_num]['rotation_angle'] = 0
             self.current_experiment[self.highlit_task_num]['trial_type'] = 'cursor'
