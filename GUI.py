@@ -479,6 +479,7 @@ class MyFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             new_experiment = []
             experimentFolder = dlg.GetValue()
+            self.highlit_experiment = dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
                 json.dump(new_experiment, f)
             f.close()
