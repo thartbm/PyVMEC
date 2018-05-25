@@ -456,11 +456,7 @@ def run_experiment_2(fulls, experiment = []):
     running = copy.deepcopy(experiment)
     cfg = {}
     addWorkSpaceLimits(cfg)
-<<<<<<< HEAD
-    Win = visual.Window([cfg['active_width'], (cfg['active_height']*3)/2], winType='pygame', colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')    
-=======
-    Win = visual.Window([cfg['active_width'], (cfg['active_height']*3)/2], winType='pygame',colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')    
->>>>>>> master
+    Win = visual.Window([cfg['active_width'], (cfg['active_height']*3)/2], winType='pygame', colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
     ### Configure visual feedback settings here
     arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
     arrowFill = visual.ShapeStim(win=Win,
