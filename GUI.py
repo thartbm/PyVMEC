@@ -478,6 +478,7 @@ class MyFrame(wx.Frame):
             del self.experiment_list_trimmed[:]
         if dlg.ShowModal() == wx.ID_OK:
             new_experiment = []
+            experimentFolder = dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
                 json.dump(new_experiment, f)
             f.close()
@@ -487,9 +488,10 @@ class MyFrame(wx.Frame):
             self.current_experiment_name = dlg.GetValue()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
                 self.current_experiment = json.load(f)
-                del self.task_list[:]
-            
+                del self.task_list[:]     
             self.task_list_box.Set(["Empty"])
+            if not(os.path.exists(os.path.join("data", experimentFolder))):
+                os.makedirs(os.path.join("data",experimentFolder))
         dlg.Destroy()
         event.Skip()
 
