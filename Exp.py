@@ -1,6 +1,7 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
 import os
 from psychopy import event, visual, core
+import pygame as pg
 import numpy as np
 import math
 import pandas as pd
@@ -8,6 +9,8 @@ import os.path
 import random
 import Tkinter as tk
 import copy
+import sys
+
 try:
     from ctypes import *
 except:
@@ -190,7 +193,16 @@ def trial_runner(cfg={}):
                 counter_text.draw()
             end_text.draw()
             myWin.flip()
-            event.waitKeys(keyList=['space'])      
+#            event.waitKeys(keyList=['space'])
+            pg.event.clear()
+            while True:
+                event = pg.event.wait()
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SPACE:
+                        return None
         return None
         
     end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
@@ -534,7 +546,7 @@ def run_experiment_2(fulls, experiment = []):
                 exp = trial_runner(running[i])
                 df_exp = pd.DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
                 end_exp = pd.concat([end_exp, df_exp])
-        if (running[i]['trial_type'] == 'pause'):
+        elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
     running[i]['win'].close()
