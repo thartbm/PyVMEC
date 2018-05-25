@@ -206,8 +206,8 @@ class MyFrame(wx.Frame):
         self.task_list_box.SetSelection(0)
         self.radio_box_1.SetSelection(0)
         
-        self.min_angle_CB.SetTickFreq(5, 1) #    
-        self.max_angle_CB.SetTickFreq(5, 1) #
+#        self.min_angle_CB.SetTickFreq(5, 1) 
+#        self.max_angle_CB.SetTickFreq(5, 1) 
         
         self.Move_Up_Button.SetMinSize((30, 30))
         self.Move_Down_Button.SetMinSize((30, 30))
