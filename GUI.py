@@ -15,11 +15,11 @@ class MyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
         ### Gather Experiment names
-        self.experiment_folder = "experiments/"
+        self.experiment_folder = "experiments" + os.path.sep
         if not(os.path.exists(self.experiment_folder)):
             os.makedirs(self.experiment_folder)
-        if not(os.path.exists("data/")):
-            os.makedirs("data/")
+        if not(os.path.exists("data" + os.path.sep)):
+            os.makedirs("data" + os.path.sep)
         self.experiment_list = os.listdir(self.experiment_folder)
         self.experiment_list_trimmed = []
         for i in self.experiment_list:
@@ -398,9 +398,9 @@ class MyFrame(wx.Frame):
         else:
             self.task_list_box.Set(self.task_list)
         #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists("data/" + experimentFolder)):
-            os.makedirs("data/"+ experimentFolder)
-        self.participant_list = os.listdir("data/" + self.current_experiment_name)
+        if not(os.path.exists("data"+ os.path.sep + experimentFolder)):
+            os.makedirs("data"+ os.path.sep + experimentFolder)
+        self.participant_list = os.listdir("data"+ os.path.sep + self.current_experiment_name)
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -517,9 +517,9 @@ class MyFrame(wx.Frame):
         else:
             self.task_list_box.Set(self.task_list)
        #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists("data/" + experimentFolder)):
-            os.makedirs("data/"+ experimentFolder)
-        self.participant_list = os.listdir("data/" + self.current_experiment_name)
+        if not(os.path.exists("data"+ os.path.sep + experimentFolder)):
+            os.makedirs("data"+ os.path.sep + experimentFolder)
+        self.participant_list = os.listdir("data"+ os.path.sep + self.current_experiment_name)
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -543,25 +543,25 @@ class MyFrame(wx.Frame):
         dlg.SetValue("Default")
         experimentFolder = self.current_experiment_name
         if dlg.ShowModal() ==wx.ID_OK:  
-            if (os.path.exists("data/" + experimentFolder + "/" + dlg.GetValue())):
+            if (os.path.exists("data"+os.path.sep + experimentFolder + os.path.sep + dlg.GetValue())):
                 dlg2 = wx.MessageDialog(self, "Participant already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg2.ShowModal()
                 dlg2.Destroy()
                 return
-            if not(os.path.exists("data/" + experimentFolder + "/" + dlg.GetValue())):
-                os.makedirs("data/" + experimentFolder + "/" + dlg.GetValue())
+            if not(os.path.exists(os.path.join("data", experimentFolder, dlg.GetValue()))):
+                os.makedirs(os.path.join("data", experimentFolder, dlg.GetValue()))
             try:
                 self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
-                self.experiment_run.to_csv(path_or_buf = "data/" + experimentFolder + "/" + dlg.GetValue() + "/" + dlg.GetValue() + ".csv", index=False)
+                self.experiment_run.to_csv(path_or_buf = os.path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except:
                 pass
             
         else:
             pass
         #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists("data/" + experimentFolder)):
-            os.makedirs("data/"+ experimentFolder)
-        self.participant_list = os.listdir("data/" + self.current_experiment_name)
+        if not(os.path.exists(os.path.join("data", experimentFolder))):
+            os.makedirs(os.path.join("data", experimentFolder))
+        self.participant_list = os.listdir(os.path.join("data", self.current_experiment_name))
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
