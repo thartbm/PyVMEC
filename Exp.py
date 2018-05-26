@@ -1,14 +1,12 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
-import os
 from psychopy import event, visual, core
 import pygame as pg
-import numpy as np
+from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray
 import math
-import pandas as pd
-import os.path
-import random
-import Tkinter as tk
-import copy
+from pandas import concat, DataFrame
+from random import choice
+from Tkinter import Tk
+from copy import deepcopy
 import sys
 
 try:
@@ -18,7 +16,7 @@ except:
 from time import time
 
 
-root = tk.Tk()
+root = Tk()
 def addWorkSpaceLimits(cfg = {}):
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
@@ -31,6 +29,7 @@ def addWorkSpaceLimits(cfg = {}):
     cfg['active_width'] = trimmed_width
     cfg['active_height'] = trimmed_height
     cfg['circle_radius'] = trimmed_height*0.025
+    cfg['screen_dimensions'] = [screen_width, screen_height]
     return cfg
 
 try:
@@ -120,28 +119,28 @@ def rotation_direction_num(rotation_direction, function):
 
 
 def cart2pol(coord=[]):
-    rho = np.sqrt(coord[0]**2 + coord[1]**2)
-    phi = np.arctan2(coord[1], coord[0])
+    rho = sqrt(coord[0]**2 + coord[1]**2)
+    phi = arctan2(coord[1], coord[0])
     return [rho, phi]
 
 def pol2cart(rho, phi):
-    x = rho * np.cos(phi)
-    y = rho * np.sin(phi)
+    x = rho * cos(phi)
+    y = rho * sin(phi)
     return(x, y)
         
 def get_dist(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
-    return np.linalg.norm(vector)
+    return linalg.norm(vector)
 def get_vect(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return vector
 
 def get_uvect(vector):
-    uvect = vector/np.linalg.norm(vector)
+    uvect = vector/linalg.norm(vector)
     return uvect
 def get_vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
-    scalar_proj = np.dot(moving_vect, static_uvect)
+    scalar_proj = dot(moving_vect, static_uvect)
     return scalar_proj*static_uvect      
 def angle_split(min_angle, max_angle, num_splits):
     angles = []
@@ -286,7 +285,7 @@ def trial_runner(cfg={}):
 ########################## SPECIAL CURSOR CONFIGURATIONS #####################
         if (prev_timestamp != 0):
             change_in_time = current_timestamp - prev_timestamp
-            velocity = (np.linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
+            velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
             pixels_per_sample = velocity*change_in_time
         rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
         rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
@@ -300,7 +299,7 @@ def trial_runner(cfg={}):
         elif (cfg['trial_type'] == 'error_clamp'):
             circle_pos = startPos
             vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
-            vector_proj = np.ndarray.tolist(vector_proj_array)
+            vector_proj = ndarray.tolist(vector_proj_array)
             clamped_X_vector = vector_proj[0]
             clamped_Y_vector = vector_proj[1]
             if (phase_1 == False):
@@ -471,11 +470,11 @@ def trial_runner(cfg={}):
 
 ############################# RUN EXPERIMENT V2 ###############################
 def run_experiment_2(fulls, experiment = []):
-    end_exp = pd.DataFrame({})
-    running = copy.deepcopy(experiment)
+    end_exp = DataFrame({})
+    running = deepcopy(experiment)
     cfg = {}
     addWorkSpaceLimits(cfg)
-    Win = visual.Window([cfg['active_width'], (cfg['active_height']*3)/2], winType='pygame', colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+    Win = visual.Window(cfg['screen_dimensions'], winType='pygame', colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
     ### Configure visual feedback settings here
     arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
     arrowFill = visual.ShapeStim(win=Win,
@@ -545,7 +544,7 @@ def run_experiment_2(fulls, experiment = []):
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
-                chosen_target = random.choice(targetList)
+                chosen_target = choice(targetList)
                 running[i]['target_angle'] = chosen_target
                 targetList.remove(chosen_target)
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
@@ -554,8 +553,8 @@ def run_experiment_2(fulls, experiment = []):
                 if exp == 'escaped':
                     return end_exp
                 else:
-                    df_exp = pd.DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
-                    end_exp = pd.concat([end_exp, df_exp])
+                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
+                    end_exp = concat([end_exp, df_exp])
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])

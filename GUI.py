@@ -1,12 +1,10 @@
 # this file has functions that create, populate and update the GUI
 import wx
-
-import gettext
-import math
-import os
-import json
-import pandas as pd
-import os.path
+from gettext import install
+from math import ceil
+from os import path, makedirs, remove, listdir, rename
+from json import load, dump
+#import path
 import Tkinter as tk
 import Exp as exp
 #import VMEC16 as vm
@@ -15,12 +13,12 @@ class MyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
         ### Gather Experiment names
-        self.experiment_folder = "experiments" + os.path.sep
-        if not(os.path.exists(self.experiment_folder)):
-            os.makedirs(self.experiment_folder)
-        if not(os.path.exists("data" + os.path.sep)):
-            os.makedirs("data" + os.path.sep)
-        self.experiment_list = os.listdir(self.experiment_folder)
+        self.experiment_folder = "experiments" + path.sep
+        if not(path.exists(self.experiment_folder)):
+            makedirs(self.experiment_folder)
+        if not(path.exists("data" + path.sep)):
+            makedirs("data" + path.sep)
+        self.experiment_list = listdir(self.experiment_folder)
         self.experiment_list_trimmed = []
         for i in self.experiment_list:
             self.experiment_list_trimmed.append(i.replace(".json", ""))
@@ -54,7 +52,7 @@ class MyFrame(wx.Frame):
         
         ################### General Configuration Settings ###################
         self.general_cfg = {}
-        self.FULLSCREEN = True
+        self.FULLSCREEN = False
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
@@ -389,7 +387,7 @@ class MyFrame(wx.Frame):
         experimentFolder = self.highlit_experiment
         self.current_experiment_name = event.GetString()
         with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
-            self.current_experiment = json.load(f)
+            self.current_experiment = load(f)
             del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(self.current_experiment[i]["task_name"])
@@ -398,9 +396,9 @@ class MyFrame(wx.Frame):
         else:
             self.task_list_box.Set(self.task_list)
         #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists(os.path.join("data", experimentFolder))):
-            os.makedirs(os.path.join("data",experimentFolder))
-        self.participant_list = os.listdir(os.path.join("data", self.current_experiment_name))
+        if not(path.exists(path.join("data", experimentFolder))):
+            makedirs(path.join("data",experimentFolder))
+        self.participant_list = listdir(path.join("data", self.current_experiment_name))
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -474,25 +472,25 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Name', 'Create new experiment')
         dlg.SetValue("Default")
         
-        if os.listdir(self.experiment_folder) == []:
+        if listdir(self.experiment_folder) == []:
             del self.experiment_list_trimmed[:]
         if dlg.ShowModal() == wx.ID_OK:
             new_experiment = []
             experimentFolder = dlg.GetValue()
             self.highlit_experiment = dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
-                json.dump(new_experiment, f)
+                dump(new_experiment, f)
             f.close()
             self.experiment_list_trimmed.append(dlg.GetValue())
             self.exp_list_box.Set(self.experiment_list_trimmed)
             self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
             self.current_experiment_name = dlg.GetValue()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
-                self.current_experiment = json.load(f)
+                self.current_experiment = load(f)
                 del self.task_list[:]     
             self.task_list_box.Set(["Empty"])
-            if not(os.path.exists(os.path.join("data", experimentFolder))):
-                os.makedirs(os.path.join("data",experimentFolder))
+            if not(path.exists(path.join("data", experimentFolder))):
+                makedirs(path.join("data",experimentFolder))
         dlg.Destroy()
         event.Skip()
 
@@ -500,9 +498,9 @@ class MyFrame(wx.Frame):
         dlg = wx.MessageDialog(self, 'Confirm Deleting %s\n' % self.highlit_experiment,
                                'Delete Confirmation')
         if dlg.ShowModal() == wx.ID_OK:
-            os.remove(self.experiment_folder + self.highlit_experiment + ".json")
+            remove(self.experiment_folder + self.highlit_experiment + ".json")
             self.experiment_list_trimmed.remove(self.highlit_experiment)
-            if os.listdir(self.experiment_folder) == []:
+            if listdir(self.experiment_folder) == []:
                 self.experiment_list_trimmed = ["Empty"]
             self.exp_list_box.Set(self.experiment_list_trimmed)
         dlg.Destroy()
@@ -511,7 +509,7 @@ class MyFrame(wx.Frame):
     def Load_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         experimentFolder = self.highlit_experiment
         with open(self.experiment_folder+self.highlit_experiment+".json", "rb") as f:
-            self.current_experiment = json.load(f)
+            self.current_experiment = load(f)
             del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(self.current_experiment[i]["task_name"])
@@ -520,9 +518,9 @@ class MyFrame(wx.Frame):
         else:
             self.task_list_box.Set(self.task_list)
        #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists("data"+ os.path.sep + experimentFolder)):
-            os.makedirs("data"+ os.path.sep + experimentFolder)
-        self.participant_list = os.listdir("data"+ os.path.sep + self.current_experiment_name)
+        if not(path.exists("data"+ path.sep + experimentFolder)):
+            makedirs("data"+ path.sep + experimentFolder)
+        self.participant_list = listdir("data"+ path.sep + self.current_experiment_name)
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -536,7 +534,7 @@ class MyFrame(wx.Frame):
         dlg = wx.MessageDialog(self, "Save Experiment?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
             with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-                json.dump(self.current_experiment, f)
+                dump(self.current_experiment, f)
                 f.close()
         dlg.Destroy()
         event.Skip()
@@ -546,25 +544,25 @@ class MyFrame(wx.Frame):
         dlg.SetValue("Default")
         experimentFolder = self.current_experiment_name
         if dlg.ShowModal() ==wx.ID_OK:  
-            if (os.path.exists("data"+os.path.sep + experimentFolder + os.path.sep + dlg.GetValue())):
+            if (path.exists("data"+path.sep + experimentFolder + path.sep + dlg.GetValue())):
                 dlg2 = wx.MessageDialog(self, "Participant already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg2.ShowModal()
                 dlg2.Destroy()
                 return
-            if not(os.path.exists(os.path.join("data", experimentFolder, dlg.GetValue()))):
-                os.makedirs(os.path.join("data", experimentFolder, dlg.GetValue()))
+            if not(path.exists(path.join("data", experimentFolder, dlg.GetValue()))):
+                makedirs(path.join("data", experimentFolder, dlg.GetValue()))
             try:
                 self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
-                self.experiment_run.to_csv(path_or_buf = os.path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
+                self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except:
                 pass
             
         else:
             pass
         #### REFRESH PARTICIPANT LIST #####
-        if not(os.path.exists(os.path.join("data", experimentFolder))):
-            os.makedirs(os.path.join("data", experimentFolder))
-        self.participant_list = os.listdir(os.path.join("data", self.current_experiment_name))
+        if not(path.exists(path.join("data", experimentFolder))):
+            makedirs(path.join("data", experimentFolder))
+        self.participant_list = listdir(path.join("data", self.current_experiment_name))
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -600,7 +598,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
             self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
             with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
-                json.dump(self.current_experiment, f)
+                dump(self.current_experiment, f)
                 f.close()
             del self.task_list[:]
             for i in range (0, len(self.current_experiment)):
@@ -640,7 +638,7 @@ class MyFrame(wx.Frame):
         del self.current_experiment[self.highlit_task_num] # remove current task
         self.highlit_task_num = len(self.current_experiment) - 1
         with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
-            json.dump(self.current_experiment, f) #remove current task from file
+            dump(self.current_experiment, f) #remove current task from file
             f.close()
         del self.task_list[:]
         # refresh task list
@@ -669,7 +667,7 @@ class MyFrame(wx.Frame):
                 self.current_experiment[self.highlit_task_num]["trial_type"] = "error_clamp"
                 self.regular_experiment_show()
             with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-                json.dump(self.current_experiment, f)
+                dump(self.current_experiment, f)
                 f.close()
             # refresh task list
             del self.task_list[:]
@@ -698,7 +696,7 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['max_angle'] = self.max_angle_chosen      
         #save
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
         event.Skip()
         
@@ -714,7 +712,7 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['max_angle'] = self.max_angle_chosen      
         #save        
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
@@ -723,7 +721,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num], self.current_experiment[self.highlit_task_num - 1] = self.current_experiment[self.highlit_task_num - 1], self.current_experiment[self.highlit_task_num]
             self.highlit_task_num = self.highlit_task_num - 1
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
         # refresh task list
         del self.task_list[:]
@@ -741,7 +739,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num], self.current_experiment[self.highlit_task_num + 1] = self.current_experiment[self.highlit_task_num + 1], self.current_experiment[self.highlit_task_num]
             self.highlit_task_num = self.highlit_task_num + 1
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
         # refresh task list
         del self.task_list[:]
@@ -758,7 +756,7 @@ class MyFrame(wx.Frame):
         self.num_target_chosen = int(event.GetString())
         
         self.current_experiment[self.highlit_task_num]['num_targets'] = self.num_target_chosen
-        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue()))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())        
+        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue()))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())        
         ## Set num trial default
         if self.num_target_chosen > 2:
             self.num_trial_CB.SetValue(self.num_target_chosen)
@@ -778,7 +776,7 @@ class MyFrame(wx.Frame):
             
         ## SAVE
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()        
         event.Skip()
         
@@ -804,20 +802,20 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['num_trials'] = int(self.num_trial_chosen)
         ## SAVE        
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
     def rot_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
         self.rotation_angle_chosen = int(event.GetString())
         self.current_experiment[self.highlit_task_num]['rotation_angle'] = self.rotation_angle_chosen
-        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (math.ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
         if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
             self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
                 
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
         event.Skip()
 
@@ -846,7 +844,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['lag'] = int(int(event.GetString())*lag_conversion_factor)
             self.current_experiment[self.highlit_task_num]['lag_value'] = int(event.GetString())
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()
             
         event.Skip()
@@ -862,14 +860,14 @@ class MyFrame(wx.Frame):
         else:
             self.current_experiment[self.highlit_task_num]['pausetime'] = int(event.GetString())
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()        
         event.Skip()
 
     def pause_message_make(self, event):  # wxGlade: MyFrame.<event_handler>
         self.current_experiment[self.highlit_task_num]['pause_instruction'] = event.GetString()
         with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            json.dump(self.current_experiment, f)
+            dump(self.current_experiment, f)
             f.close()   
         event.Skip()
     
@@ -885,8 +883,8 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Name', 'Rename experiment')
         dlg.SetValue("") 
         if dlg.ShowModal() == wx.ID_OK:
-            os.rename(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
-            self.experiment_list = os.listdir(self.experiment_folder)
+            rename(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
+            self.experiment_list = listdir(self.experiment_folder)
             del self.experiment_list_trimmed[:]
             for i in self.experiment_list:
                 self.experiment_list_trimmed.append(i.replace(".json", ""))
@@ -894,7 +892,7 @@ class MyFrame(wx.Frame):
 #            self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
             self.current_experiment_name = dlg.GetValue()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
-                self.current_experiment = json.load(f)
+                self.current_experiment = load(f)
         dlg.Destroy()
         event.Skip()
         
@@ -932,7 +930,7 @@ class MyApp(wx.App):
 
 #if __name__ == "__main__":
 def start():
-    gettext.install("app") # replace with the appropriate catalog name
+    install("app") # replace with the appropriate catalog name
     
     app = MyApp(0)
     app.MainLoop()
