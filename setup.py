@@ -40,6 +40,8 @@ some_dlls += glob.glob('C:\\Python27\\DLLs\\libgetbreak.*')
 some_dlls += glob.glob('C:\\Python27\\DLLs\\libdqag.*')
 #some_dlls += 'C:\\Windows\\System32\\avbin.dll'
 
+print(some_dlls)
+
 
 all_files = [ ("psychopy\\preferences", preference_files),
               ("psychopy\\app", app_files),
@@ -72,7 +74,12 @@ setup(
                          "scipy.special._ufuncs_cxx",
                          "scipy._lib.messagestream",
                          "pyglet.resource",
-                         "PIL.Image"],
+                         "PIL.Image",
+                         "pkg_resources._vendor.appdirs",
+                         "pkg_resources._vendor.packaging",
+                         "pkg_resources._vendor.packaging.version",
+                         "pkg_resources._vendor.packaging.specifiers",
+                         "pkg_resources._vendor.packaging.requirements"],
             "dll_excludes":["MSVCP90.dll"],
             "excludes":["gevent._socket3"],
             "skip_archive": True,
