@@ -239,7 +239,7 @@ def trial_runner(cfg={}):
     nc_check_1 = False
     timerSet = False
     timer_timestamp = 0
-    stablize = False
+    stabilize = False
     ### These variables record timestamps and mouse positions (Used to calculate mouse velocity)
     prev_timestamp = 0
     prev_X = 0
@@ -266,7 +266,14 @@ def trial_runner(cfg={}):
         rot_dir = 1
     elif cfg['rotation_angle_direction'] == 'Clockwise':
         rot_dir = -1
+    pg.event.clear()
     while (core.getTime() - cfg['time']) < 60:
+        ### ESCAPE ###
+        event = pg.event.wait()
+        if event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+                myWin.close()
+                return 'escaped'
         ### mouse Position
         if (cfg['poll_type'] == 'psychopy'):
             mousePos = myMouse.getPos()
@@ -291,14 +298,14 @@ def trial_runner(cfg={}):
         elif (cfg['trial_type'] == 'no_cursor'):
             circle_pos = mousePos
         elif (cfg['trial_type'] == 'error_clamp'):
-            circle_pos = mousePos
+            circle_pos = startPos
             vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
             vector_proj = np.ndarray.tolist(vector_proj_array)
             clamped_X_vector = vector_proj[0]
             clamped_Y_vector = vector_proj[1]
             if (phase_1 == False):
-                active_X = current_pos[0]
-                active_Y = current_pos[1]
+                active_X = circle_pos[0]
+                active_Y = circle_pos[1]
             else:
                 if (active_Y < startPos[1] - 20 and clamped_Y_vector < 0):
                     active_X = active_X - clamped_X_vector
@@ -308,11 +315,11 @@ def trial_runner(cfg={}):
                     active_Y = prev_Y_cursor + clamped_Y_vector
             circle_pos_clamped = [active_X, active_Y]
 ########################### SET CURSOR POSITIONS #############################
-        if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stablize == True):
+        if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == True):
             circle_pos = circle_pos_clamped
-        elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stablize == False):
+        elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
             circle_pos = startPos
-            stablize = True
+            stabilize = True
         myCircle.setPos(circle_pos)
 ########################### SPECIAL ARROW CONDITIONS #########################
         if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
@@ -544,8 +551,11 @@ def run_experiment_2(fulls, experiment = []):
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
                 exp = trial_runner(running[i])
-                df_exp = pd.DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
-                end_exp = pd.concat([end_exp, df_exp])
+                if exp == 'escaped':
+                    return end_exp
+                else:
+                    df_exp = pd.DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
+                    end_exp = pd.concat([end_exp, df_exp])
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
