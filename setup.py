@@ -18,6 +18,8 @@ builder_files = []
 lib23_files = []
 pandas_libs_files = []
 
+some_dlls = []
+
 
 #define which files you want to copy for data_files
 for files in os.listdir('C:\\Python27\\Lib\\site-packages\\psychopy\\preferences\\'):
@@ -30,6 +32,14 @@ lib23_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python2
 
 pandas_libs_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python27\\Lib\\site-packages\\pandas\\_libs\\') for f in filenames] 
 
+import glob
+
+some_dlls += glob.glob('C:\\Python27\\DLLs\\libansari.*')
+some_dlls += glob.glob('C:\\Python27\\DLLs\\liblbfgsb.*')
+some_dlls += glob.glob('C:\\Python27\\DLLs\\libgetbreak.*')
+some_dlls += glob.glob('C:\\Python27\\DLLs\\libdqag.*')
+#some_dlls += 'C:\\Windows\\System32\\avbin.dll'
+
 
 all_files = [ ("psychopy\\preferences", preference_files),
               ("psychopy\\app", app_files),
@@ -41,6 +51,7 @@ all_files = [ ("psychopy\\preferences", preference_files),
 #all_files = [("psychopy\\preferences", preference_files), my_data_files[0]]
 #all_files = [("psychopy\\preferences", preference_files)]
 
+all_files += some_dlls
 
 import matplotlib as mpl
 all_files += mpl.get_py2exe_datafiles()
