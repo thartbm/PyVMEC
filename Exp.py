@@ -293,8 +293,7 @@ def trial_runner(cfg={}):
 ########################## SPECIAL CURSOR CONFIGURATIONS #####################
         if (prev_timestamp != 0):
             change_in_time = current_timestamp - prev_timestamp
-            velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
-            print velocity            
+            velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time           
             pixels_per_sample = velocity*change_in_time
         rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
         rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
