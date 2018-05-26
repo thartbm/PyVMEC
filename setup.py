@@ -10,6 +10,7 @@ import os
 preference_files = []
 app_files = []
 builder_files = []
+lib23_files = []
 #my_data_files=matplotlib.get_py2exe_datafiles()
 
 #define which files you want to copy for data_files
@@ -29,7 +30,10 @@ for files in os.listdir('C:\\Python27\\Lib\\site-packages\\psychopy\\preferences
 
 app_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python27\\Lib\\site-packages\\psychopy\\app\\') for f in filenames]
 
-all_files = [("psychopy\\preferences", preference_files),("psychopy\\app", app_files)]
+lib23_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python27\\Lib\\lib2to3\\') for f in filenames]
+
+
+all_files = [("psychopy\\preferences", preference_files),("psychopy\\app", app_files), ('lib2to3', lib23_files)]
 
 #combine the files
 #all_files = [("psychopy\\preferences", preference_files), my_data_files[0]]
@@ -44,7 +48,16 @@ setup(
     
     options = {
         "py2exe": {
-            "includes": ["pandas", "psychopy", "UserList", "UserString"],
+            "includes": ["pandas",
+                         "psychopy",
+                         "UserList",
+                         "UserString",
+                         "scipy.sparse.csgraph._validation",
+                         "scipy.linalg.cython_blas",
+                         "scipy.linalg.cython_lapack",
+                         "scipy.special._ufuncs_cxx",
+                         "scipy._lib.messagestream",
+                         "pyglet.resource"],
             "dll_excludes":["MSVCP90.dll"],
             "excludes":["gevent._socket3"],
             "skip_archive": True,
