@@ -1,6 +1,9 @@
 from distutils.core import setup
 import py2exe
 
+import sys
+sys.setrecursionlimit(3000)
+
 #data_files = []
 
 #import matplotlib as mpl
