@@ -1,7 +1,6 @@
 from distutils.core import setup
 import setuptools
 import py2exe
-import matplotlib
 
 import sys
 sys.setrecursionlimit(3000)
@@ -10,6 +9,12 @@ import os
 # pandas._libs.tslibs.conversion._TSObject should have an attribute __reduce_cython__
 # in versions of pandas > 0.20.0 (at least for Python < 3.4)
 # so: pip install pandas==0.20.0
+
+# with psychopy 1.90.0 and pyglet 1.3.2 we get an error that the window has no close() attribute
+# someone solved this like this:
+# pip install psychopy==1.85.3
+# pip install pyglet==1.3.0
+# this removes the error, but the experiment still doesn't work
 
 #Initialize Holder Files
 preference_files = []
