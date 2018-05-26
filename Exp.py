@@ -481,45 +481,54 @@ def run_experiment_2(fulls, experiment = []):
     end_exp = DataFrame({})
     running = deepcopy(experiment)
     cfg = {}
-    addWorkSpaceLimits(cfg)
-    Win = visual.Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+    try:
+        addWorkSpaceLimits(cfg)
+    except:
+        print "Exception adding workspace limits"
+    try:
+        Win = visual.Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+    except:
+        print "Exception creating Window"
     ### Configure visual feedback settings here
-    arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
-    arrowFill = visual.ShapeStim(win=Win,
-                                 vertices=arrowFillVert,
-                                 fillColor=[-1,-1,-1],
+    try:
+        arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
+        arrowFill = visual.ShapeStim(win=Win,
+                                     vertices=arrowFillVert,
+                                     fillColor=[-1,-1,-1],
+                                     size=cfg['circle_radius']*0.6,
+                                     lineColor=[-1,-1,-1])
+        arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
+        arrow = visual.ShapeStim(win=Win,
+                                 vertices=arrowVert,
+                                 fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
-                                 lineColor=[-1,-1,-1])
-    arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
-    arrow = visual.ShapeStim(win=Win,
-                             vertices=arrowVert,
-                             fillColor=[0, 0, 0],
-                             size=cfg['circle_radius']*0.6,
-                             lineColor=[0,0,0])
-    
-    myCircle = visual.Circle(win=Win,
-                             radius=cfg['circle_radius'],
-                             edges=32,
-                             units='pix',
-                             fillColor=[0, 0, 0],
-                             lineColor=[0, 0, 0])
-    startCircle = visual.Circle(win=Win,
-                                radius=cfg['circle_radius'],
-                                lineWidth=2,
-                                edges=32,
-                                units='pix',
-                                fillColor=[-1, -1, -1],
+                                 lineColor=[0,0,0])
+        
+        myCircle = visual.Circle(win=Win,
+                                 radius=cfg['circle_radius'],
+                                 edges=32,
+                                 units='pix',
+                                 fillColor=[0, 0, 0],
                                  lineColor=[0, 0, 0])
-    endCircle = visual.Circle(win=Win,
-                              radius=cfg['circle_radius'],
-                              lineWidth=2,
-                              edges=32,
-                              units='pix',
-                              fillColor=[-1, -1, -1],
-                              lineColor=[0, 0, 0]) 
-
+        startCircle = visual.Circle(win=Win,
+                                    radius=cfg['circle_radius'],
+                                    lineWidth=2,
+                                    edges=32,
+                                    units='pix',
+                                    fillColor=[-1, -1, -1],
+                                     lineColor=[0, 0, 0])
+        endCircle = visual.Circle(win=Win,
+                                  radius=cfg['circle_radius'],
+                                  lineWidth=2,
+                                  edges=32,
+                                  units='pix',
+                                  fillColor=[-1, -1, -1],
+                                  lineColor=[0, 0, 0]) 
     
-    Mouse = event.Mouse(win=Win, visible=False)
+        
+        Mouse = event.Mouse(win=Win, visible=False)
+    except:
+        print "Exception caught in making visual objects"
     for i in range (0, len(experiment)):
         try:
             running[i]['x11_mouse'] = myMouse()
@@ -552,12 +561,18 @@ def run_experiment_2(fulls, experiment = []):
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
-                chosen_target = choice(targetList)
+                try:
+                    chosen_target = choice(targetList)
+                except:
+                    print "Exception randomizing target"
                 running[i]['target_angle'] = chosen_target
                 targetList.remove(chosen_target)
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
-                exp = trial_runner(running[i])
+                try:
+                    exp = trial_runner(running[i])
+                except:
+                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     return end_exp
                 else:
