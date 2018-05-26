@@ -1,6 +1,8 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
 from psychopy import event, visual, core
-import pygame as pg
+#import pygame as pg
+from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
+from pygame import event as pev
 from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray
 import math
 from pandas import concat, DataFrame
@@ -30,6 +32,7 @@ def addWorkSpaceLimits(cfg = {}):
     cfg['active_height'] = trimmed_height
     cfg['circle_radius'] = trimmed_height*0.025
     cfg['screen_dimensions'] = [screen_width, screen_height]
+    cfg['winType'] = 'pyglet'
     return cfg
 
 try:
@@ -192,16 +195,17 @@ def trial_runner(cfg={}):
                 counter_text.draw()
             end_text.draw()
             myWin.flip()
-#            event.waitKeys(keyList=['space'])
-            pg.event.clear()
-            while True:
-                event = pg.event.wait()
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SPACE:
-                        return None
+            event.waitKeys(keyList=['space'])
+            #### IF USING PYGAME ####
+#            pev.clear()
+#            while True:
+#                event = pev.wait()
+#                if event.type == QUIT:
+#                    quit()
+#                    sys.exit()
+#                elif event.type == KEYDOWN:
+#                    if event.key == K_SPACE:
+#                        return None
         return None
         
     end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
@@ -265,14 +269,18 @@ def trial_runner(cfg={}):
         rot_dir = 1
     elif cfg['rotation_angle_direction'] == 'Clockwise':
         rot_dir = -1
-    pg.event.clear()
+#    pev.clear()
     while (core.getTime() - cfg['time']) < 60:
-        ### ESCAPE ###
-        event = pg.event.wait()
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_ESCAPE:
-                myWin.close()
-                return 'escaped'
+        ### ESCAPE ### USING PYGAME ####
+#        event = pev.wait()
+#        if event.type == KEYDOWN:
+#            if event.key == K_ESCAPE:
+#                myWin.close()
+#                return 'escaped'
+        ### ESCAPE ### USING PYGLET ####
+        if event.getKeys(keyList=['escape']):
+            myWin.close()
+            return 'escaped'
         ### mouse Position
         if (cfg['poll_type'] == 'psychopy'):
             mousePos = myMouse.getPos()
@@ -286,6 +294,7 @@ def trial_runner(cfg={}):
         if (prev_timestamp != 0):
             change_in_time = current_timestamp - prev_timestamp
             velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
+            print velocity            
             pixels_per_sample = velocity*change_in_time
         rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
         rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
@@ -474,7 +483,7 @@ def run_experiment_2(fulls, experiment = []):
     running = deepcopy(experiment)
     cfg = {}
     addWorkSpaceLimits(cfg)
-    Win = visual.Window(cfg['screen_dimensions'], winType='pygame', colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+    Win = visual.Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
     ### Configure visual feedback settings here
     arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
     arrowFill = visual.ShapeStim(win=Win,
