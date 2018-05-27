@@ -1,8 +1,8 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
 from psychopy import event, visual, core
 #import pygame as pg
-from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
-from pygame import event as pev
+#from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
+#from pygame import event as pev
 from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray
 import math
 from pandas import concat, DataFrame
