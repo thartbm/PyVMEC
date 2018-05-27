@@ -330,26 +330,32 @@ def trial_runner(cfg={}):
                 print "Error in Block 2.1"
     ########################### SET CURSOR POSITIONS #############################
             try:
-                if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == True):
-                    circle_pos = circle_pos_clamped
-                elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
-                    circle_pos = startPos
-                    stabilize = True
-                myCircle.setPos(circle_pos)
-        ########################### SPECIAL ARROW CONDITIONS #########################
-                if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
-                    arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
-                    arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
+                try:
+                    if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == True):
+                        circle_pos = circle_pos_clamped
+                    elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
+                        circle_pos = startPos
+                        stabilize = True
+                    myCircle.setPos(circle_pos)
+            ########################### SPECIAL ARROW CONDITIONS #########################
+                    if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
+                        arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
+                        arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
+                except:
+                    print "Error in block 2.2.1"
         ################################ SHOW OBJECTS ################################
-                if (show_home == True):
-                    startCircle.draw()
-                if (show_target == True):
-                    endCircle.draw()
-                if (show_arrow == True):
-                    arrow.draw()
-                    arrowFill.draw()
-                if (show_cursor == True):
-                    myCircle.draw()
+                try:            
+                    if (show_home == True):
+                        startCircle.draw()
+                    if (show_target == True):
+                        endCircle.draw()
+                    if (show_arrow == True):
+                        arrow.draw()
+                        arrowFill.draw()
+                    if (show_cursor == True):
+                        myCircle.draw()
+                except:
+                    print "Error in block 2.2.2"
             except:
                 print "error in block 2.2"
         except:
