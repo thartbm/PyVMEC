@@ -1,5 +1,6 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
-from psychopy import visual, event, core
+from psychopy.visual import Window, Circle, ShapeStim, TextStim
+from psychopy import event, core
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -161,9 +162,9 @@ def angle_split(min_angle, max_angle, num_splits):
 def pause_experiment(cfg={}):
     myWin = cfg['win']
     instruction = cfg['pause_instruction']
-    counter_text = visual.TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))    
-    instruction_text = visual.TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
-    end_text = visual.TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
+    counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))    
+    instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
+    end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
     while ((core.getTime() - cfg['time']) < cfg['pausetime']):
         counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
         instruction_text.draw()
@@ -181,9 +182,9 @@ def trial_runner(cfg={}):
         myWin=cfg['win']
         if (cfg['trial_type'] == 'pause'):
             instruction = cfg['pause_instruction']
-            counter_text = visual.TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))    
-            instruction_text = visual.TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
-            end_text = visual.TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))    
+            instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
+            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
@@ -506,38 +507,38 @@ def run_experiment_2(fulls, experiment = []):
     except:
         print "Exception adding workspace limits"
     try:
-        Win = visual.Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+        Win = Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
     except:
         print "Exception creating Window"
     ### Configure visual feedback settings here
     try:
         arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
-        arrowFill = visual.ShapeStim(win=Win,
+        arrowFill = ShapeStim(win=Win,
                                      vertices=arrowFillVert,
                                      fillColor=[-1,-1,-1],
                                      size=cfg['circle_radius']*0.6,
                                      lineColor=[-1,-1,-1])
         arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
-        arrow = visual.ShapeStim(win=Win,
+        arrow = ShapeStim(win=Win,
                                  vertices=arrowVert,
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
                                  lineColor=[0,0,0])
         
-        myCircle = visual.Circle(win=Win,
+        myCircle = Circle(win=Win,
                                  radius=cfg['circle_radius'],
                                  edges=32,
                                  units='pix',
                                  fillColor=[0, 0, 0],
                                  lineColor=[0, 0, 0])
-        startCircle = visual.Circle(win=Win,
+        startCircle = Circle(win=Win,
                                     radius=cfg['circle_radius'],
                                     lineWidth=2,
                                     edges=32,
                                     units='pix',
                                     fillColor=[-1, -1, -1],
                                      lineColor=[0, 0, 0])
-        endCircle = visual.Circle(win=Win,
+        endCircle = Circle(win=Win,
                                   radius=cfg['circle_radius'],
                                   lineWidth=2,
                                   edges=32,
