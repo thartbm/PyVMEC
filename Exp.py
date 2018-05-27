@@ -282,70 +282,76 @@ def trial_runner(cfg={}):
     #                myWin.close()
     #                return 'escaped'
             ### ESCAPE ### USING PYGLET ####
-            if event.getKeys(keyList=['escape']):
-                myWin.close()
-                return 'escaped'
-            ### mouse Position
-            if (cfg['poll_type'] == 'psychopy'):
-                mousePos = myMouse.getPos()
-                current_pos = mousePos
-                current_timestamp = core.getTime() - myTime
-            elif (cfg['poll_type'] == 'x11'):
-                mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]]
-                current_pos = mousePos
-                current_timestamp = myMouse.Pos()[2] - myTime
-    ########################## SPECIAL CURSOR CONFIGURATIONS #####################
-            if (prev_timestamp != 0):
-                change_in_time = current_timestamp - prev_timestamp
-                velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time           
-                pixels_per_sample = velocity*change_in_time
-            rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
-            rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
-            if (cfg['trial_type'] == 'cursor'):
-                if (cfg['rotation_angle'] == 0):
-                    circle_pos = mousePos
-                else:
-                    circle_pos = [rotated_X, rotated_Y]
-            elif (cfg['trial_type'] == 'no_cursor'):
-                circle_pos = mousePos
-            elif (cfg['trial_type'] == 'error_clamp'):
-                circle_pos = startPos
-                vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
-                vector_proj = ndarray.tolist(vector_proj_array)
-                clamped_X_vector = vector_proj[0]
-                clamped_Y_vector = vector_proj[1]
-                if (phase_1 == False):
-                    active_X = circle_pos[0]
-                    active_Y = circle_pos[1]
-                else:
-                    if (active_Y < startPos[1] - 20 and clamped_Y_vector < 0):
-                        active_X = active_X - clamped_X_vector
-                        active_Y = active_Y - clamped_Y_vector
+            try:
+                if event.getKeys(keyList=['escape']):
+                    myWin.close()
+                    return 'escaped'
+                ### mouse Position
+                if (cfg['poll_type'] == 'psychopy'):
+                    mousePos = myMouse.getPos()
+                    current_pos = mousePos
+                    current_timestamp = core.getTime() - myTime
+                elif (cfg['poll_type'] == 'x11'):
+                    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]]
+                    current_pos = mousePos
+                    current_timestamp = myMouse.Pos()[2] - myTime
+        ########################## SPECIAL CURSOR CONFIGURATIONS #####################
+                if (prev_timestamp != 0):
+                    change_in_time = current_timestamp - prev_timestamp
+                    velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time           
+                    pixels_per_sample = velocity*change_in_time
+                rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
+                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
+                if (cfg['trial_type'] == 'cursor'):
+                    if (cfg['rotation_angle'] == 0):
+                        circle_pos = mousePos
                     else:
-                        active_X = prev_X_cursor + clamped_X_vector
-                        active_Y = prev_Y_cursor + clamped_Y_vector
-                circle_pos_clamped = [active_X, active_Y]
+                        circle_pos = [rotated_X, rotated_Y]
+                elif (cfg['trial_type'] == 'no_cursor'):
+                    circle_pos = mousePos
+                elif (cfg['trial_type'] == 'error_clamp'):
+                    circle_pos = startPos
+                    vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
+                    vector_proj = ndarray.tolist(vector_proj_array)
+                    clamped_X_vector = vector_proj[0]
+                    clamped_Y_vector = vector_proj[1]
+                    if (phase_1 == False):
+                        active_X = circle_pos[0]
+                        active_Y = circle_pos[1]
+                    else:
+                        if (active_Y < startPos[1] - 20 and clamped_Y_vector < 0):
+                            active_X = active_X - clamped_X_vector
+                            active_Y = active_Y - clamped_Y_vector
+                        else:
+                            active_X = prev_X_cursor + clamped_X_vector
+                            active_Y = prev_Y_cursor + clamped_Y_vector
+                    circle_pos_clamped = [active_X, active_Y]
+            except:
+                print "Error in Block 2.1"
     ########################### SET CURSOR POSITIONS #############################
-            if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == True):
-                circle_pos = circle_pos_clamped
-            elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
-                circle_pos = startPos
-                stabilize = True
-            myCircle.setPos(circle_pos)
-    ########################### SPECIAL ARROW CONDITIONS #########################
-            if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
-                arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
-                arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
-    ################################ SHOW OBJECTS ################################
-            if (show_home == True):
-                startCircle.draw()
-            if (show_target == True):
-                endCircle.draw()
-            if (show_arrow == True):
-                arrow.draw()
-                arrowFill.draw()
-            if (show_cursor == True):
-                myCircle.draw()
+            try:
+                if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == True):
+                    circle_pos = circle_pos_clamped
+                elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
+                    circle_pos = startPos
+                    stabilize = True
+                myCircle.setPos(circle_pos)
+        ########################### SPECIAL ARROW CONDITIONS #########################
+                if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
+                    arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
+                    arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
+        ################################ SHOW OBJECTS ################################
+                if (show_home == True):
+                    startCircle.draw()
+                if (show_target == True):
+                    endCircle.draw()
+                if (show_arrow == True):
+                    arrow.draw()
+                    arrowFill.draw()
+                if (show_cursor == True):
+                    myCircle.draw()
+            except:
+                print "error in block 2.2"
         except:
             print "error in block 2"
 ################################ PHASE 1 #####################################
