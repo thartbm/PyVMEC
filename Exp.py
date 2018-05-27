@@ -1,5 +1,5 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
-from psychopy import event, visual, core
+from psychopy import visual, event, core
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -273,7 +273,7 @@ def trial_runner(cfg={}):
     elif cfg['rotation_angle_direction'] == 'Clockwise':
         rot_dir = -1
 #    pev.clear()
-    while (core.getTime() - cfg['time']) < 60:
+    while (core.getTime() - cfg['time']) < 15:
         try:
             ### ESCAPE ### USING PYGAME ####
     #        event = pev.wait()
