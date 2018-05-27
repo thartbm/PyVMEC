@@ -569,10 +569,10 @@ def run_experiment_2(fulls, experiment = []):
                 targetList.remove(chosen_target)
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
-                try:
-                    exp = trial_runner(running[i])
-                except:
-                    print "Exception in running trial_runner function"
+#                try:
+                exp = trial_runner(running[i])
+#                except:
+#                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     return end_exp
                 else:
