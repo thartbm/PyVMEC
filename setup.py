@@ -23,6 +23,8 @@ app_files = []
 builder_files = []
 lib23_files = []
 pandas_libs_files = []
+visual_files = []
+misc_files = []
 
 some_dlls = []
 my_data_files=matplotlib.get_py2exe_datafiles()
@@ -38,6 +40,11 @@ lib23_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python2
 
 pandas_libs_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python27\\Lib\\site-packages\\pandas\\_libs\\') for f in filenames] 
 
+visual_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python27\\Lib\\site-packages\\psychopy\\visual\\') for f in filenames]
+
+misc_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('C:\\Python27\\Lib\\site-packages\\psychopy\\misc\\') for f in filenames]
+
+
 import glob
 
 some_dlls += glob.glob('C:\\Python27\\DLLs\\libansari.*')
@@ -51,6 +58,8 @@ print(some_dlls)
 
 all_files = [ ("psychopy\\preferences", preference_files),
               ("psychopy\\app", app_files),
+              ("psychopy\\visual", visual_files),
+              ("psychopy\\misc", misc_files),
               ('lib2to3', lib23_files),
               ("pandas\\_lib", pandas_libs_files),
               ]
@@ -73,6 +82,7 @@ setup(
                          "psychopy",
                          "psychopy.visual.shape",
                          "psychopy.visual.circle",
+                         "psychopy.misc",
                          "UserList",
                          "UserString",
                          "numpy",
