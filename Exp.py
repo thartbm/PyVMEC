@@ -275,7 +275,7 @@ def trial_runner(cfg={}):
     elif cfg['rotation_angle_direction'] == 'Clockwise':
         rot_dir = -1
 #    pev.clear()
-    while (core.getTime() - cfg['time']) < 15:
+    while (core.getTime() - cfg['time']) < 120:
         try:
             ### ESCAPE ### USING PYGAME ####
     #        event = pev.wait()
@@ -420,7 +420,7 @@ def trial_runner(cfg={}):
                         show_target = True
                         nc_check_1 = True
                         show_cursor = False
-                    if (get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2 and stop_time >= 0.75):
+                    if (get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2 and stop_time >= 1.25):
                         phase_2 = True
                         show_target = False
                         show_home = True   
