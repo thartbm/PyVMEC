@@ -1,6 +1,7 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
 from psychopy.visual import Window, Circle, ShapeStim, TextStim
 from psychopy import event, core
+import shape
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
