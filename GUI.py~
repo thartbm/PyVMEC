@@ -52,7 +52,7 @@ class MyFrame(wx.Frame):
         
         ################### General Configuration Settings ###################
         self.general_cfg = {}
-        self.FULLSCREEN = True
+        self.FULLSCREEN = False
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
