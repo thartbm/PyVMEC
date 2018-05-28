@@ -1,5 +1,6 @@
 from distutils.core import setup
 import setuptools
+import matplotlib
 import py2exe
 
 import sys
@@ -24,7 +25,7 @@ lib23_files = []
 pandas_libs_files = []
 
 some_dlls = []
-
+my_data_files=matplotlib.get_py2exe_datafiles()
 
 #define which files you want to copy for data_files
 for files in os.listdir('C:\\Python27\\Lib\\site-packages\\psychopy\\preferences\\'):
@@ -70,8 +71,11 @@ setup(
         "py2exe": {
             "includes": ["pandas",
                          "psychopy",
+                         "psychopy.visual.shape",
+                         "psychopy.visual.circle",
                          "UserList",
                          "UserString",
+                         "numpy",
                          "scipy.sparse.csgraph._validation",
                          "scipy.linalg.cython_blas",
                          "scipy.linalg.cython_lapack",
