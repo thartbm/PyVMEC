@@ -548,8 +548,9 @@ def run_experiment_2(fulls, experiment = []):
     
         
         Mouse = event.Mouse(win=Win, visible=False)
-    except Exception:
-        print Exception
+    except Exception as e:
+        print e
+        print str(e)
     for i in range (0, len(experiment)):
         try:
             running[i]['x11_mouse'] = myMouse()
