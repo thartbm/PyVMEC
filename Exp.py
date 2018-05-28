@@ -1,7 +1,7 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
 from psychopy.visual import Window, Circle, ShapeStim, TextStim
 from psychopy import event, core
-import shape
+from psychopy.visual import shape
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -29,7 +29,7 @@ def addWorkSpaceLimits(cfg = {}):
     if (trimmed_height*2 < trimmed_width):
         trimmed_width = trimmed_height*2
     else:
-        trimmed_height = trimmed_width/2   
+        trimmed_height = trimmed_width/2
     cfg['active_width'] = trimmed_width
     cfg['active_height'] = trimmed_height
     cfg['circle_radius'] = trimmed_height*0.025
@@ -46,10 +46,10 @@ try:
       (root_id, child_id) = (c_uint32(), c_uint32())
       (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
       mask = c_uint()
-      
+
       width = root.winfo_screenwidth()
       height = root.winfo_screenheight()
-    
+
       def Pos(self):
         ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
         if ret == 0: sys.exit(1)
@@ -57,8 +57,8 @@ try:
 except:
     pass
 def myRounder(x, base):
-    return int(base * round(float(x)/base))    
-    
+    return int(base * round(float(x)/base))
+
 def task_namer(given_task, function):
     if (function == True):
         if (given_task == "cursor"):
@@ -78,7 +78,7 @@ def task_namer(given_task, function):
             return "pause"
         if (given_task == "Error Clamp"):
             return "error_clamp"
-            
+
 def task_num(given_task, function):
     if (function == True):
         if (given_task == "cursor"):
@@ -109,7 +109,7 @@ def rotation_num(rotation_type, function):
             return 'abrupt'
         if (rotation_type == 1):
             return 'gradual'
-            
+
 def rotation_direction_num(rotation_direction, function):
     if (function == True):
         if (rotation_direction == 'Counter-clockwise'):
@@ -132,7 +132,7 @@ def pol2cart(rho, phi):
     x = rho * cos(phi)
     y = rho * sin(phi)
     return(x, y)
-        
+
 def get_dist(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return linalg.norm(vector)
@@ -146,7 +146,7 @@ def get_uvect(vector):
 def get_vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
     scalar_proj = dot(moving_vect, static_uvect)
-    return scalar_proj*static_uvect      
+    return scalar_proj*static_uvect
 def angle_split(min_angle, max_angle, num_splits):
     angles = []
     for i in range(0, num_splits):
@@ -158,12 +158,12 @@ def angle_split(min_angle, max_angle, num_splits):
             new_angle = max_angle
         angles.append(new_angle)
     return angles
-    
+
 #################### PAUSE TASK ####################################
 def pause_experiment(cfg={}):
     myWin = cfg['win']
     instruction = cfg['pause_instruction']
-    counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))    
+    counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))
     instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
     end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
     while ((core.getTime() - cfg['time']) < cfg['pausetime']):
@@ -183,13 +183,13 @@ def trial_runner(cfg={}):
         myWin=cfg['win']
         if (cfg['trial_type'] == 'pause'):
             instruction = cfg['pause_instruction']
-            counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))    
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
             end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
-                if (cfg['pausetime'] != 0):           
+                if (cfg['pausetime'] != 0):
                     counter_text.draw()
                 myWin.flip()
             if (cfg['pause_button_wait'] == True):
@@ -210,7 +210,7 @@ def trial_runner(cfg={}):
     #                    if event.key == K_SPACE:
     #                        return None
             return None
-            
+
         end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
         end_Y = (cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))) - cfg['active_height']/2
         ### Creates Mouse object
@@ -224,7 +224,7 @@ def trial_runner(cfg={}):
             myTime = myMouse.Pos()[2]
         ### Creates cursor circle Object
         myCircle = cfg['cursor_circle']
-        ### Creates a circle object to be used as starting point      
+        ### Creates a circle object to be used as starting point
         startCircle = cfg['start_circle']
         ### Creates a Target circle
         endCircle = cfg['end_circle']
@@ -232,8 +232,8 @@ def trial_runner(cfg={}):
         startPos=cfg['starting_pos']
         arrow=cfg['arrow_stim']
         arrowFill=cfg['arrowFill_stim']
-        
-        endPos=[end_X, end_Y]   
+
+        endPos=[end_X, end_Y]
         ### Instantiating Checking Variables Here
         phase_1 = False
         phase_2 = False
@@ -263,7 +263,7 @@ def trial_runner(cfg={}):
         cursorposYArray = []
         ### target circle position
         endCircle.setPos(endPos)
-        ### starting circle 
+        ### starting circle
         startCircle.setPos(startPos)
         arrow.setPos(startPos)
         arrowFill.setPos(startPos)
@@ -300,10 +300,10 @@ def trial_runner(cfg={}):
         ########################## SPECIAL CURSOR CONFIGURATIONS #####################
                 if (prev_timestamp != 0):
                     change_in_time = current_timestamp - prev_timestamp
-                    velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time           
+                    velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
                     pixels_per_sample = velocity*change_in_time
                 rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
-                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))    
+                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['rotation_angle'] == 0):
                         circle_pos = mousePos
@@ -341,12 +341,12 @@ def trial_runner(cfg={}):
                     myCircle.setPos(circle_pos)
             ########################### SPECIAL ARROW CONDITIONS #########################
                     if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
-                        arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)  
+                        arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
                         arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
                 except:
                     print "Error in block 2.2.1"
         ################################ SHOW OBJECTS ################################
-                try:            
+                try:
                     if (show_home == True):
                         startCircle.draw()
                     if (show_target == True):
@@ -414,7 +414,7 @@ def trial_runner(cfg={}):
                     stop_time = current_timestamp - timer_timestamp
                     if (pixels_per_sample > 1 and timerSet == True):
                         timerSet = False
-                        stop_time = 0  
+                        stop_time = 0
                     if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):
                         show_home = False
                         show_target = True
@@ -423,7 +423,7 @@ def trial_runner(cfg={}):
                     if (get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2 and stop_time >= 1.25):
                         phase_2 = True
                         show_target = False
-                        show_home = True   
+                        show_home = True
                 if (cfg['trial_type'] == 'error_clamp'):
                     if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
                         phase_2 = True
@@ -443,9 +443,9 @@ def trial_runner(cfg={}):
             cursorposYArray.append(circle_pos[1] + cfg['active_height']/2)
             myWin.flip()
     ################################ PHASE 3 #####################################
-            
+
             if (phase_1 == True and phase_2 == True):
-                
+
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
                     show_arrow = True
                     show_arrowFill = True
@@ -454,7 +454,7 @@ def trial_runner(cfg={}):
                     show_arrowFill = False
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
                     show_cursor = False
-                    
+
                 if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35 and cfg['terminal_feedback'] == False):
                     timePos_dict['task_num'] = cfg['task_num']
                     timePos_dict['task_name'] = cfg['task_name']
@@ -472,9 +472,9 @@ def trial_runner(cfg={}):
                     timePos_dict['cursorx_px'] = cursorposXArray
                     timePos_dict['cursory_px'] = cursorposYArray
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
-                    timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)            
+                    timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
                     return timePos_dict
-                    
+
                 elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
                     show_cursor = True
                     if (get_dist(circle_pos, startPos) < cfg['circle_radius']):
@@ -525,7 +525,7 @@ def run_experiment_2(fulls, experiment = []):
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
                                  lineColor=[0,0,0])
-        
+
         myCircle = Circle(win=Win,
                                  radius=cfg['circle_radius'],
                                  edges=32,
@@ -545,9 +545,9 @@ def run_experiment_2(fulls, experiment = []):
                                   edges=32,
                                   units='pix',
                                   fillColor=[-1, -1, -1],
-                                  lineColor=[0, 0, 0]) 
-    
-        
+                                  lineColor=[0, 0, 0])
+
+
         Mouse = event.Mouse(win=Win, visible=False)
     except Exception as e:
         print e
@@ -574,7 +574,7 @@ def run_experiment_2(fulls, experiment = []):
         targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         fulltargetList = tuple(targetList)
         if (running[i]['trial_type'] != 'pause'):
-            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])          
+            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
             for trial_num in range (0, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
@@ -599,7 +599,7 @@ def run_experiment_2(fulls, experiment = []):
                 if exp == 'escaped':
                     return end_exp
                 else:
-                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])              
+                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
                     end_exp = concat([end_exp, df_exp])
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
