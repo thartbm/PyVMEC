@@ -511,45 +511,45 @@ def run_experiment_2(fulls, experiment = []):
     except:
         print "Exception creating Window"
     ### Configure visual feedback settings here
-#    try:
-    arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
-    arrowFill = ShapeStim(win=Win,
-                                 vertices=arrowFillVert,
-                                 fillColor=[-1,-1,-1],
+    try:
+        arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
+        arrowFill = ShapeStim(win=Win,
+                                     vertices=arrowFillVert,
+                                     fillColor=[-1,-1,-1],
+                                     size=cfg['circle_radius']*0.6,
+                                     lineColor=[-1,-1,-1])
+        arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
+        arrow = ShapeStim(win=Win,
+                                 vertices=arrowVert,
+                                 fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
-                                 lineColor=[-1,-1,-1])
-    arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
-    arrow = ShapeStim(win=Win,
-                             vertices=arrowVert,
-                             fillColor=[0, 0, 0],
-                             size=cfg['circle_radius']*0.6,
-                             lineColor=[0,0,0])
-    
-    myCircle = Circle(win=Win,
-                             radius=cfg['circle_radius'],
-                             edges=32,
-                             units='pix',
-                             fillColor=[0, 0, 0],
-                             lineColor=[0, 0, 0])
-    startCircle = Circle(win=Win,
-                                radius=cfg['circle_radius'],
-                                lineWidth=2,
-                                edges=32,
-                                units='pix',
-                                fillColor=[-1, -1, -1],
+                                 lineColor=[0,0,0])
+        
+        myCircle = Circle(win=Win,
+                                 radius=cfg['circle_radius'],
+                                 edges=32,
+                                 units='pix',
+                                 fillColor=[0, 0, 0],
                                  lineColor=[0, 0, 0])
-    endCircle = Circle(win=Win,
-                              radius=cfg['circle_radius'],
-                              lineWidth=2,
-                              edges=32,
-                              units='pix',
-                              fillColor=[-1, -1, -1],
-                              lineColor=[0, 0, 0]) 
-
+        startCircle = Circle(win=Win,
+                                    radius=cfg['circle_radius'],
+                                    lineWidth=2,
+                                    edges=32,
+                                    units='pix',
+                                    fillColor=[-1, -1, -1],
+                                     lineColor=[0, 0, 0])
+        endCircle = Circle(win=Win,
+                                  radius=cfg['circle_radius'],
+                                  lineWidth=2,
+                                  edges=32,
+                                  units='pix',
+                                  fillColor=[-1, -1, -1],
+                                  lineColor=[0, 0, 0]) 
     
-    Mouse = event.Mouse(win=Win, visible=False)
-#    except:
-#        print "Exception caught in making visual objects"
+        
+        Mouse = event.Mouse(win=Win, visible=False)
+    except Exception:
+        print Exception
     for i in range (0, len(experiment)):
         try:
             running[i]['x11_mouse'] = myMouse()
