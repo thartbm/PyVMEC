@@ -66,6 +66,7 @@ class MyFrame(wx.Frame):
         self.Save_Button = wx.Button(self, wx.ID_ANY, ("Save"))
         self.Run_Button = wx.Button(self, wx.ID_ANY, ("Run"))
         self.Task_statictext = wx.StaticText(self, wx.ID_ANY, ("Tasks"))
+        self.experiment_settings_Button = wx.Button(self, wx.ID_ANY, "Experiment Settings")
         
         self.participants_statictext = wx.StaticText(self, wx.ID_ANY, "Participants")
         self.participants_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
@@ -104,10 +105,12 @@ class MyFrame(wx.Frame):
         self.num_trials_statictext = wx.StaticText(self, wx.ID_ANY, ("# Trials"))
         self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=self.MIN_TRIALS, max=self.MAX_TRIALS, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
         
-        self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, (" Rotation Angle"))
-        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
+        self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Rotation Angle"))
+#        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
+        self.Rotation_angle_slider = wx.Slider(self, wx.ID_ANY, minValue = -75, maxValue = 75, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
-        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+#        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
         self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
         self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
@@ -138,6 +141,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.Plus_Press, self.Plus_Button)
         self.Bind(wx.EVT_BUTTON, self.Minus_Press, self.Minus_Button)
         self.Bind(wx.EVT_RADIOBOX, self.Trial_Type_Press, self.radio_box_1)
+        self.Bind(wx.EVT_BUTTON, self.experiment_settings_Button_Press, self.experiment_settings_Button)
         
         self.Bind(wx.EVT_SLIDER, self.min_angle_choose, self.min_angle_CB)       
         self.Bind(wx.EVT_SLIDER, self.max_angle_choose, self.max_angle_CB)
@@ -149,9 +153,11 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.rename_task, self.rename_task_button)
         self.Bind(wx.EVT_COMBOBOX, self.num_target_choose, self.num_targ_CB)
         self.Bind(wx.EVT_SPINCTRL, self.num_trial_choose, self.num_trial_CB)
-        self.Bind(wx.EVT_COMBOBOX, self.rot_angle_choose, self.Rotation_angle_CB)
+#        self.Bind(wx.EVT_COMBOBOX, self.rot_angle_choose, self.Rotation_angle_CB)
+        self.Bind(wx.EVT_SLIDER, self.rot_angle_choose, self.Rotation_angle_slider)
+        
         self.Bind(wx.EVT_RADIOBOX, self.Rot_Change_Press, self.rot_change_statictext)
-        self.Bind(wx.EVT_RADIOBOX, self.rotation_angle_direction_press, self.rotation_angle_direction)        
+#        self.Bind(wx.EVT_RADIOBOX, self.rotation_angle_direction_press, self.rotation_angle_direction)        
         self.Bind(wx.EVT_TEXT, self.Lag_Enter, self.lag_txt)
         self.Bind(wx.EVT_CHECKBOX, self.terminalfeedback_check_press, self.terminalfeedback_Radio)
         ### Pause events
@@ -171,7 +177,7 @@ class MyFrame(wx.Frame):
         # begin wxGlade: MyFrame.__set_properties
         self.SetTitle(("PyVMEC"))
 #        self.SetSize((798, 462)) ## Set size to this when Pause is selected
-        self.SetSize((698, 500))
+        self.SetSize((698, 560))
         self.Experiment_statictext.SetMinSize((70, 17))
         self.staticline_1.SetMinSize((175, 22))
         self.exp_list_box.SetMinSize((175, 150))
@@ -181,6 +187,7 @@ class MyFrame(wx.Frame):
         self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
         self.preprocess_Button.SetMinSize((175, 29))
+        self.experiment_settings_Button.SetMinSize((175, 29))
         self.Save_Button.SetMinSize((85, 29))
         self.rename_experiment_button.SetMinSize((55, 29))
         self.rename_task_button.SetMinSize((55, 29))        
@@ -210,7 +217,7 @@ class MyFrame(wx.Frame):
         self.Move_Down_Button.SetMinSize((30, 30))
         self.num_targ_CB.SetSelection(-1)
 #        self.num_trial_CB.SetSelection(-1)
-        self.Rotation_angle_CB.SetSelection(-1)
+#        self.Rotation_angle_CB.SetSelection(-1)
         self.rot_change_statictext.SetSelection(0)
         ### Pause stuff
         self.pause_txt.SetMinSize((175,29))
@@ -234,6 +241,7 @@ class MyFrame(wx.Frame):
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2.Add(self.Experiment_statictext, 0, wx.EXPAND, 0)
         sizer_2.Add(self.staticline_1, 0, wx.BOTTOM, 5)
+        sizer_2.Add(self.experiment_settings_Button, 0, wx.RIGHT, 1)
         sizer_2.Add(self.exp_list_box, 0, wx.RIGHT, 1)
         sizer_5.Add(self.New_Button, 0, wx.ALL, 2)
         sizer_5.Add(self.rename_experiment_button, 0, wx.ALL, 2)
@@ -248,6 +256,7 @@ class MyFrame(wx.Frame):
         sizer_2.Add(self.participants_statictext, 0, wx.EXPAND, 0)
         sizer_2.Add(self.participants_list_box, 0, wx.RIGHT, 1)
         sizer_2.Add(self.preprocess_Button, 0, wx.RIGHT, 1)
+        
         sizer_1.Add(sizer_2, 1, 0, 0)
         sizer_3.Add(self.Task_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.static_line2, 0, wx.BOTTOM, 5)
@@ -283,9 +292,9 @@ class MyFrame(wx.Frame):
         sizer_9.Add(self.num_trial_CB, 0, wx.LEFT, 2)
         sizer_9.Add(self.num_trials_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.Rotation_angle_statictext, 0, wx.LEFT, 2)
-        sizer_9.Add(self.Rotation_angle_CB, 0, wx.LEFT, 2)
+        sizer_9.Add(self.Rotation_angle_slider, 0, wx.EXPAND, 2)
         sizer_9.Add(self.rotation_angle_staticline, 0, wx.BOTTOM, 2)
-        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
+#        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
         sizer_9.Add(self.rot_change_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.rotation_change_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
@@ -312,7 +321,7 @@ class MyFrame(wx.Frame):
         self.num_trial_CB.Show()
         self.num_trials_staticline.Show()
         self.Rotation_angle_statictext.Show()     
-        self.Rotation_angle_CB.Show()
+        self.Rotation_angle_slider.Show()
         self.rotation_angle_staticline.Show() 
         self.rot_change_statictext.Show()
         self.rotation_change_staticline.Show()
@@ -329,13 +338,13 @@ class MyFrame(wx.Frame):
         self.target_distance_txt.Show()
         self.terminalfeedback_Radio.Show()
         self.terminalfeedback_Radio_staticline.Show()
-        self.rotation_angle_direction.Show()
+#        self.rotation_angle_direction.Show()
         ### Show ###
         if (self.current_experiment[self.highlit_task_num]['trial_type'] == 'no_cursor'):
             self.Rotation_angle_statictext.Hide()     
-            self.Rotation_angle_CB.Hide()
+            self.Rotation_angle_slider.Hide()
             self.rotation_angle_staticline.Hide()
-            self.rotation_angle_direction.Hide()
+#            self.rotation_angle_direction.Hide()
             self.rot_change_statictext.Hide()
             self.rotation_change_staticline.Hide()
             self.lag_static_text.Hide()
@@ -347,7 +356,7 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Hide()
         self.pause_message_txt.Hide()
         self.pause_check.Hide()
-        self.SetSize((698, 500))
+        self.SetSize((698, 560))
     
     def pause_experiment_show(self):
         ### Right most widgets ###
@@ -358,7 +367,7 @@ class MyFrame(wx.Frame):
         self.num_trial_CB.Hide()
         self.num_trials_staticline.Hide()
         self.Rotation_angle_statictext.Hide()        
-        self.Rotation_angle_CB.Hide()
+        self.Rotation_angle_slider.Hide()
         self.rotation_angle_staticline.Hide()        
         self.rot_change_statictext.Hide()
         self.rotation_change_staticline.Hide()
@@ -375,7 +384,7 @@ class MyFrame(wx.Frame):
         self.target_distance_txt.Hide()
         self.terminalfeedback_Radio.Hide()
         self.terminalfeedback_Radio_staticline.Hide()
-        self.rotation_angle_direction.Hide()
+#        self.rotation_angle_direction.Hide()
         ### Show ###
         self.pause_static_text.Show()
         self.pause_txt.Show()
@@ -435,9 +444,11 @@ class MyFrame(wx.Frame):
             self.terminalfeedback_Radio.SetValue(self.current_experiment[self.highlit_task_num]['terminal_feedback'])
             self.target_distance_slider.SetValue(self.current_experiment[self.highlit_task_num]['target_distance_ratio']*100)
             self.rot_change_statictext.SetSelection(exp.rotation_num(self.current_experiment[self.highlit_task_num]['rotation_change_type'], True))
-            self.Rotation_angle_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['rotation_angle']))
-            self.rotation_angle_direction.SetSelection(exp.rotation_direction_num(self.current_experiment[self.highlit_task_num]['rotation_angle_direction'], True))
+            self.Rotation_angle_slider.SetValue(self.current_experiment[self.highlit_task_num]['rotation_angle'])
+#            self.rotation_angle_direction.SetSelection(exp.rotation_direction_num(self.current_experiment[self.highlit_task_num]['rotation_angle_direction'], True))
             self.pause_check.SetValue(self.current_experiment[self.highlit_task_num]['pause_button_wait'])
+            if (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'gradual'):
+                self.MIN_TRIAL_BOOL = True
             # Show or hide Pause menu
             if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
                 self.pause_experiment_show()
@@ -456,8 +467,8 @@ class MyFrame(wx.Frame):
                 self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
             except:
                 self.lag_txt.SetValue("0")
-        except:
-            pass
+        except Exception as e:
+            print e
         event.Skip()
     
     def task_list_box_dclick(self, event):
@@ -811,9 +822,10 @@ class MyFrame(wx.Frame):
         event.Skip()
 
     def rot_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
-        self.rotation_angle_chosen = int(event.GetString())
+        self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 5)
+        self.Rotation_angle_slider.SetValue(self.rotation_angle_chosen)
         self.current_experiment[self.highlit_task_num]['rotation_angle'] = self.rotation_angle_chosen
-        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (ceil(float(int(abs(self.Rotation_angle_slider.GetValue()))/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
         if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
             self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
@@ -915,16 +927,45 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['terminal_feedback'] = event.IsChecked()
         event.Skip()
     
-    def rotation_angle_direction_press(self, event):
-        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
-        event.Skip()
+#    def rotation_angle_direction_press(self, event):
+#        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
+#        event.Skip()
+    
     def preprocess_press(self, event):
+        
+        event.Skip()
+    def experiment_settings_Button_Press(self, event):
+        tester = SettingsFrame(self, wx.ID_ANY, "")
+        tester.Show()
         event.Skip()
         
 ############################### SETTINGS WINDOW ##############################
 
-
-
+class SettingsFrame(wx.Frame):
+    def __init__(self, *args, **kwds):
+        wx.Frame.__init__(self, *args, **kwds)
+        
+        self.testButton = wx.Button(self, wx.ID_ANY, "Test")
+        
+        
+        self.Bind(wx.EVT_BUTTON, self.set_butt_press, self.testButton)
+        
+        self.__set_properties()
+        self.__do_layout()
+        
+    def __set_properties(self):
+        self.SetTitle("Settings")
+        self.SetSize((500,500))
+        self.testButton.SetMinSize((100,100))
+        
+    def __do_layout(self):
+        horizontal_1 = wx.BoxSizer(wx.HORIZONTAL)
+        horizontal_1.Add(self.testButton, 0, wx.RIGHT, 2)
+    
+    def set_butt_press(self, event):
+        print ("HELLO!!!")
+        event.Skip()
+        
 # end of class MyFrame
 class MyApp(wx.App):
     def OnInit(self):
