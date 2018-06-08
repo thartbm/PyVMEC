@@ -96,6 +96,7 @@ class MyFrame(wx.Frame):
 #        self.max_angle_CB = wx.ComboBox(self, wx.ID_ANY, choices=[("Cursor"), ("No Cursor"), ("Error Clamp")], style=wx.CB_DROPDOWN)       
         self.Move_Up_Button = wx.Button(self, wx.ID_ANY, (u"\u25b2"))
         self.Move_Down_Button = wx.Button(self, wx.ID_ANY, (u"\u25bc"))
+        self.preprocess_Button = wx.Button(self, wx.ID_ANY, ("Pre-Process"))        
         
         self.num_target_statictext = wx.StaticText(self, wx.ID_ANY, ("# Targets"))
         self.num_targ_CB = wx.ComboBox(self, wx.ID_ANY, value="3", choices=self.num_target_list, style=wx.CB_DROPDOWN)
@@ -163,6 +164,7 @@ class MyFrame(wx.Frame):
         ### Task List Box Events
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.task_list_box_dclick, self.task_list_box)
         self.Bind(wx.EVT_LISTBOX, self.task_list_box_click, self.task_list_box)
+        self.Bind(wx.EVT_BUTTON, self.preprocess_press, self.preprocess_Button)
         # end wxGlade
         
     def __set_properties(self):
@@ -178,6 +180,7 @@ class MyFrame(wx.Frame):
         self.participants_list_box.SetSelection(0)
         self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
+        self.preprocess_Button.SetMinSize((175, 29))
         self.Save_Button.SetMinSize((85, 29))
         self.rename_experiment_button.SetMinSize((55, 29))
         self.rename_task_button.SetMinSize((55, 29))        
@@ -232,9 +235,6 @@ class MyFrame(wx.Frame):
         sizer_2.Add(self.Experiment_statictext, 0, wx.EXPAND, 0)
         sizer_2.Add(self.staticline_1, 0, wx.BOTTOM, 5)
         sizer_2.Add(self.exp_list_box, 0, wx.RIGHT, 1)
-        sizer_2.Add(self.participants_statictext, 0, wx.EXPAND, 0)
-        sizer_2.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
-        sizer_2.Add(self.participants_list_box, 0, wx.RIGHT, 1)
         sizer_5.Add(self.New_Button, 0, wx.ALL, 2)
         sizer_5.Add(self.rename_experiment_button, 0, wx.ALL, 2)
         sizer_5.Add(self.Delete_Button, 0, wx.ALL, 2)
@@ -244,6 +244,10 @@ class MyFrame(wx.Frame):
         sizer_12.Add(sizer_13, 1, 0, 0)
         sizer_12.Add(self.Run_Button, 0, wx.ALL, 2)
         sizer_2.Add(sizer_12, 1, 0, 0)
+        sizer_2.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
+        sizer_2.Add(self.participants_statictext, 0, wx.EXPAND, 0)
+        sizer_2.Add(self.participants_list_box, 0, wx.RIGHT, 1)
+        sizer_2.Add(self.preprocess_Button, 0, wx.RIGHT, 1)
         sizer_1.Add(sizer_2, 1, 0, 0)
         sizer_3.Add(self.Task_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.static_line2, 0, wx.BOTTOM, 5)
@@ -914,8 +918,11 @@ class MyFrame(wx.Frame):
     def rotation_angle_direction_press(self, event):
         self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
         event.Skip()
+    def preprocess_press(self, event):
+        event.Skip()
         
-############################### EXPERIMENT CODE ##############################
+############################### SETTINGS WINDOW ##############################
+
 
 
 # end of class MyFrame
