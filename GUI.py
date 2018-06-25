@@ -32,7 +32,7 @@ class MyFrame(wx.Frame):
         self.current_experiment = []
         self.current_experiment_name = ""
         self.highlit_experiment = ""
-        self.experiment_holder = {'experiment': self.current_experiment, 'settings':{}}
+        self.experiment_holder = {'experiment': self.current_experiment, 'settings':{}, 'participant':{}}
         ### Current Task
         self.highlit_task = ""
         self.highlit_task_num = 0
@@ -501,7 +501,7 @@ class MyFrame(wx.Frame):
             del self.experiment_list_trimmed[:]
         if dlg.ShowModal() == wx.ID_OK:
             new_experiment = []
-            self.experiment_holder = {"experiment":[], "settings":{}}
+            self.experiment_holder = {"experiment":[], "settings":{}, "participant":{}}
             experimentFolder = dlg.GetValue()
             self.highlit_experiment = dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
@@ -524,6 +524,7 @@ class MyFrame(wx.Frame):
             self.experiment_holder['settings']['custom_cursor_file'] = ""
             self.experiment_holder['settings']['custom_home_enable'] = False
             self.experiment_holder['settings']['custom_home_file'] = ""
+            self.experiment_holder['settings']['experiment_folder'] =  dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
                 dump(self.experiment_holder, f)
             f.close()
@@ -590,9 +591,12 @@ class MyFrame(wx.Frame):
             if not(path.exists(path.join("data", experimentFolder, dlg.GetValue()))):
                 makedirs(path.join("data", experimentFolder, dlg.GetValue()))
             try:
-                self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], self.experiment_holder)
+                participant = dlg.GetValue()
+                self.experiment_holder['participant'][participant] = {"state":[0, 0], "angles":[]}
+                self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], participant, self.experiment_holder)
                 self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
-            except:
+            except Exception as e:
+                print e
                 dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg3.ShowModal()
                 dlg3.Destroy()

@@ -2,6 +2,8 @@
 from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
 from psychopy import event, core
 from psychopy.visual import shape
+from os import path
+from json import dump
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -439,11 +441,12 @@ def trial_runner(cfg={}):
             if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
                 pass
             else:
-                timeArray.append(current_timestamp)
-                mouseposXArray.append(current_pos[0])
-                mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
-                cursorposXArray.append(circle_pos[0])
-                cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
+                if phase_1 == True:
+                    timeArray.append(current_timestamp)
+                    mouseposXArray.append(current_pos[0])
+                    mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
+                    cursorposXArray.append(circle_pos[0])
+                    cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
             myWin.flip()
     ################################ PHASE 3 #####################################
 
@@ -502,10 +505,11 @@ def trial_runner(cfg={}):
             print "Error in block 3"
 
 ############################# RUN EXPERIMENT V2 ###############################
-def run_experiment_2(fulls, experiment = {}):
+def run_experiment_2(fulls, participant, experiment = {}):
     end_exp = DataFrame({})
     running = deepcopy(experiment['experiment'])
     settings = deepcopy(experiment['settings'])
+    participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
     try:
         addWorkSpaceLimits(cfg)
@@ -632,7 +636,7 @@ def run_experiment_2(fulls, experiment = {}):
                 except:
                     print "Exception randomizing target"
                 running[i]['target_angle'] = chosen_target
-                targetList.remove(chosen_target)
+                
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
 #                try:
@@ -644,7 +648,14 @@ def run_experiment_2(fulls, experiment = {}):
                     return end_exp
                 else:
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
+                    df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     end_exp = concat([end_exp, df_exp])
+                    experiment['participant'][participant]['angles'] = targetList
+                    experiment['participant'][participant]['state'] = [i, trial_num]
+                    targetList.remove(chosen_target)
+                    with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
+                        dump(experiment, f)
+                        f.close()
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
