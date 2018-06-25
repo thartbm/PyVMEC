@@ -32,6 +32,7 @@ class MyFrame(wx.Frame):
         self.current_experiment = []
         self.current_experiment_name = ""
         self.highlit_experiment = ""
+        self.experiment_holder = {'experiment': self.current_experiment, 'settings':{}}
         ### Current Task
         self.highlit_task = ""
         self.highlit_task_num = 0
@@ -56,6 +57,8 @@ class MyFrame(wx.Frame):
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
+        self.DEFAULT_FRAME_SIZE = ((708, 580))
+        self.PAUSE_FRAME_SIZE = ((708, 500))
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -78,7 +81,9 @@ class MyFrame(wx.Frame):
         self.rotation_angle_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.rotation_change_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.target_distance_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
-        
+        self.group_listbox_statictext = wx.StaticText(self, wx.ID_ANY, "Group")
+        self.group_listbox_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
+        self.group_listbox = wx.ListBox(self, wx.ID_ANY, choices=["Empty"])
         self.rename_experiment_button = wx.Button(self, wx.ID_ANY, ("Rename"))
         self.rename_task_button = wx.Button(self, wx.ID_ANY, ("Rename"))
         
@@ -171,18 +176,20 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.task_list_box_dclick, self.task_list_box)
         self.Bind(wx.EVT_LISTBOX, self.task_list_box_click, self.task_list_box)
         self.Bind(wx.EVT_BUTTON, self.preprocess_press, self.preprocess_Button)
+        
+        self.Bind(wx.EVT_LISTBOX, self.group_listbox_click, self.group_listbox)
         # end wxGlade
         
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
         self.SetTitle(("PyVMEC"))
 #        self.SetSize((798, 462)) ## Set size to this when Pause is selected
-        self.SetSize((698, 560))
+        self.SetSize(self.DEFAULT_FRAME_SIZE)
         self.Experiment_statictext.SetMinSize((70, 17))
         self.staticline_1.SetMinSize((175, 22))
         self.exp_list_box.SetMinSize((175, 150))
         self.exp_list_box.SetSelection(0)
-        self.participants_list_box.SetMinSize((175,150))
+        self.participants_list_box.SetMinSize((175,200))
         self.participants_list_box.SetSelection(0)
         self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
@@ -199,7 +206,7 @@ class MyFrame(wx.Frame):
 
         self.Plus_Button.SetMinSize((55, 29))
         self.Minus_Button.SetMinSize((55, 29))        
-        
+        self.group_listbox_staticline.SetMinSize((175, 22))
         self.static_line2.SetMinSize((175, 22))
         self.min_max_staticline.SetMinSize((175, 22))
         self.static_line_3.SetMinSize((175, 22))
@@ -210,8 +217,9 @@ class MyFrame(wx.Frame):
         self.rotation_change_staticline.SetMinSize((175, 22))
         self.terminalfeedback_Radio_staticline.SetMinSize((175, 22))
         
-        self.task_list_box.SetMinSize((175, 332))
+        self.task_list_box.SetMinSize((175, 220))
         self.task_list_box.SetSelection(0)
+        self.group_listbox.SetMinSize((175,166))
         self.radio_box_1.SetSelection(0)
         self.Move_Up_Button.SetMinSize((30, 30))
         self.Move_Down_Button.SetMinSize((30, 30))
@@ -250,21 +258,23 @@ class MyFrame(wx.Frame):
         sizer_13.Add(self.Load_Button, 0, wx.ALL, 2)
         sizer_13.Add(self.Save_Button, 0, wx.ALL, 2)
         sizer_12.Add(sizer_13, 1, 0, 0)
-        sizer_12.Add(self.Run_Button, 0, wx.ALL, 2)
+        sizer_12.Add(self.Run_Button, 0, wx.ALL, 1)
         sizer_2.Add(sizer_12, 1, 0, 0)
-        sizer_2.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
-        sizer_2.Add(self.participants_statictext, 0, wx.EXPAND, 0)
-        sizer_2.Add(self.participants_list_box, 0, wx.RIGHT, 1)
-        sizer_2.Add(self.preprocess_Button, 0, wx.RIGHT, 1)
-        
+        sizer_2.Add(self.group_listbox_staticline, 0, wx.BOTTOM, 0)
+        sizer_2.Add(self.group_listbox_statictext, 0, wx.EXPAND, 0)
+        sizer_2.Add(self.group_listbox, 0, wx.RIGHT, 1)
+        sizer_2.Add(self.preprocess_Button, 0, wx.RIGHT, 1)     
         sizer_1.Add(sizer_2, 1, 0, 0)
         sizer_3.Add(self.Task_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.static_line2, 0, wx.BOTTOM, 5)
-        sizer_3.Add(self.task_list_box, 0, wx.LEFT, 1)   
+        sizer_3.Add(self.task_list_box, 0, wx.LEFT, 1)
         sizer_4.Add(self.Plus_Button, 0, wx.ALL, 2)
         sizer_4.Add(self.rename_task_button, 0, wx.ALL, 2)
         sizer_4.Add(self.Minus_Button, 0, wx.ALL, 2)
         sizer_3.Add(sizer_4, 1, 0, 0)
+        sizer_3.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
+        sizer_3.Add(self.participants_statictext, 0, wx.EXPAND, 0)
+        sizer_3.Add(self.participants_list_box, 0, wx.RIGHT, 1)
         sizer_1.Add(sizer_3, 1, 0, 0)
         sizer_10.Add(self.radio_box_1, 0, 0, 0)
         sizer_10.Add(self.static_line_3, 0, wx.BOTTOM, 2)
@@ -356,7 +366,7 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Hide()
         self.pause_message_txt.Hide()
         self.pause_check.Hide()
-        self.SetSize((698, 560))
+        self.SetSize(self.DEFAULT_FRAME_SIZE)
     
     def pause_experiment_show(self):
         ### Right most widgets ###
@@ -391,7 +401,7 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Show()
         self.pause_message_txt.Show()
         self.pause_check.Show()
-        self.SetSize((543, 500))
+        self.SetSize(self.PAUSE_FRAME_SIZE)
         
         
         
@@ -400,8 +410,9 @@ class MyFrame(wx.Frame):
         experimentFolder = self.highlit_experiment
         self.current_experiment_name = event.GetString()
         with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
-            self.current_experiment = load(f)
+            self.experiment_holder = load(f)
             del self.task_list[:]
+        self.current_experiment = self.experiment_holder['experiment']
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(self.current_experiment[i]["task_name"])
         if len(self.task_list) == 0:
@@ -425,7 +436,6 @@ class MyFrame(wx.Frame):
         event.Skip()
         
     def task_list_box_click(self, event):
-        lag_conversion_factor = 37.2495/1000
         self.highlit_task = event.GetString()
         self.highlit_task_num = event.GetSelection()
         try:
@@ -504,6 +514,18 @@ class MyFrame(wx.Frame):
                 self.current_experiment = load(f)
                 del self.task_list[:]     
             self.task_list_box.Set(["Empty"])
+            self.experiment_holder['settings']['fullscreen'] = True
+            self.experiment_holder['settings']['flipscreen'] = False
+            self.experiment_holder['settings']['return_movement'] = False
+            self.experiment_holder['settings']['custom_target_enable'] = False
+            self.experiment_holder['settings']['custom_target_file'] = ""
+            self.experiment_holder['settings']['custom_cursor_enable'] = False
+            self.experiment_holder['settings']['custom_cursor_file'] = ""
+            self.experiment_holder['settings']['custom_home_enable'] = False
+            self.experiment_holder['settings']['custom_home_file'] = ""
+            with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
+                dump(self.experiment_holder, f)
+            f.close()
             if not(path.exists(path.join("data", experimentFolder))):
                 makedirs(path.join("data",experimentFolder))
         dlg.Destroy()
@@ -549,7 +571,7 @@ class MyFrame(wx.Frame):
         dlg = wx.MessageDialog(self, "Save Experiment?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
             with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-                dump(self.current_experiment, f)
+                dump(self.experiment_holder, f)
                 f.close()
         dlg.Destroy()
         event.Skip()
@@ -567,11 +589,13 @@ class MyFrame(wx.Frame):
             if not(path.exists(path.join("data", experimentFolder, dlg.GetValue()))):
                 makedirs(path.join("data", experimentFolder, dlg.GetValue()))
             try:
-                self.experiment_run = exp.run_experiment_2(self.FULLSCREEN, self.current_experiment)
+                self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], self.experiment_holder)
                 self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except:
-                pass
-            
+                dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg3.ShowModal()
+                dlg3.Destroy()
+                return
         else:
             pass
         #### REFRESH PARTICIPANT LIST #####
@@ -592,11 +616,12 @@ class MyFrame(wx.Frame):
         dlg.SetValue("Default")
         if dlg.ShowModal() == wx.ID_OK:
             new_task = {}
+            self.experiment_holder['experiment'] = self.current_experiment 
             self.current_experiment.append(new_task)
             self.highlit_task_num = len(self.current_experiment) - 1
             self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
             self.current_experiment[self.highlit_task_num]['target_distance_ratio'] = float(100/100)
-            self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = 33
+            self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = 3
             self.current_experiment[self.highlit_task_num]['rotation_change_type'] = 'abrupt'
             self.current_experiment[self.highlit_task_num]['rotation_angle'] = 0
             self.current_experiment[self.highlit_task_num]['trial_type'] = 'cursor'
@@ -612,9 +637,9 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['pausetime'] = 3
             self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
             self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
-            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
-                dump(self.current_experiment, f)
-                f.close()
+#            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:           
+#                dump(self.experiment_holder, f)
+#                f.close()
             del self.task_list[:]
             for i in range (0, len(self.current_experiment)):
                 self.task_list.append(self.current_experiment[i]['task_name'])
@@ -652,9 +677,9 @@ class MyFrame(wx.Frame):
     def Minus_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         del self.current_experiment[self.highlit_task_num] # remove current task
         self.highlit_task_num = len(self.current_experiment) - 1
-        with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
-            dump(self.current_experiment, f) #remove current task from file
-            f.close()
+#        with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f: 
+#            dump(self.current_experiment, f) #remove current task from file
+#            f.close()
         del self.task_list[:]
         # refresh task list
         for i in range (0, len(self.current_experiment)):
@@ -681,9 +706,13 @@ class MyFrame(wx.Frame):
             elif(chosen_trial == "Error Clamp"):
                 self.current_experiment[self.highlit_task_num]["trial_type"] = "error_clamp"
                 self.regular_experiment_show()
-            with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-                dump(self.current_experiment, f)
-                f.close()
+            if (chosen_trial != "Cursor"):
+                self.current_experiment[self.highlit_task_num]['rotation_change_type'] = 'abrupt'
+                self.MIN_TRIAL_BOOL = False
+                self.rot_change_statictext.SetSelection(exp.rotation_num(self.current_experiment[self.highlit_task_num]['rotation_change_type'], True))            
+#            with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#                dump(self.current_experiment, f)
+#                f.close()
             # refresh task list
             del self.task_list[:]
             for i in range (0, len(self.current_experiment)):
@@ -710,9 +739,9 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['min_angle'] = self.min_angle_chosen
         self.current_experiment[self.highlit_task_num]['max_angle'] = self.max_angle_chosen      
         #save
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()
         event.Skip()
         
     def max_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -726,18 +755,18 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['min_angle'] = self.min_angle_chosen
         self.current_experiment[self.highlit_task_num]['max_angle'] = self.max_angle_chosen      
         #save        
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()
         event.Skip()
 
     def Move_Up(self, event):  # wxGlade: MyFrame.<event_handler>  
         if (self.highlit_task_num > 0):
             self.current_experiment[self.highlit_task_num], self.current_experiment[self.highlit_task_num - 1] = self.current_experiment[self.highlit_task_num - 1], self.current_experiment[self.highlit_task_num]
             self.highlit_task_num = self.highlit_task_num - 1
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()
         # refresh task list
         del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
@@ -753,9 +782,9 @@ class MyFrame(wx.Frame):
         if (self.highlit_task_num < len(self.task_list) - 1):
             self.current_experiment[self.highlit_task_num], self.current_experiment[self.highlit_task_num + 1] = self.current_experiment[self.highlit_task_num + 1], self.current_experiment[self.highlit_task_num]
             self.highlit_task_num = self.highlit_task_num + 1
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()
         # refresh task list
         del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
@@ -771,7 +800,7 @@ class MyFrame(wx.Frame):
         self.num_target_chosen = int(event.GetString())
         
         self.current_experiment[self.highlit_task_num]['num_targets'] = self.num_target_chosen
-        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = ceil(float(int(self.Rotation_angle_CB.GetValue())/float(int(self.num_targ_CB.GetValue()))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())        
+        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = ceil(float(self.Rotation_angle_slider.GetValue())/float(int(self.num_targ_CB.GetValue())))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())        
         ## Set num trial default
         if self.num_target_chosen > 2:
             self.num_trial_CB.SetValue(self.num_target_chosen)
@@ -790,9 +819,9 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
             
         ## SAVE
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()        
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()        
         event.Skip()
         
 
@@ -816,9 +845,9 @@ class MyFrame(wx.Frame):
         self.num_trial_chosen = self.valid_trial_num
         self.current_experiment[self.highlit_task_num]['num_trials'] = int(self.num_trial_chosen)
         ## SAVE        
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()
         event.Skip()
 
     def rot_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -830,9 +859,9 @@ class MyFrame(wx.Frame):
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
             self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
                 
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()
         event.Skip()
 
     def Rot_Change_Press(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -859,9 +888,9 @@ class MyFrame(wx.Frame):
         else:
             self.current_experiment[self.highlit_task_num]['lag'] = int(int(event.GetString())*lag_conversion_factor)
             self.current_experiment[self.highlit_task_num]['lag_value'] = int(event.GetString())
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.experiment_holder, f)
+#            f.close()
             
         event.Skip()
 
@@ -875,16 +904,16 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['pausetime'] = 0
         else:
             self.current_experiment[self.highlit_task_num]['pausetime'] = int(event.GetString())
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()        
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()        
         event.Skip()
 
     def pause_message_make(self, event):  # wxGlade: MyFrame.<event_handler>
         self.current_experiment[self.highlit_task_num]['pause_instruction'] = event.GetString()
-        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-            dump(self.current_experiment, f)
-            f.close()   
+#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+#            dump(self.current_experiment, f)
+#            f.close()   
         event.Skip()
     
     def pause_check_press(self, event):
@@ -930,18 +959,237 @@ class MyFrame(wx.Frame):
 #    def rotation_angle_direction_press(self, event):
 #        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
 #        event.Skip()
+    def group_listbox_click(self, event):
+        event.Skip()
     
     def preprocess_press(self, event):
-        
+        preprocess = PreprocessFrame(self, wx.ID_ANY, "")
+        preprocess.Show(True)
         event.Skip()
+        
     def experiment_settings_Button_Press(self, event):
-        tester = SettingsFrame(self, wx.ID_ANY, "")
-        tester.Show()
+        settings = SettingsFrame(self, wx.ID_ANY, "")
+        settings.Show(True)
         event.Skip()
         
-############################### SETTINGS WINDOW ##############################
+############################### SETTINGS Panel ##############################
 
 class SettingsFrame(wx.Frame):
+    def __init__(self, *args, **kwds):
+        wx.Frame.__init__(self, *args, **kwds)
+        ### Empty image preset ###
+        self.empty_image = wx.EmptyImage(35,35)
+        ### OPTION STATES ###
+        self.fullscreen_state = self.Parent.experiment_holder['settings']['fullscreen']
+        self.flipscreen_state = self.Parent.experiment_holder['settings']['flipscreen']
+        self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
+        self.enable_custom_target_state = self.Parent.experiment_holder['settings']['custom_target_enable']
+        self.custom_target_file_state = self.Parent.experiment_holder['settings']['custom_target_file']
+        self.enable_custom_cursor_state = self.Parent.experiment_holder['settings']['custom_cursor_enable']
+        self.custom_cursor_file_state = self.Parent.experiment_holder['settings']['custom_cursor_file']
+        self.enable_custom_home_state = self.Parent.experiment_holder['settings']['custom_home_enable']
+        self.custom_home_file_state = self.Parent.experiment_holder['settings']['custom_home_file']
+        
+        
+        ###############
+        self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
+        self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
+        self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
+        self.enable_custom_target = wx.CheckBox(self, wx.ID_ANY, "Enable custom target")
+        self.custom_target_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")   
+        self.custom_target_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
+        self.enable_custom_cursor = wx.CheckBox(self, wx.ID_ANY, "Enable custom cursor")
+        self.custom_cursor_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")   
+        self.custom_cursor_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
+        self.enable_custom_home = wx.CheckBox(self, wx.ID_ANY, "Enable custom home")
+        self.custom_home_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")   
+        self.custom_home_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
+        
+        
+        
+        self.apply_button = wx.Button(self, wx.ID_ANY, "Apply Changes")
+        self.cancel_button = wx.Button(self, wx.ID_ANY, "Cancel")
+        self.Bind(wx.EVT_CHECKBOX, self.fullscreen_toggle_press, self.fullscreen_toggle)
+        self.Bind(wx.EVT_CHECKBOX, self.flipscreen_toggle_press, self.flipscreen_toggle)
+        self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
+        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_target_press, self.enable_custom_target)
+        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_target_file_choose, self.custom_target_file)
+        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_cursor_press, self.enable_custom_cursor)
+        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_cursor_file_choose, self.custom_cursor_file)
+        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_home_press, self.enable_custom_home)
+        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_home_file_choose, self.custom_home_file)
+        
+        self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)     
+        self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
+        
+        self.__set_properties()
+        self.__do_layout()
+        
+    def __set_properties(self):
+        self.SetTitle("Settings")
+        self.SetSize((200,350))
+        self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
+        self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
+        self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
+        self.enable_custom_target.SetValue(self.Parent.experiment_holder['settings']['custom_target_enable'])
+        self.enable_custom_home.SetValue(self.Parent.experiment_holder['settings']['custom_home_enable'])
+        self.enable_custom_cursor.SetValue(self.Parent.experiment_holder['settings']['custom_cursor_enable'])
+        self.custom_target_file.SetPath(self.Parent.experiment_holder['settings']['custom_target_file'])
+        self.custom_home_file.SetPath(self.Parent.experiment_holder['settings']['custom_home_file'])
+        self.custom_cursor_file.SetPath(self.Parent.experiment_holder['settings']['custom_cursor_file'])
+
+        if self.Parent.experiment_holder['settings']['custom_target_file'] != "":
+            image = wx.Image(self.Parent.experiment_holder['settings']['custom_target_file'], wx.BITMAP_TYPE_ANY)
+            image.Rescale(35,35)
+            self.custom_target_preview.SetBitmap(wx.BitmapFromImage(image))
+        else:
+            self.custom_target_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
+        
+        if self.Parent.experiment_holder['settings']['custom_home_file'] != "":
+            image = wx.Image(self.Parent.experiment_holder['settings']['custom_home_file'], wx.BITMAP_TYPE_ANY)
+            image.Rescale(35,35)
+            self.custom_home_preview.SetBitmap(wx.BitmapFromImage(image))
+        else:
+            self.custom_home_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
+        
+        if self.Parent.experiment_holder['settings']['custom_cursor_file'] != "":
+            image = wx.Image(self.Parent.experiment_holder['settings']['custom_cursor_file'], wx.BITMAP_TYPE_ANY)
+            image.Rescale(35,35)
+            self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(image))
+        else:
+            self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
+            
+        
+        if self.enable_custom_target_state == False:
+            self.custom_target_file.Disable()
+            self.custom_target_preview.Disable()
+        elif self.enable_custom_target_state == True:
+            self.custom_target_file.Enable()
+            self.custom_target_preview.Enable()
+            
+        if self.enable_custom_home_state == False:
+            self.custom_home_file.Disable()
+            self.custom_home_preview.Disable()
+        elif self.enable_custom_home_state == True:
+            self.custom_home_file.Enable()
+            self.custom_home_preview.Enable()
+            
+        if self.enable_custom_cursor_state == False:
+            self.custom_cursor_file.Disable()
+            self.custom_cursor_preview.Disable()
+        elif self.enable_custom_cursor_state == True:
+            self.custom_cursor_file.Enable()
+            self.custom_cursor_preview.Enable()
+    def __do_layout(self):
+        horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
+        vertical_1 = wx.BoxSizer(wx.VERTICAL)
+        vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.enable_custom_target, 0, wx.TOP, 2)
+        horizontal_1 = wx.BoxSizer(wx.HORIZONTAL)
+        horizontal_1.Add(self.custom_target_preview,0, wx.LEFT, 2)
+        horizontal_1.Add(self.custom_target_file, 0, wx.RIGHT, 2)
+        vertical_1.Add(horizontal_1)
+        vertical_1.Add(self.enable_custom_home, 0, wx.TOP, 2)
+        horizontal_2 = wx.BoxSizer(wx.HORIZONTAL)
+        horizontal_2.Add(self.custom_home_preview,0, wx.LEFT, 2)
+        horizontal_2.Add(self.custom_home_file, 0, wx.RIGHT, 2)
+        vertical_1.Add(horizontal_2)
+        vertical_1.Add(self.enable_custom_cursor, 0, wx.TOP, 2)
+        horizontal_3 = wx.BoxSizer(wx.HORIZONTAL)
+        horizontal_3.Add(self.custom_cursor_preview, 0, wx.LEFT, 2)
+        horizontal_3.Add(self.custom_cursor_file, 0, wx.RIGHT, 2)
+        vertical_1.Add(horizontal_3)
+        
+        vertical_1.Add(self.apply_button, 0, wx.BOTTOM, 2)
+        vertical_1.Add(self.cancel_button, 0, wx.BOTTOM, 2)
+        horizontal_main.Add(vertical_1, 1, 0, 0)
+        
+        self.SetSizer(horizontal_main)
+        self.Layout()
+    
+    def fullscreen_toggle_press(self, event):
+        self.fullscreen_state = event.IsChecked()
+        event.Skip()
+    def flipscreen_toggle_press(self, event):
+        self.flipscreen_state = event.IsChecked()
+        event.Skip()
+        
+    def collect_return_movement_toggle_press(self, event):
+        self.collect_return_movement_state = event.IsChecked()
+        event.Skip()
+        
+    def enable_custom_target_press(self, event):
+        self.enable_custom_target_state = event.IsChecked()
+        if self.enable_custom_target_state == False:
+            self.custom_target_file.Disable()
+            self.custom_target_preview.Disable()
+        elif self.enable_custom_target_state == True:
+            self.custom_target_file.Enable()
+            self.custom_target_preview.Enable()
+        event.Skip()
+        
+    def custom_target_file_choose(self, event):
+        self.custom_target_file_state = event.GetPath()
+        image = wx.Image(self.custom_target_file_state, wx.BITMAP_TYPE_ANY)
+        image.Rescale(35,35)
+        self.custom_target_preview.SetBitmap(wx.BitmapFromImage(image))
+        event.Skip()
+        
+    def enable_custom_home_press(self, event):
+        self.enable_custom_home_state = event.IsChecked()
+        if self.enable_custom_home_state == False:
+            self.custom_home_file.Disable()
+            self.custom_home_preview.Disable()
+        elif self.enable_custom_home_state == True:
+            self.custom_home_file.Enable()
+            self.custom_home_preview.Enable()
+        event.Skip()
+        
+    def custom_home_file_choose(self, event):
+        self.custom_home_file_state = event.GetPath()
+        image = wx.Image(self.custom_home_file_state, wx.BITMAP_TYPE_ANY)
+        image.Rescale(35,35)
+        self.custom_home_preview.SetBitmap(wx.BitmapFromImage(image))
+        event.Skip()
+        
+    def enable_custom_cursor_press(self, event):
+        self.enable_custom_cursor_state = event.IsChecked()
+        if self.enable_custom_cursor_state == False:
+            self.custom_cursor_file.Disable()
+            self.custom_cursor_preview.Disable()
+        elif self.enable_custom_cursor_state == True:
+            self.custom_cursor_file.Enable()
+            self.custom_cursor_preview.Enable()
+        event.Skip()
+        
+    def custom_cursor_file_choose(self, event):
+        self.custom_cursor_file_state = event.GetPath()
+        image = wx.Image(self.custom_cursor_file_state, wx.BITMAP_TYPE_ANY)
+        image.Rescale(35,35)
+        self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(image))
+        event.Skip()
+        
+    def apply_button_press(self, event):
+        self.Parent.experiment_holder['settings']['fullscreen'] = self.fullscreen_state
+        self.Parent.experiment_holder['settings']['flipscreen'] = self.flipscreen_state
+        self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state        
+        self.Parent.experiment_holder['settings']['custom_target_enable'] = self.enable_custom_target_state
+        self.Parent.experiment_holder['settings']['custom_target_file'] = self.custom_target_file_state
+        self.Parent.experiment_holder['settings']['custom_home_enable'] = self.enable_custom_home_state
+        self.Parent.experiment_holder['settings']['custom_home_file'] = self.custom_home_file_state
+        self.Parent.experiment_holder['settings']['custom_cursor_enable'] = self.enable_custom_cursor_state
+        self.Parent.experiment_holder['settings']['custom_cursor_file'] = self.custom_cursor_file_state
+        
+        self.Destroy()
+        event.Skip()
+    def cancel_button_press(self, event):
+        self.Destroy()
+        event.Skip()
+
+###################### PREPROCESSING FRAME ##########################        
+class PreprocessFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
         
@@ -954,7 +1202,7 @@ class SettingsFrame(wx.Frame):
         self.__do_layout()
         
     def __set_properties(self):
-        self.SetTitle("Settings")
+        self.SetTitle("Pre-Process")
         self.SetSize((500,500))
         self.testButton.SetMinSize((100,100))
         
@@ -963,7 +1211,8 @@ class SettingsFrame(wx.Frame):
         horizontal_1.Add(self.testButton, 0, wx.RIGHT, 2)
     
     def set_butt_press(self, event):
-        print ("HELLO!!!")
+        check = self.Parent.Rotation_angle_slider.GetValue()
+        print check, type(check)
         event.Skip()
         
 # end of class MyFrame

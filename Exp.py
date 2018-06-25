@@ -1,5 +1,5 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
-from psychopy.visual import Window, Circle, ShapeStim, TextStim
+from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
 from psychopy import event, core
 from psychopy.visual import shape
 #import pygame as pg
@@ -183,9 +183,9 @@ def trial_runner(cfg={}):
         myWin=cfg['win']
         if (cfg['trial_type'] == 'pause'):
             instruction = cfg['pause_instruction']
-            counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
-            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
+            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), color=( 1, 1, 1))
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
@@ -212,7 +212,7 @@ def trial_runner(cfg={}):
             return None
 
         end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
-        end_Y = (cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))) - cfg['active_height']/2
+        end_Y = ((cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))) - cfg['active_height']/2)*cfg['flipscreen']
         ### Creates Mouse object
         if (cfg['poll_type'] == 'psychopy'):
             myMouse = cfg['mouse']
@@ -290,11 +290,11 @@ def trial_runner(cfg={}):
                     return 'escaped'
                 ### mouse Position
                 if (cfg['poll_type'] == 'psychopy'):
-                    mousePos = myMouse.getPos()
+                    mousePos = [myMouse.getPos()[0], myMouse.getPos()[1]*cfg['flipscreen']]
                     current_pos = mousePos
                     current_timestamp = core.getTime() - myTime
                 elif (cfg['poll_type'] == 'x11'):
-                    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]]
+                    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']]
                     current_pos = mousePos
                     current_timestamp = myMouse.Pos()[2] - myTime
         ########################## SPECIAL CURSOR CONFIGURATIONS #####################
@@ -436,11 +436,14 @@ def trial_runner(cfg={}):
             prev_Y = current_pos[1]
             prev_X_cursor = circle_pos[0]
             prev_Y_cursor = circle_pos[1]
-            timeArray.append(current_timestamp)
-            mouseposXArray.append(current_pos[0])
-            mouseposYArray.append(current_pos[1] + cfg['active_height']/2)
-            cursorposXArray.append(circle_pos[0])
-            cursorposYArray.append(circle_pos[1] + cfg['active_height']/2)
+            if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
+                pass
+            else:
+                timeArray.append(current_timestamp)
+                mouseposXArray.append(current_pos[0])
+                mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
+                cursorposXArray.append(circle_pos[0])
+                cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
             myWin.flip()
     ################################ PHASE 3 #####################################
 
@@ -463,9 +466,9 @@ def trial_runner(cfg={}):
                     timePos_dict['targetangle_deg'] = cfg['target_angle']
                     timePos_dict['rotation_angle'] = rot_dir*cfg['rotation_angle']
                     timePos_dict['homex_px'] = startPos[0]
-                    timePos_dict['homey_px'] = startPos[1] + cfg['active_height']/2
+                    timePos_dict['homey_px'] = startPos[1]*cfg['flipscreen'] + cfg['active_height']/2
                     timePos_dict['targetx_px'] = endPos[0]
-                    timePos_dict['targety_px'] = endPos[1] + cfg['active_height']/2
+                    timePos_dict['targety_px'] = endPos[1]*cfg['flipscreen'] + cfg['active_height']/2
                     timePos_dict['time_s'] = timeArray
                     timePos_dict['mousex_px'] = mouseposXArray
                     timePos_dict['mousey_px'] = mouseposYArray
@@ -499,9 +502,10 @@ def trial_runner(cfg={}):
             print "Error in block 3"
 
 ############################# RUN EXPERIMENT V2 ###############################
-def run_experiment_2(fulls, experiment = []):
+def run_experiment_2(fulls, experiment = {}):
     end_exp = DataFrame({})
-    running = deepcopy(experiment)
+    running = deepcopy(experiment['experiment'])
+    settings = deepcopy(experiment['settings'])
     cfg = {}
     try:
         addWorkSpaceLimits(cfg)
@@ -525,38 +529,77 @@ def run_experiment_2(fulls, experiment = []):
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
                                  lineColor=[0,0,0])
-
-        myCircle = Circle(win=Win,
-                                 radius=cfg['circle_radius'],
-                                 edges=32,
-                                 units='pix',
-                                 fillColor=[0, 0, 0],
-                                 lineColor=[0, 0, 0])
-        startCircle = Circle(win=Win,
-                                    radius=cfg['circle_radius'],
-                                    lineWidth=2,
-                                    edges=32,
-                                    units='pix',
-                                    fillColor=[-1, -1, -1],
+        if settings['custom_cursor_enable'] == False:
+            myCircle = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
-        endCircle = Circle(win=Win,
-                                  radius=cfg['circle_radius'],
-                                  lineWidth=2,
-                                  edges=32,
-                                  units='pix',
-                                  fillColor=[-1, -1, -1],
-                                  lineColor=[0, 0, 0])
-
-
+        else:
+            try:
+                myCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
+            except:
+                myCircle = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+        if settings['custom_home_enable'] == False:
+            startCircle = Circle(win=Win,
+                                        radius=cfg['circle_radius'],
+                                        lineWidth=2,
+                                        edges=32,
+                                        units='pix',
+                                        fillColor=[-1, -1, -1],
+                                         lineColor=[0, 0, 0])
+        else:
+            try:
+                startCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
+            except:
+                startCircle = Circle(win=Win,
+                                        radius=cfg['circle_radius'],
+                                        lineWidth=2,
+                                        edges=32,
+                                        units='pix',
+                                        fillColor=[-1, -1, -1],
+                                         lineColor=[0, 0, 0])
+        if settings['custom_target_enable'] == False:
+            endCircle = Circle(win=Win,
+                                      radius=cfg['circle_radius'],
+                                      lineWidth=2,
+                                      edges=32,
+                                      units='pix',
+                                      fillColor=[-1, -1, -1],
+                                      lineColor=[0, 0, 0])
+        else:
+            try:
+                endCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
+            except:
+                endCircle = Circle(win=Win,
+                                      radius=cfg['circle_radius'],
+                                      lineWidth=2,
+                                      edges=32,
+                                      units='pix',
+                                      fillColor=[-1, -1, -1],
+                                      lineColor=[0, 0, 0])
+                                      
         Mouse = event.Mouse(win=Win, visible=False)
+    
     except Exception as e:
         print e
         print str(e)
-    for i in range (0, len(experiment)):
+    for i in range (0, len(running)):
+        if experiment['settings']['flipscreen'] == True:
+            running[i]['flipscreen'] = -1
+        else:
+            running[i]['flipscreen'] = 1
         try:
             running[i]['x11_mouse'] = myMouse()
         except:
             running[i]['poll_type'] = 'psychopy'
+        running[i]['return_movement'] = experiment['settings']['return_movement']
         running[i]['cursor_circle'] = myCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
@@ -569,7 +612,7 @@ def run_experiment_2(fulls, experiment = []):
         running[i]['max_distance'] = cfg['active_height']
         running[i]['min_distance'] = cfg['active_height']/2
         running[i]['active_height'] = cfg['active_height']
-        running[i]['starting_pos'] = (0, -cfg['active_height']/2)
+        running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         running[i]['current_rotation_angle'] = 0
         targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         fulltargetList = tuple(targetList)
@@ -597,6 +640,7 @@ def run_experiment_2(fulls, experiment = []):
 #                except:
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
+                    running[i]['win'].close()
                     return end_exp
                 else:
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
