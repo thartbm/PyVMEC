@@ -501,6 +501,7 @@ class MyFrame(wx.Frame):
             del self.experiment_list_trimmed[:]
         if dlg.ShowModal() == wx.ID_OK:
             new_experiment = []
+            self.experiment_holder = {"experiment":[], "settings":{}}
             experimentFolder = dlg.GetValue()
             self.highlit_experiment = dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
