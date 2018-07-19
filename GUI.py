@@ -60,7 +60,7 @@ class MyFrame(wx.Frame):
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
         self.DEFAULT_FRAME_SIZE = ((708, 580))
-        self.PAUSE_FRAME_SIZE = ((708, 500))
+        self.PAUSE_FRAME_SIZE = ((536, 580))
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
