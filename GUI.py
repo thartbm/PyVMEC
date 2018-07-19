@@ -46,6 +46,8 @@ class MyFrame(wx.Frame):
         self.lag_chosen_err = ""
         self.num_target_list = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] 
         self.rotation_angle_list = ["0" , "30", "45", "60", "75"]
+        self.highlit_group = ""
+        self.highlit_participant = ""
         ######################## VALID TEXT STUFF ##############################
         self.valid_lag_text = ""    
         self.valid_pause_text = ""
@@ -68,6 +70,7 @@ class MyFrame(wx.Frame):
         self.Load_Button = wx.Button(self, wx.ID_ANY, ("Load"))
         self.Save_Button = wx.Button(self, wx.ID_ANY, ("Save"))
         self.Run_Button = wx.Button(self, wx.ID_ANY, ("Run"))
+        self.continue_Button = wx.Button(self, wx.ID_ANY, ("Continue Run"))
         self.Task_statictext = wx.StaticText(self, wx.ID_ANY, ("Tasks"))
         self.experiment_settings_Button = wx.Button(self, wx.ID_ANY, "Experiment Settings")
         
@@ -147,6 +150,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.Minus_Press, self.Minus_Button)
         self.Bind(wx.EVT_RADIOBOX, self.Trial_Type_Press, self.radio_box_1)
         self.Bind(wx.EVT_BUTTON, self.experiment_settings_Button_Press, self.experiment_settings_Button)
+        self.Bind(wx.EVT_BUTTON, self.continue_Button_Press, self.continue_Button)        
         
         self.Bind(wx.EVT_SLIDER, self.min_angle_choose, self.min_angle_CB)       
         self.Bind(wx.EVT_SLIDER, self.max_angle_choose, self.max_angle_CB)
@@ -176,7 +180,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.task_list_box_dclick, self.task_list_box)
         self.Bind(wx.EVT_LISTBOX, self.task_list_box_click, self.task_list_box)
         self.Bind(wx.EVT_BUTTON, self.preprocess_press, self.preprocess_Button)
-        
+        self.Bind(wx.EVT_LISTBOX, self.participants_list_box_click, self.participants_list_box)
         self.Bind(wx.EVT_LISTBOX, self.group_listbox_click, self.group_listbox)
         # end wxGlade
         
@@ -193,12 +197,13 @@ class MyFrame(wx.Frame):
         self.participants_list_box.SetSelection(0)
         self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
+        self.continue_Button.SetMinSize((175, 29))
         self.preprocess_Button.SetMinSize((175, 29))
         self.experiment_settings_Button.SetMinSize((175, 29))
         self.Save_Button.SetMinSize((85, 29))
         self.rename_experiment_button.SetMinSize((55, 29))
         self.rename_task_button.SetMinSize((55, 29))        
-        
+        self.continue_Button.Disable()
         
         self.New_Button.SetMinSize((55, 29))
         self.Delete_Button.SetMinSize((55, 29))
@@ -275,6 +280,7 @@ class MyFrame(wx.Frame):
         sizer_3.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
         sizer_3.Add(self.participants_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.participants_list_box, 0, wx.RIGHT, 1)
+        sizer_3.Add(self.continue_Button, 0, wx.RIGHT, 1)
         sizer_1.Add(sizer_3, 1, 0, 0)
         sizer_10.Add(self.radio_box_1, 0, 0, 0)
         sizer_10.Add(self.static_line_3, 0, wx.BOTTOM, 2)
@@ -593,8 +599,12 @@ class MyFrame(wx.Frame):
             try:
                 participant = dlg.GetValue()
                 self.experiment_holder['participant'][participant] = {"state":[0, 0], "angles":[]}
+                with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+                    dump(self.experiment_holder, f)
+                    f.close()
                 self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], participant, self.experiment_holder)
-                self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
+                if (self.experiment_run != "escaped"):
+                    self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except Exception as e:
                 print e
                 dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
@@ -965,6 +975,7 @@ class MyFrame(wx.Frame):
 #        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
 #        event.Skip()
     def group_listbox_click(self, event):
+        self.highlit_group = event.GetString()
         event.Skip()
     
     def preprocess_press(self, event):
@@ -976,7 +987,28 @@ class MyFrame(wx.Frame):
         settings = SettingsFrame(self, wx.ID_ANY, "")
         settings.Show(True)
         event.Skip()
+    
+    def participants_list_box_click(self, event):
+        self.highlit_participant = event.GetString()
+        print self.experiment_holder['participant'][self.highlit_participant]['state'], [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]
         
+        if self.experiment_holder['participant'][self.highlit_participant]['state'] == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+            self.continue_Button.Disable()
+        else:
+            self.continue_Button.Enable()
+        event.Skip()
+    def continue_Button_Press(self, event):
+        dlg = wx.MessageDialog(self, "Continue running this participant?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
+        if dlg.ShowModal() == wx.ID_YES:
+            exp.continue_experiment(self.experiment_holder['settings']['fullscreen'], self.highlit_participant, self.experiment_holder)
+        dlg.Destroy()
+        event.Skip()
+    
+    def concat_csv(self, participant):
+        file_list = []
+        for i in range(0, len(self.current_experiment)):
+            for j in range(0, self.current_experiment[i]['num_trials']):
+                file_list.append(self.current_experiment[i]['task_name'] + '_' + str(j))
 ############################### SETTINGS Panel ##############################
 
 class SettingsFrame(wx.Frame):
@@ -1192,7 +1224,7 @@ class SettingsFrame(wx.Frame):
     def cancel_button_press(self, event):
         self.Destroy()
         event.Skip()
-
+    
 ###################### PREPROCESSING FRAME ##########################        
 class PreprocessFrame(wx.Frame):
     def __init__(self, *args, **kwds):
