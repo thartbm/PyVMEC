@@ -7,6 +7,7 @@ from json import load, dump
 #import path
 import Tkinter as tk
 import Exp as exp
+import traceback
 #import VMEC16 as vm
 root = tk.Tk()
 class MyFrame(wx.Frame):
@@ -530,6 +531,8 @@ class MyFrame(wx.Frame):
             self.experiment_holder['settings']['custom_cursor_file'] = ""
             self.experiment_holder['settings']['custom_home_enable'] = False
             self.experiment_holder['settings']['custom_home_file'] = ""
+            self.experiment_holder['settings']['custom_stim_enable'] = False
+            self.experiment_holder['settings']['custom_stim_file'] = ""
             self.experiment_holder['settings']['experiment_folder'] =  dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
                 dump(self.experiment_holder, f)
@@ -603,10 +606,10 @@ class MyFrame(wx.Frame):
                     dump(self.experiment_holder, f)
                     f.close()
                 self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], participant, self.experiment_holder)
-                if (self.experiment_run != "escaped"):
+                if (len(self.experiment_run) != 0):
                     self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except Exception as e:
-                print e
+                traceback.print_exc()
                 dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg3.ShowModal()
                 dlg3.Destroy()
@@ -984,7 +987,7 @@ class MyFrame(wx.Frame):
         event.Skip()
         
     def experiment_settings_Button_Press(self, event):
-        settings = SettingsFrame(self, wx.ID_ANY, "")
+        settings = SettingsFrameV2(self, wx.ID_ANY, "")
         settings.Show(True)
         event.Skip()
     
@@ -1225,31 +1228,166 @@ class SettingsFrame(wx.Frame):
         self.Destroy()
         event.Skip()
     
+###################### SETTINGS FRAME VERSION 2 #####################
+class SettingsFrameV2(wx.Frame):
+    def __init__(self, *args, **kwds):
+        wx.Frame.__init__(self, *args, **kwds)
+        ### Empty image preset ###
+        self.empty_image = wx.EmptyImage(35,35)
+        ### OPTION STATES ###
+        self.fullscreen_state = self.Parent.experiment_holder['settings']['fullscreen']
+        self.flipscreen_state = self.Parent.experiment_holder['settings']['flipscreen']
+        self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
+        self.enable_custom_stim_state = self.Parent.experiment_holder['settings']['custom_stim_enable']   
+        self.custom_stim_file_state = self.Parent.experiment_holder['settings']['custom_stim_file']
+        ###############
+        self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
+        self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
+        self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
+        self.enable_custom_stim = wx.CheckBox(self, wx.ID_ANY, "Enable custom stimuli")
+        self.custom_stim_file = wx.DirPickerCtrl(self, wx.ID_ANY, path="", style=wx.DIRP_USE_TEXTCTRL)
+        
+        self.apply_button = wx.Button(self, wx.ID_ANY, "Apply Changes")
+        self.cancel_button = wx.Button(self, wx.ID_ANY, "Cancel")
+        self.Bind(wx.EVT_CHECKBOX, self.fullscreen_toggle_press, self.fullscreen_toggle)
+        self.Bind(wx.EVT_CHECKBOX, self.flipscreen_toggle_press, self.flipscreen_toggle)
+        self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
+        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_stim_press, self.enable_custom_stim)
+        self.Bind(wx.EVT_DIRPICKER_CHANGED, self.custom_stim_file_choose, self.custom_stim_file)
+       
+        self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)     
+        self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
+        
+        self.__set_properties()
+        self.__do_layout()
+        
+    def __set_properties(self):
+        self.SetTitle("Settings")
+        self.SetSize((200,350))
+        self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
+        self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
+        self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
+        self.enable_custom_stim.SetValue(self.Parent.experiment_holder['settings']['custom_stim_enable'])
+        self.custom_stim_file.SetPath(self.Parent.experiment_holder['settings']['custom_stim_file'])
+        
+        if self.Parent.experiment_holder['settings']['custom_stim_enable'] == False:
+            self.custom_stim_file.Disable()
+        else:
+            self.custom_stim_file.Enable()
+    def __do_layout(self):
+        horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
+        vertical_1 = wx.BoxSizer(wx.VERTICAL)
+        vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.enable_custom_stim, 0, wx.TOP, 2)
+        vertical_1.Add(self.custom_stim_file, 0, wx.TOP, 2)
+        vertical_1.Add(self.apply_button, 0, wx.BOTTOM, 2)
+        vertical_1.Add(self.cancel_button, 0, wx.BOTTOM, 2)
+        horizontal_main.Add(vertical_1, 1, 0, 0)
+        
+        self.SetSizer(horizontal_main)
+        self.Layout()
+    
+    def fullscreen_toggle_press(self, event):
+        self.fullscreen_state = event.IsChecked()
+        event.Skip()
+    def flipscreen_toggle_press(self, event):
+        self.flipscreen_state = event.IsChecked()
+        event.Skip()
+        
+    def collect_return_movement_toggle_press(self, event):
+        self.collect_return_movement_state = event.IsChecked()
+        event.Skip()
+        
+    def enable_custom_stim_press(self, event):
+        self.enable_custom_stim_state = event.IsChecked()
+        if self.enable_custom_stim_state == False:
+            self.custom_stim_file.Disable()
+        elif self.enable_custom_stim_state == True:
+            self.custom_stim_file.Enable()
+        event.Skip()
+        
+    def custom_stim_file_choose(self, event):
+        self.custom_stim_file_state = event.GetPath()
+        event.Skip()
+        
+    
+        
+    def apply_button_press(self, event):
+        self.Parent.experiment_holder['settings']['fullscreen'] = self.fullscreen_state
+        self.Parent.experiment_holder['settings']['flipscreen'] = self.flipscreen_state
+        self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state        
+        self.Parent.experiment_holder['settings']['custom_stim_enable'] = self.enable_custom_stim_state
+        self.Parent.experiment_holder['settings']['custom_stim_file'] = self.custom_stim_file_state
+        
+        self.Destroy()
+        event.Skip()
+    def cancel_button_press(self, event):
+        self.Destroy()
+        event.Skip()
 ###################### PREPROCESSING FRAME ##########################        
 class PreprocessFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
+        self.list_box_size = [100,200]
+        self.participant_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.ignore_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.task_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.ignore_task_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.participant_to_ignore = wx.Button(self, wx.ID_ANY, (u"\u2bab"))
+        self.ignore_to_participant = wx.Button(self, wx.ID_ANY, (u"\u2ba8"))
         
-        self.testButton = wx.Button(self, wx.ID_ANY, "Test")
+#        self.testButton = wx.Button(self, wx.ID_ANY, "Test")
         
         
-        self.Bind(wx.EVT_BUTTON, self.set_butt_press, self.testButton)
-        
+#        self.Bind(wx.EVT_BUTTON, self.set_butt_press, self.testButton)
+        self.Bind(wx.EVT_LISTBOX, self.participant_pool_click, self.participant_pool)
+        self.Bind(wx.EVT_LISTBOX, self.ignore_pool_click, self.ignore_pool)
+        self.Bind(wx.EVT_LISTBOX, self.task_pool_click, self.task_pool)
+        self.Bind(wx.EVT_LISTBOX, self.ignore_task_pool_click, self.ignore_task_pool)
+        self.Bind(wx.EVT_BUTTON, self.participant_to_ignore_click, self.participant_to_ignore)
+        self.Bind(wx.EVT_BUTTON, self.ignore_to_participant_click, self.ignore_to_participant)
+                
         self.__set_properties()
         self.__do_layout()
         
     def __set_properties(self):
         self.SetTitle("Pre-Process")
         self.SetSize((500,500))
-        self.testButton.SetMinSize((100,100))
+#        self.testButton.SetMinSize((1,1))
+        self.participant_pool.SetMinSize(self.list_box_size)
+        self.ignore_pool.SetMinSize(self.list_box_size)
+        self.task_pool.SetMinSize(self.list_box_size)
+        self.ignore_task_pool.SetMinSize(self.list_box_size)
         
     def __do_layout(self):
-        horizontal_1 = wx.BoxSizer(wx.HORIZONTAL)
-        horizontal_1.Add(self.testButton, 0, wx.RIGHT, 2)
-    
-    def set_butt_press(self, event):
-        check = self.Parent.Rotation_angle_slider.GetValue()
-        print check, type(check)
+        horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
+        horizontal_main.Add(self.participant_pool, 0, wx.RIGHT, 2)
+        vertical_1 = wx.BoxSizer(wx.VERTICAL)
+        vertical_1.Add(self.participant_to_ignore, 0, 0, 2)
+        vertical_1.Add(self.ignore_to_participant, 0, 0, 2)
+        horizontal_main.Add(vertical_1)
+        horizontal_main.Add(self.ignore_pool, 0, wx.RIGHT, 2)
+        horizontal_main.Add(self.task_pool, 0, wx.RIGHT, 2)
+        horizontal_main.Add(self.ignore_task_pool, 0, wx.RIGHT, 2)
+        
+        self.SetSizer(horizontal_main)
+        self.Layout()
+#    def set_butt_press(self, event):
+#        print self.Parent.experiment_holder['settings']['custom_stim_file']
+#        event.Skip()
+    def participant_pool_click(self, event):
+        event.Skip()
+    def ignore_pool_click(self, event):
+        event.Skip()
+    def task_pool_click(self, event):
+        event.Skip()
+    def ignore_task_pool_click(self, event):
+        event.Skip()
+    def participant_to_ignore_click(self, event):
+        event.Skip()
+    def ignore_to_participant_click(self, event):
         event.Skip()
         
 # end of class MyFrame

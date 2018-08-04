@@ -2,7 +2,7 @@
 from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
 from psychopy import event, core
 from psychopy.visual import shape
-from os import path
+from os import path, listdir
 from json import dump
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
@@ -224,12 +224,19 @@ def trial_runner(cfg={}):
             myMouse = cfg['x11_mouse']
             ### Gets current CPU Time
             myTime = myMouse.Pos()[2]
-        ### Creates cursor circle Object
-        myCircle = cfg['cursor_circle']
+        if (cfg['custom_stim_enable'] == False):
+            ### Creates cursor circle Object
+            myCircle = cfg['cursor_circle']
+            ### Creates a Target circle
+            endCircle = cfg['end_circle']
+        elif (cfg['custom_stim_enable'] == True):
+            rng = choice(cfg['custom_stim'])
+            print rng
+            myCircle = rng[0]
+            endCircle = rng[1]
         ### Creates a circle object to be used as starting point
         startCircle = cfg['start_circle']
-        ### Creates a Target circle
-        endCircle = cfg['end_circle']
+        
         ### Define Parameters here
         startPos=cfg['starting_pos']
         arrow=cfg['arrow_stim']
@@ -331,7 +338,7 @@ def trial_runner(cfg={}):
                             active_Y = prev_Y_cursor + clamped_Y_vector
                     circle_pos_clamped = [active_X, active_Y]
             except:
-                print "Error in Block 2.1"
+                pass
     ########################### SET CURSOR POSITIONS #############################
             try:
                 try:
@@ -346,7 +353,7 @@ def trial_runner(cfg={}):
                         arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
                         arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
                 except:
-                    print "Error in block 2.2.1"
+                    pass
         ################################ SHOW OBJECTS ################################
                 try:
                     if (show_home == True):
@@ -359,11 +366,11 @@ def trial_runner(cfg={}):
                     if (show_cursor == True):
                         myCircle.draw()
                 except:
-                    print "Error in block 2.2.2"
+                    pass
             except:
-                print "error in block 2.2"
+                pass
         except:
-            print "error in block 2"
+            pass
 ################################ PHASE 1 #####################################
         try:
             if (phase_1 == False):
@@ -502,7 +509,7 @@ def trial_runner(cfg={}):
                         timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
                         return timePos_dict
         except:
-            print "Error in block 3"
+            pass
 
 ############################# RUN EXPERIMENT V2 ###############################
 def run_experiment_2(fulls, participant, experiment = {}):
@@ -534,6 +541,30 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
                                  lineColor=[0,0,0])
+        if settings['custom_stim_enable'] == True:
+            custom_stim_holder = []
+            icon_directory = listdir(settings['custom_stim_file'])
+            for i in range(1, len(icon_directory)/2 + 1):
+                try:
+                    custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                except:
+                    custom_target = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+                try:   
+                    custom_cursor = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                except:
+                    custom_cursor = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+                                     
+                custom_stim_holder.append([custom_cursor, custom_target])
         if settings['custom_cursor_enable'] == False:
             myCircle = Circle(win=Win,
                                      radius=cfg['circle_radius'],
@@ -589,7 +620,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-                                      
         Mouse = event.Mouse(win=Win, visible=False)
     
     except Exception as e:
@@ -604,6 +634,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
             running[i]['x11_mouse'] = myMouse()
         except:
             running[i]['poll_type'] = 'psychopy'
+        if settings['custom_stim_enable'] == True:
+            running[i]['custom_stim'] = custom_stim_holder
+        running[i]['custom_stim_enable'] = settings['custom_stim_enable']
         running[i]['return_movement'] = experiment['settings']['return_movement']
         running[i]['cursor_circle'] = myCircle
         running[i]['start_circle'] = startCircle
@@ -646,9 +679,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
-                    return "escaped"
-                else:
-                    
+                    return DataFrame({})
+                else:           
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     task_save = concat([task_save, df_exp])
