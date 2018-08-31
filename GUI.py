@@ -4,10 +4,13 @@ from gettext import install
 from math import ceil
 from os import path, makedirs, remove, listdir, rename
 from json import load, dump
+from copy import deepcopy
 #import path
 import Tkinter as tk
 import Exp as exp
 import traceback
+import Preprocess as pp
+import csv
 #import VMEC16 as vm
 root = tk.Tk()
 class MyFrame(wx.Frame):
@@ -1330,64 +1333,160 @@ class SettingsFrameV2(wx.Frame):
 class PreprocessFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
-        self.list_box_size = [100,200]
+        ########## Initial Presets#############
+        self.highlit_participant = ""
+        self.highlit_ignore = ""
+        self.highlit_task = ""
+        self.highlit_task_ignore = ""
+        self.participant_list = []
+        self.participant_list_trimmed = []
+        self.task_list = []
+        ########## Dynamic Data ###############
+        self.participant_list_dynamic = []
+        self.ignore_list_dynamic = []
+        self.task_list_dynamic = []
+        self.ignore_task_list_dynamic = []
+        ####################################
+        self.list_box_size = [150,300]
+        self.switch_button_size = [50,50]
+        self.participant_static_text = wx.StaticText(self, wx.ID_ANY, ("Participants"))
+        self.ignore_participant_static_text = wx.StaticText(self, wx.ID_ANY, ("Ignore Participants"))
+        self.task_static_text = wx.StaticText(self, wx.ID_ANY, ("Tasks"))
+        self.ignore_task_static_text = wx.StaticText(self, wx.ID_ANY, ("Ignore Tasks"))
+        
         self.participant_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.ignore_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.task_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.ignore_task_pool = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.participant_to_ignore = wx.Button(self, wx.ID_ANY, (u"\u2bab"))
         self.ignore_to_participant = wx.Button(self, wx.ID_ANY, (u"\u2ba8"))
-        
-#        self.testButton = wx.Button(self, wx.ID_ANY, "Test")
-        
-        
-#        self.Bind(wx.EVT_BUTTON, self.set_butt_press, self.testButton)
+        self.task_to_ignore = wx.Button(self, wx.ID_ANY, (u"\u2bab"))
+        self.ignore_to_task = wx.Button(self, wx.ID_ANY, (u"\u2ba8"))
+        self.preprocess_button = wx.Button(self, wx.ID_ANY, ("Pre-Process Participants"))
+
         self.Bind(wx.EVT_LISTBOX, self.participant_pool_click, self.participant_pool)
         self.Bind(wx.EVT_LISTBOX, self.ignore_pool_click, self.ignore_pool)
         self.Bind(wx.EVT_LISTBOX, self.task_pool_click, self.task_pool)
         self.Bind(wx.EVT_LISTBOX, self.ignore_task_pool_click, self.ignore_task_pool)
         self.Bind(wx.EVT_BUTTON, self.participant_to_ignore_click, self.participant_to_ignore)
         self.Bind(wx.EVT_BUTTON, self.ignore_to_participant_click, self.ignore_to_participant)
-                
+        self.Bind(wx.EVT_BUTTON, self.task_to_ignore_click, self.task_to_ignore)
+        self.Bind(wx.EVT_BUTTON, self.ignore_to_task_click, self.ignore_to_task)
+        self.Bind(wx.EVT_BUTTON, self.preprocess_button_click, self.preprocess_button)
+                        
         self.__set_properties()
         self.__do_layout()
         
     def __set_properties(self):
         self.SetTitle("Pre-Process")
-        self.SetSize((500,500))
+        self.SetSize((715,500))
 #        self.testButton.SetMinSize((1,1))
         self.participant_pool.SetMinSize(self.list_box_size)
         self.ignore_pool.SetMinSize(self.list_box_size)
         self.task_pool.SetMinSize(self.list_box_size)
         self.ignore_task_pool.SetMinSize(self.list_box_size)
+        self.participant_to_ignore.SetMinSize(self.switch_button_size)
+        self.ignore_to_participant.SetMinSize(self.switch_button_size)
+        self.task_to_ignore.SetMinSize(self.switch_button_size)
+        self.ignore_to_task.SetMinSize(self.switch_button_size)
+        
+        ############ Pull Data from Parent frame ##########    
+        self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
+        for i in self.participant_list:
+            self.participant_list_trimmed.append(i.replace(".csv", ""))
+        if len(self.participant_list_trimmed) == 0:
+            self.participant_list_trimmed = ["Empty"]
+        self.participant_pool.Set(self.participant_list_trimmed)
+        self.participant_list_dynamic = deepcopy(self.participant_list_trimmed)
+        del self.participant_list_trimmed[:]
+        
+        for i in range(0, len(self.Parent.current_experiment)):
+            self.task_list.append(self.Parent.current_experiment[i]["task_name"])
+        self.task_list_dynamic = deepcopy(self.task_list)
+        self.task_pool.Set(self.task_list)
         
     def __do_layout(self):
         horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
-        horizontal_main.Add(self.participant_pool, 0, wx.RIGHT, 2)
+        vertical_pp = wx.BoxSizer(wx.VERTICAL)
+        vertical_pp.Add(self.participant_static_text, 0, wx.CENTER, 5)
+        vertical_pp.Add(self.participant_pool, 0, 0, 2)
+        vertical_pp.Add(self.preprocess_button, 0, 0, 2)
+        horizontal_main.Add(vertical_pp)
         vertical_1 = wx.BoxSizer(wx.VERTICAL)
-        vertical_1.Add(self.participant_to_ignore, 0, 0, 2)
+        vertical_1.Add(self.participant_to_ignore, 0, wx.TOP, 100)
         vertical_1.Add(self.ignore_to_participant, 0, 0, 2)
         horizontal_main.Add(vertical_1)
-        horizontal_main.Add(self.ignore_pool, 0, wx.RIGHT, 2)
-        horizontal_main.Add(self.task_pool, 0, wx.RIGHT, 2)
-        horizontal_main.Add(self.ignore_task_pool, 0, wx.RIGHT, 2)
+        vertical_ip = wx.BoxSizer(wx.VERTICAL)
+        vertical_ip.Add(self.ignore_participant_static_text, 0, wx.CENTER, 5)
+        vertical_ip.Add(self.ignore_pool, 0, wx.RIGHT, 2)
+        horizontal_main.Add(vertical_ip)
+        vertical_tp = wx.BoxSizer(wx.VERTICAL)
+        vertical_tp.Add(self.task_static_text, 0, wx.CENTER, 5)
+        vertical_tp.Add(self.task_pool, 0, 0, 2)
+        horizontal_main.Add(vertical_tp)
+        vertical_2 = wx.BoxSizer(wx.VERTICAL)
+        vertical_2.Add(self.task_to_ignore, 0, wx.TOP, 100)
+        vertical_2.Add(self.ignore_to_task, 0, 0, 2)
+        horizontal_main.Add(vertical_2)
+        vertical_itp = wx.BoxSizer(wx.VERTICAL)
+        vertical_itp.Add(self.ignore_task_static_text, 0, wx.CENTER, 5)
+        vertical_itp.Add(self.ignore_task_pool, 0, 0, 2)
+        horizontal_main.Add(vertical_itp)
         
         self.SetSizer(horizontal_main)
         self.Layout()
-#    def set_butt_press(self, event):
-#        print self.Parent.experiment_holder['settings']['custom_stim_file']
-#        event.Skip()
+
     def participant_pool_click(self, event):
+        self.highlit_participant = event.GetString()
         event.Skip()
     def ignore_pool_click(self, event):
+        self.highlit_ignore = event.GetString()
         event.Skip()
     def task_pool_click(self, event):
+        self.highlit_task = event.GetString()
         event.Skip()
     def ignore_task_pool_click(self, event):
+        self.highlit_task_ignore = event.GetString()
         event.Skip()
     def participant_to_ignore_click(self, event):
+        if self.highlit_participant not in self.ignore_list_dynamic:
+            self.ignore_list_dynamic.append(self.highlit_participant)
+            self.participant_list_dynamic.remove(self.highlit_participant)
+            self.ignore_pool.Set(self.ignore_list_dynamic)
+            self.participant_pool.Set(self.participant_list_dynamic)
         event.Skip()
     def ignore_to_participant_click(self, event):
+        if self.highlit_ignore not in self.participant_list_dynamic:
+            self.participant_list_dynamic.append(self.highlit_ignore)
+            self.ignore_list_dynamic.remove(self.highlit_ignore)
+            self.participant_pool.Set(self.participant_list_dynamic)
+            self.ignore_pool.Set(self.ignore_list_dynamic)
+        event.Skip()
+    def task_to_ignore_click(self, event):
+        if self.highlit_task not in self.ignore_task_list_dynamic:
+            self.ignore_task_list_dynamic.append(self.highlit_task)
+            self.task_list_dynamic.remove(self.highlit_task)
+            self.task_pool.Set(self.task_list_dynamic)
+            self.ignore_task_pool.Set(self.ignore_task_list_dynamic)
+        event.Skip()
+    def ignore_to_task_click(self, event):
+        if self.highlit_task_ignore not in self.task_list_dynamic:
+            self.task_list_dynamic.append(self.highlit_task_ignore)
+            self.ignore_task_list_dynamic.remove(self.highlit_task_ignore)
+            self.task_pool.Set(self.task_list_dynamic)
+            self.ignore_task_pool.Set(self.ignore_task_list_dynamic)
+        event.Skip()
+    def preprocess_button_click(self, event):
+        try:
+            data_pointers = pp.data_name_list(self.participant_list_dynamic, self.task_list_dynamic, self.Parent.experiment_holder)
+            preprocessed_data = pp.data_process(self.participant_list_dynamic, data_pointers)
+            file_name = path.join("data",self.Parent.current_experiment_name, "test_output.csv")
+            with open(file_name, 'wb') as csvfile:
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerow(preprocessed_data[0])
+                csvwriter.writerows(preprocessed_data[1])
+        except Exception as e:
+            traceback.print_exc()
         event.Skip()
         
 # end of class MyFrame

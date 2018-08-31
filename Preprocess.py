@@ -6,8 +6,8 @@ import Exp as exp
 from math import degrees
 from os import path
 from json import load
-with open ("/home/julius/Desktop/PyVMEC/experiments/Test.json", "rb") as f:
-    exp_test = load(f)
+#with open ("/home/julius/Desktop/PyVMEC/experiments/Test.json", "rb") as f:
+#    exp_test = load(f)
 def data_name_list(participant_list = [], task_list = [], experiment = {}):
     data_list_participant = []
     data_list_task = []
@@ -22,19 +22,18 @@ def data_name_list(participant_list = [], task_list = [], experiment = {}):
             data_list_participant.append(data_list_task)
         data_list.append(data_list_participant)
     return data_list
-p_list = ["finished", "unfinished"]
-t_list = ['first', 'second']
-data_dir = data_name_list(p_list, t_list, exp_test)
-print data_dir
-process_cfg = {"include_trial": True}
+#p_list = ["finished", "unfinished"]
+#t_list = ['first', 'second']
+#data_dir = data_name_list(p_list, t_list, exp_test)
+#print data_dir
+#process_cfg = {"include_trial": True}
 
-def data_process(participant_list = [], data_dir = [], cfg = {}):
-    output_fields = ['task', 'trial', 'target_angle_deg']
+def data_process(participant_list = [], data_dir = []):
+    output_fields = ['task', 'trial','rotation_angle_deg', 'target_angle_deg']
     output_rows = []
     for i in range (0, len(data_dir)):   
         output_fields.append(participant_list[i])
         pc = 0
-        print i
         for j in range (0, len(data_dir[i])):           
             for k in range (0, len(data_dir[i][j])):
 #                fields = []
@@ -51,6 +50,7 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
                         if float(exp.get_dist([0,0], [float(row[15:16][0]), float(row[16:17][0])]))/float(exp.get_dist([0,0], [float(row[11:12][0]), float(row[12:13][0])])) >= float(1)/float(3):
                             input_row.append(row[1:2][0])
                             input_row.append(row[3:4][0])
+                            input_row.append(row[5:6][0])
                             input_row.append(row[6:7][0])
                             cursor_deviation = degrees(exp.cart2pol([float(row[15:16][0]), float(row[16:17][0])])[1]) - float(row[6:7][0])
                             input_row.append(cursor_deviation)
@@ -64,13 +64,20 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
                 if i == 0:
                     output_rows.append(input_row)
     return [output_fields, output_rows]
-data = data_process(p_list, data_dir, process_cfg)
-file_name = "processed_data.csv"
-with open(file_name, "wb") as csvfile:
-    csvwriter = csv.writer(csvfile)
-    csvwriter.writerow(data[0])
-    csvwriter.writerows(data[1])
-
+#data = data_process(p_list, data_dir, process_cfg)
+#file_name = "processed_data.csv"
+#with open(file_name, "wb") as csvfile:
+#    csvwriter = csv.writer(csvfile)
+#    csvwriter.writerow(data[0])
+#    csvwriter.writerows(data[1])
+test_cfg = {'block':True, 'angle':True}
+def data_process_2(data = [], cfg = {}, experiment = {}):
+    fields_b = ['task', 'block']
+    fields_a = ['task', 'target_angle_deg']
+    fields_t = ['task', 'trial']
+    
+    for i in data[1]:
+        
             
             
     
