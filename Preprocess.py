@@ -75,9 +75,3 @@ def data_process_2(data = [], cfg = {}, experiment = {}):
     fields_b = ['task', 'block']
     fields_a = ['task', 'target_angle_deg']
     fields_t = ['task', 'trial']
-    
-    for i in data[1]:
-        
-            
-            
-    
