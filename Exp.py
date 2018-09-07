@@ -61,6 +61,12 @@ except:
 def myRounder(x, base):
     return int(base * round(float(x)/base))
 
+def vector_rotate(node, center, angle):
+    vector_X = center[0] + (node[0] - center[0])*math.cos(math.radians(angle)) - (node[1] - center[1])*math.sin(math.radians(angle))
+    vector_Y = center[1] + (node[0] - center[0])*math.sin(math.radians(angle)) + (node[1] - center[1])*math.cos(math.radians(angle))
+    return [vector_X, vector_Y]
+                
+
 def task_namer(given_task, function):
     if (function == True):
         if (given_task == "cursor"):
@@ -263,6 +269,7 @@ def trial_runner(cfg={}):
         prev_Y_cursor = 0
         velocity = 0
         pixels_per_sample = 0
+        pos_buffer = 0
         ### Instantiating return dictionary and arrays within it
         timePos_dict = {}
         timeArray = []
@@ -311,13 +318,16 @@ def trial_runner(cfg={}):
                     change_in_time = current_timestamp - prev_timestamp
                     velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
                     pixels_per_sample = velocity*change_in_time
-                rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
-                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))
+#                print rotated_vector, get_vect([prev_X, prev_Y], current_pos)
+#                rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
+#                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))
+                rotated_X, rotated_Y = vector_rotate(mousePos, [0, -cfg['active_height']/2], rot_dir*cfg['current_rotation_angle'])
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['rotation_angle'] == 0):
                         circle_pos = mousePos
                     else:
                         circle_pos = [rotated_X, rotated_Y]
+
                 elif (cfg['trial_type'] == 'no_cursor'):
                     circle_pos = mousePos
                 elif (cfg['trial_type'] == 'error_clamp'):
@@ -356,6 +366,9 @@ def trial_runner(cfg={}):
                     pass
         ################################ SHOW OBJECTS ################################
                 try:
+                    if (pos_buffer == 0):
+                        print "current position: ", circle_pos
+                        pos_buffer = pos_buffer + 1
                     if (show_home == True):
                         startCircle.draw()
                     if (show_target == True):
@@ -486,6 +499,7 @@ def trial_runner(cfg={}):
                     timePos_dict['cursory_px'] = cursorposYArray
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                     timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
+           
                     return timePos_dict
 
                 elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
@@ -507,6 +521,7 @@ def trial_runner(cfg={}):
                         timePos_dict['cursory_px'] = cursorposYArray
                         timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                         timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
+               
                         return timePos_dict
         except:
             pass
@@ -524,7 +539,14 @@ def run_experiment_2(fulls, participant, experiment = {}):
     except:
         print "Exception adding workspace limits"
     try:
-        Win = Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+        Win = Window(cfg['screen_dimensions'],
+                     winType=cfg['winType'],
+                     colorSpace='rgb',
+                     fullscr=fulls,
+                     name='MousePosition',
+                     color=(-1, -1, -1),
+                     units='pix',
+                     screen=experiment['settings']['screen'])
     except:
         print "Exception creating Window"
     ### Configure visual feedback settings here
@@ -675,6 +697,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 running[i]['time'] = core.getTime()
 #                try:
                 exp = trial_runner(running[i])
+           
 #                except:
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':

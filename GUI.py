@@ -537,6 +537,7 @@ class MyFrame(wx.Frame):
             self.experiment_holder['settings']['custom_stim_enable'] = False
             self.experiment_holder['settings']['custom_stim_file'] = ""
             self.experiment_holder['settings']['experiment_folder'] =  dlg.GetValue()
+            self.experiment_holder['settings']['screen'] = 0
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
                 dump(self.experiment_holder, f)
             f.close()
@@ -1243,12 +1244,14 @@ class SettingsFrameV2(wx.Frame):
         self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
         self.enable_custom_stim_state = self.Parent.experiment_holder['settings']['custom_stim_enable']   
         self.custom_stim_file_state = self.Parent.experiment_holder['settings']['custom_stim_file']
-        ###############
+        self.screen_choose_state = str(self.Parent.experiment_holder['settings']['screen'])
+       ###############
         self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
         self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
         self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
         self.enable_custom_stim = wx.CheckBox(self, wx.ID_ANY, "Enable custom stimuli")
         self.custom_stim_file = wx.DirPickerCtrl(self, wx.ID_ANY, path="", style=wx.DIRP_USE_TEXTCTRL)
+        self.screen_choose = wx.ComboBox(self, wx.ID_ANY, value='0', choices=['0', '1'])        
         
         self.apply_button = wx.Button(self, wx.ID_ANY, "Apply Changes")
         self.cancel_button = wx.Button(self, wx.ID_ANY, "Cancel")
@@ -1257,6 +1260,7 @@ class SettingsFrameV2(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.enable_custom_stim_press, self.enable_custom_stim)
         self.Bind(wx.EVT_DIRPICKER_CHANGED, self.custom_stim_file_choose, self.custom_stim_file)
+        self.Bind(wx.EVT_COMBOBOX, self.screen_choose_press, self.screen_choose)
        
         self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)     
         self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
@@ -1272,7 +1276,7 @@ class SettingsFrameV2(wx.Frame):
         self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
         self.enable_custom_stim.SetValue(self.Parent.experiment_holder['settings']['custom_stim_enable'])
         self.custom_stim_file.SetPath(self.Parent.experiment_holder['settings']['custom_stim_file'])
-        
+        self.screen_choose.SetSelection(self.Parent.experiment_holder['settings']['screen'])
         if self.Parent.experiment_holder['settings']['custom_stim_enable'] == False:
             self.custom_stim_file.Disable()
         else:
@@ -1282,6 +1286,7 @@ class SettingsFrameV2(wx.Frame):
         vertical_1 = wx.BoxSizer(wx.VERTICAL)
         vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.screen_choose, 0, wx.TOP, 2)
         vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.enable_custom_stim, 0, wx.TOP, 2)
         vertical_1.Add(self.custom_stim_file, 0, wx.TOP, 2)
@@ -1314,7 +1319,9 @@ class SettingsFrameV2(wx.Frame):
     def custom_stim_file_choose(self, event):
         self.custom_stim_file_state = event.GetPath()
         event.Skip()
-        
+    def screen_choose_press(self, event):
+        self.screen_choose_state = event.GetString()
+        event.Skip()
     
         
     def apply_button_press(self, event):
@@ -1323,7 +1330,7 @@ class SettingsFrameV2(wx.Frame):
         self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state        
         self.Parent.experiment_holder['settings']['custom_stim_enable'] = self.enable_custom_stim_state
         self.Parent.experiment_holder['settings']['custom_stim_file'] = self.custom_stim_file_state
-        
+        self.Parent.experiment_holder['settings']['screen'] = int(self.screen_choose_state)
         self.Destroy()
         event.Skip()
     def cancel_button_press(self, event):
