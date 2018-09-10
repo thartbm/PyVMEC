@@ -14,6 +14,8 @@ from random import choice
 from Tkinter import Tk
 from copy import deepcopy
 import sys
+import screeninfo
+
 
 try:
     from ctypes import *
@@ -23,9 +25,21 @@ from time import time
 
 
 root = Tk()
-def addWorkSpaceLimits(cfg = {}):
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+def addWorkSpaceLimits(screen, cfg = {}):
+    s = screeninfo.get_monitors()
+    if (len(s) == 1 and screen == 0):
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+    elif(len(s) > 1 and screen == 0):
+        screen_width = int(str(s[0]).strip('monitor(').partition('x')[0])
+        screen_height = int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])
+        cfg['main_screen_dimensions'] = [int(str(s[1]).strip('monitor(').partition('x')[0]), int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])]
+
+    else:
+        screen_width = int(str(s[1]).strip('monitor(').partition('x')[0])
+        screen_height = int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])
+        cfg['main_screen_dimensions'] = [int(str(s[0]).strip('monitor(').partition('x')[0]), int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])]
+
     trimmed_width = int((float(2)/float(3))*float(screen_width))
     trimmed_height = int((float(2)/float(3))*float(screen_height))
     if (trimmed_height*2 < trimmed_width):
@@ -57,7 +71,13 @@ try:
         if ret == 0: sys.exit(1)
         return [self.root_x.value - (self.width/2), -1 * (self.root_y.value - (self.height/2)), time()] # c_int can't be used by regular Python to do math, but the values of c_ints are ints - also, we return the current time
 except:
+    print ('not using xLib')
     pass
+def moveMouse(x,y):
+    myMouse.setPos([x,y])
+    myWin.winHandle._mouse_x = x  # hack to change pyglet window
+    myWin.winHandle._mouse_y = y
+    
 def myRounder(x, base):
     return int(base * round(float(x)/base))
 
@@ -191,9 +211,9 @@ def trial_runner(cfg={}):
         myWin=cfg['win']
         if (cfg['trial_type'] == 'pause'):
             instruction = cfg['pause_instruction']
-            counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
-            instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
-            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), color=( 1, 1, 1))
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=bool(cfg['flipscreen'] - 1), pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
+            instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=bool(cfg['flipscreen'] - 1), color=( 1, 1, 1))
+            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=bool(cfg['flipscreen'] - 1), color=( 1, 1, 1))
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
@@ -233,6 +253,7 @@ def trial_runner(cfg={}):
         if (cfg['custom_stim_enable'] == False):
             ### Creates cursor circle Object
             myCircle = cfg['cursor_circle']
+            testCircle = cfg['test_circle']
             ### Creates a Target circle
             endCircle = cfg['end_circle']
         elif (cfg['custom_stim_enable'] == True):
@@ -290,7 +311,6 @@ def trial_runner(cfg={}):
         rot_dir = 1
     elif cfg['rotation_angle_direction'] == 'Clockwise':
         rot_dir = -1
-#    pev.clear()
     while (core.getTime() - cfg['time']) < 120:
         try:
             ### ESCAPE ### USING PYGAME ####
@@ -321,7 +341,7 @@ def trial_runner(cfg={}):
 #                print rotated_vector, get_vect([prev_X, prev_Y], current_pos)
 #                rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
 #                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))
-                rotated_X, rotated_Y = vector_rotate(mousePos, [0, -cfg['active_height']/2], rot_dir*cfg['current_rotation_angle'])
+                rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], rot_dir*cfg['current_rotation_angle'])
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['rotation_angle'] == 0):
                         circle_pos = mousePos
@@ -357,8 +377,10 @@ def trial_runner(cfg={}):
                     elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
                         circle_pos = startPos
                         stabilize = True
+                    circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
                     myCircle.setPos(circle_pos)
-            ########################### SPECIAL ARROW CONDITIONS #########################
+#                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
+           ########################### SPECIAL ARROW CONDITIONS #########################
                     if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
                         arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
                         arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
@@ -367,7 +389,6 @@ def trial_runner(cfg={}):
         ################################ SHOW OBJECTS ################################
                 try:
                     if (pos_buffer == 0):
-                        print "current position: ", circle_pos
                         pos_buffer = pos_buffer + 1
                     if (show_home == True):
                         startCircle.draw()
@@ -378,6 +399,7 @@ def trial_runner(cfg={}):
                         arrowFill.draw()
                     if (show_cursor == True):
                         myCircle.draw()
+#                        testCircle.draw()
                 except:
                     pass
             except:
@@ -458,12 +480,13 @@ def trial_runner(cfg={}):
             prev_Y = current_pos[1]
             prev_X_cursor = circle_pos[0]
             prev_Y_cursor = circle_pos[1]
+            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
             if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
                 pass
             else:
                 if phase_1 == True:
                     timeArray.append(current_timestamp)
-                    mouseposXArray.append(current_pos[0])
+                    mouseposXArray.append(current_pos[0] - (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)))
                     mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
                     cursorposXArray.append(circle_pos[0])
                     cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
@@ -495,11 +518,11 @@ def trial_runner(cfg={}):
                     timePos_dict['time_s'] = timeArray
                     timePos_dict['mousex_px'] = mouseposXArray
                     timePos_dict['mousey_px'] = mouseposYArray
-                    timePos_dict['cursorx_px'] = cursorposXArray
+                    timePos_dict['cursorx_px'] = cursorposXArray 
                     timePos_dict['cursory_px'] = cursorposYArray
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                     timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
-           
+                    
                     return timePos_dict
 
                 elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
@@ -535,7 +558,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
     participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
     try:
-        addWorkSpaceLimits(cfg)
+        addWorkSpaceLimits(experiment['settings']['screen'], cfg)
     except:
         print "Exception adding workspace limits"
     try:
@@ -593,6 +616,12 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+            testCircle = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[-1, 0, 1],
                                      lineColor=[0, 0, 0])
         else:
             try:
@@ -658,9 +687,19 @@ def run_experiment_2(fulls, participant, experiment = {}):
             running[i]['poll_type'] = 'psychopy'
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
+        if (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 1):
+            running[i]['screen_on'] = 1
+            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
+        elif (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 0):
+            running[i]['screen_on'] = -1
+            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
+        else:
+            running[i]['screen_on'] = 0
+            running[i]['screen_dimensions'] = cfg['screen_dimensions']
         running[i]['custom_stim_enable'] = settings['custom_stim_enable']
         running[i]['return_movement'] = experiment['settings']['return_movement']
         running[i]['cursor_circle'] = myCircle
+        running[i]['test_circle'] = testCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
         running[i]['mouse'] = Mouse
@@ -820,6 +859,7 @@ def continue_experiment(fulls, participant, experiment = {}):
             running[i]['x11_mouse'] = myMouse()
         except:
             running[i]['poll_type'] = 'psychopy'
+        running[i]['screen_dimensions'] = cfg['screen_dimensions']
         running[i]['return_movement'] = experiment['settings']['return_movement']
         running[i]['cursor_circle'] = myCircle
         running[i]['start_circle'] = startCircle
