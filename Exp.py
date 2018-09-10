@@ -671,7 +671,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False)
+        Mouse = event.Mouse(win=Win, visible=1)
     
     except Exception as e:
         print e
