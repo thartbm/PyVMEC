@@ -211,9 +211,9 @@ def trial_runner(cfg={}):
         myWin=cfg['win']
         if (cfg['trial_type'] == 'pause'):
             instruction = cfg['pause_instruction']
-            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=bool(cfg['flipscreen'] - 1), pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
-            instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=bool(cfg['flipscreen'] - 1), color=( 1, 1, 1))
-            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=bool(cfg['flipscreen'] - 1), color=( 1, 1, 1))
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
+            instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
+            end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=cfg['flip_text'], color=( 1, 1, 1))
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
@@ -305,8 +305,9 @@ def trial_runner(cfg={}):
         arrow.setPos(startPos)
         arrowFill.setPos(startPos)
         ### Rotation direction
-    except:
+    except Exception as e:
         print "error in Block 1"
+        print e
     if cfg['rotation_angle_direction'] == 'Counter-clockwise':
         rot_dir = 1
     elif cfg['rotation_angle_direction'] == 'Clockwise':
@@ -480,7 +481,7 @@ def trial_runner(cfg={}):
             prev_Y = current_pos[1]
             prev_X_cursor = circle_pos[0]
             prev_Y_cursor = circle_pos[1]
-            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
+#            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
             if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
                 pass
             else:
@@ -557,6 +558,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
     settings = deepcopy(experiment['settings'])
     participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
+    if experiment['settings']['flipscreen'] == True:
+        view_scale = [1, -1]
+    else:
+        view_scale = [1, 1]
     try:
         addWorkSpaceLimits(experiment['settings']['screen'], cfg)
     except:
@@ -569,7 +574,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
                      name='MousePosition',
                      color=(-1, -1, -1),
                      units='pix',
-                     screen=experiment['settings']['screen'])
+                     screen=experiment['settings']['screen'],
+                     viewScale=view_scale)
     except:
         print "Exception creating Window"
     ### Configure visual feedback settings here
@@ -671,16 +677,18 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=1)
+        Mouse = event.Mouse(win=Win, visible=False)
     
     except Exception as e:
         print e
         print str(e)
     for i in range (0, len(running)):
         if experiment['settings']['flipscreen'] == True:
-            running[i]['flipscreen'] = -1
+            running[i]['flipscreen'] = 1
+            running[i]['flip_text'] = True
         else:
             running[i]['flipscreen'] = 1
+            running[i]['flip_text'] = False
         try:
             running[i]['x11_mouse'] = myMouse()
         except:
@@ -763,16 +771,30 @@ def run_experiment_2(fulls, participant, experiment = {}):
 
 def continue_experiment(fulls, participant, experiment = {}):
     end_exp = DataFrame({})
+    task_save = DataFrame({})
     running = deepcopy(experiment['experiment'])
     settings = deepcopy(experiment['settings'])
     participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
+    continued = False
+    if experiment['settings']['flipscreen'] == True:
+        view_scale = [1, -1]
+    else:
+        view_scale = [1, 1]
     try:
-        addWorkSpaceLimits(cfg)
+        addWorkSpaceLimits(experiment['settings']['screen'], cfg)
     except:
         print "Exception adding workspace limits"
     try:
-        Win = Window(cfg['screen_dimensions'], winType=cfg['winType'], colorSpace='rgb', fullscr=fulls, name='MousePosition', color=(-1, -1, -1), units='pix')
+        Win = Window(cfg['screen_dimensions'],
+                     winType=cfg['winType'],
+                     colorSpace='rgb',
+                     fullscr=fulls,
+                     name='MousePosition',
+                     color=(-1, -1, -1),
+                     units='pix',
+                     screen=experiment['settings']['screen'],
+                     viewScale=view_scale)
     except:
         print "Exception creating Window"
     ### Configure visual feedback settings here
@@ -789,12 +811,42 @@ def continue_experiment(fulls, participant, experiment = {}):
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
                                  lineColor=[0,0,0])
+        if settings['custom_stim_enable'] == True:
+            custom_stim_holder = []
+            icon_directory = listdir(settings['custom_stim_file'])
+            for i in range(1, len(icon_directory)/2 + 1):
+                try:
+                    custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                except:
+                    custom_target = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+                try:   
+                    custom_cursor = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                except:
+                    custom_cursor = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+                                     
+                custom_stim_holder.append([custom_cursor, custom_target])
         if settings['custom_cursor_enable'] == False:
             myCircle = Circle(win=Win,
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
+                                     lineColor=[0, 0, 0])
+            testCircle = Circle(win=Win,
+                                     radius=cfg['circle_radius'],
+                                     edges=32,
+                                     units='pix',
+                                     fillColor=[-1, 0, 1],
                                      lineColor=[0, 0, 0])
         else:
             try:
@@ -844,24 +896,39 @@ def continue_experiment(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-                                      
         Mouse = event.Mouse(win=Win, visible=False)
     
+        
     except Exception as e:
         print e
         print str(e)
     for i in range (participant_state[0], len(running)):
         if experiment['settings']['flipscreen'] == True:
-            running[i]['flipscreen'] = -1
+            running[i]['flipscreen'] = 1
+            running[i]['flip_text'] = True
         else:
             running[i]['flipscreen'] = 1
+            running[i]['flip_text'] = False
         try:
             running[i]['x11_mouse'] = myMouse()
         except:
             running[i]['poll_type'] = 'psychopy'
+        if settings['custom_stim_enable'] == True:
+            running[i]['custom_stim'] = custom_stim_holder
+        if (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 1):
+            running[i]['screen_on'] = 1
+            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
+        elif (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 0):
+            running[i]['screen_on'] = -1
+            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
+        else:
+            running[i]['screen_on'] = 0
+            running[i]['screen_dimensions'] = cfg['screen_dimensions']
+        running[i]['custom_stim_enable'] = settings['custom_stim_enable']
         running[i]['screen_dimensions'] = cfg['screen_dimensions']
         running[i]['return_movement'] = experiment['settings']['return_movement']
         running[i]['cursor_circle'] = myCircle
+        running[i]['test_circle'] = testCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
         running[i]['mouse'] = Mouse
@@ -877,7 +944,9 @@ def continue_experiment(fulls, participant, experiment = {}):
         running[i]['current_rotation_angle'] = 0
         filltargetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         fulltargetList = tuple(filltargetList)
-        targetList = experiment['participant'][participant]['angles']
+        if continued == False:
+            targetList = experiment['participant'][participant]['angles']
+            continued = True
         if (running[i]['trial_type'] != 'pause'):
             for trial_num in range (participant_state[1], int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
