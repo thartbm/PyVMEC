@@ -482,7 +482,7 @@ def trial_runner(cfg={}):
             prev_Y = current_pos[1]
             prev_X_cursor = circle_pos[0]
             prev_Y_cursor = circle_pos[1]
-            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
+#            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
             if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
                 pass
             else:
@@ -678,7 +678,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=1)
+        Mouse = event.Mouse(win=Win, visible=False)
     
     except Exception as e:
         print e
