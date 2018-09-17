@@ -352,7 +352,7 @@ def trial_runner(cfg={}):
                 elif (cfg['trial_type'] == 'no_cursor'):
                     circle_pos = mousePos
                 elif (cfg['trial_type'] == 'error_clamp'):
-                    circle_pos = startPos
+                    circle_pos = mousePos
                     vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
                     vector_proj = ndarray.tolist(vector_proj_array)
                     clamped_X_vector = vector_proj[0]
@@ -378,7 +378,8 @@ def trial_runner(cfg={}):
                     elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
                         circle_pos = startPos
                         stabilize = True
-                    circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                    if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
+                        circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
@@ -481,7 +482,7 @@ def trial_runner(cfg={}):
             prev_Y = current_pos[1]
             prev_X_cursor = circle_pos[0]
             prev_Y_cursor = circle_pos[1]
-#            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
+            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
             if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
                 pass
             else:
@@ -677,7 +678,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False)
+        Mouse = event.Mouse(win=Win, visible=1)
     
     except Exception as e:
         print e
