@@ -384,8 +384,8 @@ def trial_runner(cfg={}):
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
                     if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
-                        arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
-                        arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0],current_pos[1] + cfg['active_height']/2])[1]), 45)
+                        arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
+                        arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
                 except:
                     pass
         ################################ SHOW OBJECTS ################################
