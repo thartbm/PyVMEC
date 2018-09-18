@@ -679,7 +679,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
         Mouse = event.Mouse(win=Win, visible=False)
-    
+        Mouse.setExclusive(True)
     except Exception as e:
         print e
         print str(e)
