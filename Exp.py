@@ -7,7 +7,7 @@ from json import dump
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
-from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray
+from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean
 import math
 from pandas import concat, DataFrame
 from random import choice
@@ -457,10 +457,11 @@ def trial_runner(cfg={}):
                             myWin.flip()
                 if (cfg['trial_type'] == 'no_cursor'):
                     ##### STOP WATCH ####
-                    if (pixels_per_sample <= 1 and timerSet == False):
-                        timer_timestamp = current_timestamp
-                        timerSet = True
-                    stop_time = current_timestamp - timer_timestamp
+#                    if (pixels_per_sample <= 1 and timerSet == False):
+#                        timer_timestamp = current_timestamp
+#                        timerSet = True
+#                    stop_time = current_timestamp - timer_timestamp
+                    
                     if (pixels_per_sample > 1 and timerSet == True):
                         timerSet = False
                         stop_time = 0
@@ -469,10 +470,14 @@ def trial_runner(cfg={}):
                         show_target = True
                         nc_check_1 = True
                         show_cursor = False
-                    if (get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2 and stop_time >= 0.5):
-                        phase_2 = True
-                        show_target = False
-                        show_home = True
+                    if (get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
+                        if current_timestamp > .5:
+                            idx = (array(timeArray) > (current_timestamp - .5)).nonzero()[0]
+                            avgspeed = mean(sqrt(diff(array(mouseposXArray)[idx])**2 + diff(array(mouseposYArray)[idx])**2) / diff(array(timeArray)[idx]))
+                            if avgspeed < 3:
+                                phase_2 = True
+                                show_target = False
+                                show_home = True
                 if (cfg['trial_type'] == 'error_clamp'):
                     if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
                         phase_2 = True
