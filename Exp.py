@@ -282,6 +282,7 @@ def trial_runner(cfg={}):
         timerSet = False
         timer_timestamp = 0
         stabilize = False
+        screen_edge = (root.winfo_screenwidth()/2) - (cfg['screen_on']*cfg['screen_dimensions'][0])
         ### These variables record timestamps and mouse positions (Used to calculate mouse velocity)
         prev_timestamp = 0
         prev_X = 0
@@ -380,6 +381,8 @@ def trial_runner(cfg={}):
                         stabilize = True
                     if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
                         circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                    if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
+                        circle_pos[0] = -screen_edge
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
@@ -679,7 +682,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
         Mouse = event.Mouse(win=Win, visible=False)
-        Mouse.setExclusive(True)
     except Exception as e:
         print e
         print str(e)
