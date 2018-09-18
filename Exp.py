@@ -485,7 +485,7 @@ def trial_runner(cfg={}):
             prev_Y = current_pos[1]
             prev_X_cursor = circle_pos[0]
             prev_Y_cursor = circle_pos[1]
-#            print 'mouse position: ', current_pos, 'circle position: ', circle_pos
+            print 'mouse position: ', mousePos, 'circle position: ', circle_pos, 'screen_edge', -screen_edge
             if (phase_1 == True and phase_2 == True and cfg['return_movement'] == False):
                 pass
             else:
