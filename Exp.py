@@ -382,7 +382,7 @@ def trial_runner(cfg={}):
                     if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
                         circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
                     if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
-                        circle_pos[0] = -screen_edge
+                        circle_pos[0] = -((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
