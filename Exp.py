@@ -374,8 +374,10 @@ def trial_runner(cfg={}):
     ########################### SET CURSOR POSITIONS #############################
             try:
                 try:
-                    if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == True):
+                    if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == False and stabilize == True):
                         circle_pos = circle_pos_clamped
+                    if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == True and stabilize == True):
+                        circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
                     elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
                         circle_pos = startPos
                         stabilize = True
@@ -386,7 +388,7 @@ def trial_runner(cfg={}):
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
-                    if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)):
+                    if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')):
                         arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
                         arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
                 except:
@@ -505,15 +507,19 @@ def trial_runner(cfg={}):
 
             if (phase_1 == True and phase_2 == True):
 
-                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
+                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
                     show_arrow = True
                     show_arrowFill = True
-                elif ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
+                
+                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
+                
                     show_arrow = False
                     show_arrowFill = False
-                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
+                
+                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
                     show_cursor = False
-
+                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
+                    show_cursor = True
                 if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35 and cfg['terminal_feedback'] == False):
                     timePos_dict['task_num'] = cfg['task_num']
                     timePos_dict['task_name'] = cfg['task_name']
