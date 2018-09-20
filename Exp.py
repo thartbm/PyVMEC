@@ -735,10 +735,16 @@ def run_experiment_2(fulls, participant, experiment = {}):
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         running[i]['current_rotation_angle'] = 0
-        targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+        if running[i]['num_targets'] > 1:
+            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+        elif running[i]['num_targets'] == 1:
+            targetList = [running[i]['min_angle']]
         fulltargetList = tuple(targetList)
         if (running[i]['trial_type'] != 'pause'):
-            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+            if running[i]['num_targets'] > 1:
+                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+            elif running[i]['num_targets'] == 1:
+                targetList = [running[i]['min_angle']]
             for trial_num in range (0, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
