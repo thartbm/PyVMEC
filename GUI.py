@@ -88,9 +88,9 @@ class MyFrame(wx.Frame):
         self.rotation_angle_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.rotation_change_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
         self.target_distance_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
-        self.group_listbox_statictext = wx.StaticText(self, wx.ID_ANY, "Group")
-        self.group_listbox_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
-        self.group_listbox = wx.ListBox(self, wx.ID_ANY, choices=["Empty"])
+#        self.group_listbox_statictext = wx.StaticText(self, wx.ID_ANY, "Group")
+#        self.group_listbox_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
+#        self.group_listbox = wx.ListBox(self, wx.ID_ANY, choices=["Empty"])
         self.rename_experiment_button = wx.Button(self, wx.ID_ANY, ("Rename"))
         self.rename_task_button = wx.Button(self, wx.ID_ANY, ("Rename"))
         
@@ -185,7 +185,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX, self.task_list_box_click, self.task_list_box)
         self.Bind(wx.EVT_BUTTON, self.preprocess_press, self.preprocess_Button)
         self.Bind(wx.EVT_LISTBOX, self.participants_list_box_click, self.participants_list_box)
-        self.Bind(wx.EVT_LISTBOX, self.group_listbox_click, self.group_listbox)
+#        self.Bind(wx.EVT_LISTBOX, self.group_listbox_click, self.group_listbox)
         # end wxGlade
         
     def __set_properties(self):
@@ -215,7 +215,7 @@ class MyFrame(wx.Frame):
 
         self.Plus_Button.SetMinSize((55, 29))
         self.Minus_Button.SetMinSize((55, 29))        
-        self.group_listbox_staticline.SetMinSize((175, 22))
+#        self.group_listbox_staticline.SetMinSize((175, 22))
         self.static_line2.SetMinSize((175, 22))
         self.min_max_staticline.SetMinSize((175, 22))
         self.static_line_3.SetMinSize((175, 22))
@@ -228,7 +228,7 @@ class MyFrame(wx.Frame):
         
         self.task_list_box.SetMinSize((175, 220))
         self.task_list_box.SetSelection(0)
-        self.group_listbox.SetMinSize((175,166))
+#        self.group_listbox.SetMinSize((175,166))
         self.radio_box_1.SetSelection(0)
         self.Move_Up_Button.SetMinSize((30, 30))
         self.Move_Down_Button.SetMinSize((30, 30))
@@ -266,12 +266,12 @@ class MyFrame(wx.Frame):
         sizer_2.Add(sizer_5, 1, 0, 0)
         sizer_13.Add(self.Load_Button, 0, wx.ALL, 2)
         sizer_13.Add(self.Save_Button, 0, wx.ALL, 2)
-        sizer_12.Add(sizer_13, 1, 0, 0)
+        sizer_12.Add(sizer_13, 1, wx.ALL, 1)
         sizer_12.Add(self.Run_Button, 0, wx.ALL, 1)
         sizer_2.Add(sizer_12, 1, 0, 0)
-        sizer_2.Add(self.group_listbox_staticline, 0, wx.BOTTOM, 0)
-        sizer_2.Add(self.group_listbox_statictext, 0, wx.EXPAND, 0)
-        sizer_2.Add(self.group_listbox, 0, wx.RIGHT, 1)
+#        sizer_2.Add(self.group_listbox_staticline, 0, wx.BOTTOM, 0)
+#        sizer_2.Add(self.group_listbox_statictext, 0, wx.EXPAND, 0)
+#        sizer_2.Add(self.group_listbox, 0, wx.RIGHT, 1)
         sizer_2.Add(self.preprocess_Button, 0, wx.RIGHT, 1)     
         sizer_1.Add(sizer_2, 1, 0, 0)
         sizer_3.Add(self.Task_statictext, 0, wx.EXPAND, 0)
@@ -560,19 +560,21 @@ class MyFrame(wx.Frame):
 
     def Load_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         experimentFolder = self.highlit_experiment
-        with open(self.experiment_folder+self.highlit_experiment+".json", "rb") as f:
-            self.current_experiment = load(f)
+        self.current_experiment_name = self.highlit_experiment
+        with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
+            self.experiment_holder = load(f)
             del self.task_list[:]
+        self.current_experiment = self.experiment_holder['experiment']
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(self.current_experiment[i]["task_name"])
         if len(self.task_list) == 0:
             self.task_list_box.Set(['Empty'])
         else:
             self.task_list_box.Set(self.task_list)
-       #### REFRESH PARTICIPANT LIST #####
-        if not(path.exists("data"+ path.sep + experimentFolder)):
-            makedirs("data"+ path.sep + experimentFolder)
-        self.participant_list = listdir("data"+ path.sep + self.current_experiment_name)
+        #### REFRESH PARTICIPANT LIST #####
+        if not(path.exists(path.join("data", experimentFolder))):
+            makedirs(path.join("data",experimentFolder))
+        self.participant_list = listdir(path.join("data", self.current_experiment_name))
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -951,6 +953,7 @@ class MyFrame(wx.Frame):
         dlg.SetValue("") 
         if dlg.ShowModal() == wx.ID_OK:
             rename(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
+            rename(path.join("data", self.current_experiment_name), path.join("data", dlg.GetValue()))
             self.experiment_list = listdir(self.experiment_folder)
             del self.experiment_list_trimmed[:]
             for i in self.experiment_list:
@@ -959,7 +962,12 @@ class MyFrame(wx.Frame):
 #            self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
             self.current_experiment_name = dlg.GetValue()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
-                self.current_experiment = load(f)
+                self.experiment_holder = load(f)
+            self.experiment_holder['settings']['experiment_folder'] = dlg.GetValue()
+            with open(self.experiment_folder + self.current_experiment_name + ".json", 'wb') as f:
+                dump(self.experiment_holder, f)
+                f.close()
+            
         dlg.Destroy()
         event.Skip()
         
@@ -981,9 +989,9 @@ class MyFrame(wx.Frame):
 #    def rotation_angle_direction_press(self, event):
 #        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
 #        event.Skip()
-    def group_listbox_click(self, event):
-        self.highlit_group = event.GetString()
-        event.Skip()
+#    def group_listbox_click(self, event):
+#        self.highlit_group = event.GetString()
+#        event.Skip()
     
     def preprocess_press(self, event):
         preprocess = PreprocessFrame(self, wx.ID_ANY, "")
@@ -1370,7 +1378,19 @@ class PreprocessFrame(wx.Frame):
         self.task_to_ignore = wx.Button(self, wx.ID_ANY, (u"\u2bab"))
         self.ignore_to_task = wx.Button(self, wx.ID_ANY, (u"\u2ba8"))
         self.preprocess_button = wx.Button(self, wx.ID_ANY, ("Pre-Process Participants"))
+        ####################################
+        self.one_or_split_rbutton = wx.RadioBox(self, wx.ID_ANY, label='File output style', choices=['One file','Split by task'], style=wx.RA_SPECIFY_ROWS, majorDimension=2)
+        self.output_type_text = wx.StaticText(self, wx.ID_ANY, 'Output type')
+        self.trial = wx.CheckBox(self, wx.ID_ANY, label='Trial')
+        self.block = wx.CheckBox(self, wx.ID_ANY, label='Block')
+        self.target = wx.CheckBox(self, wx.ID_ANY, label='Target')
+        self.error_style = wx.RadioBox(self, wx.ID_ANY, label='Error style', choices=['Cursor error', 'Reach Deviation'], style=wx.RA_SPECIFY_ROWS, majorDimension=2)
 
+#        self.output_type = wx.RadioBox(self, wx.ID_ANY, label='Output type', choices=['Trial','Block','Target'], style=wx.RA_SPECIFY_ROWS, majorDimension=3)
+#        self.error_text = wx.StaticText(self, wx.ID_ANY, "Error output")
+#        self.error_cbox_1 = wx.CheckBox(self, wx.ID_ANY, label='Cursor error')
+#        self.error_cbox_2 = wx.CheckBox(self, wx.ID_ANY, label='Reach deviation')
+        
         self.Bind(wx.EVT_LISTBOX, self.participant_pool_click, self.participant_pool)
         self.Bind(wx.EVT_LISTBOX, self.ignore_pool_click, self.ignore_pool)
         self.Bind(wx.EVT_LISTBOX, self.task_pool_click, self.task_pool)
@@ -1380,6 +1400,15 @@ class PreprocessFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.task_to_ignore_click, self.task_to_ignore)
         self.Bind(wx.EVT_BUTTON, self.ignore_to_task_click, self.ignore_to_task)
         self.Bind(wx.EVT_BUTTON, self.preprocess_button_click, self.preprocess_button)
+        self.Bind(wx.EVT_RADIOBOX, self.one_or_split_rbutton_click, self.one_or_split_rbutton)
+        self.Bind(wx.EVT_CHECKBOX, self.trial_click, self.trial)
+        self.Bind(wx.EVT_CHECKBOX, self.block_click, self.block)
+        self.Bind(wx.EVT_CHECKBOX, self.target_click, self.target)
+        self.Bind(wx.EVT_RADIOBOX, self.error_style_click, self.error_style)
+        
+#        self.Bind(wx.EVT_RADIOBOX, self.output_type_click, self.output_type)
+#        self.Bind(wx.EVT_CHECKBOX, self.error_cbox_1_click, self.error_cbox_1)
+#        self.Bind(wx.EVT_CHECKBOX, self.error_cbox_2_click, self.error_cbox_2)
                         
         self.__set_properties()
         self.__do_layout()
@@ -1396,6 +1425,8 @@ class PreprocessFrame(wx.Frame):
         self.ignore_to_participant.SetMinSize(self.switch_button_size)
         self.task_to_ignore.SetMinSize(self.switch_button_size)
         self.ignore_to_task.SetMinSize(self.switch_button_size)
+        self.block.SetValue(True)
+        self.trial.SetValue(True)
         
         ############ Pull Data from Parent frame ##########    
         self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
@@ -1417,6 +1448,7 @@ class PreprocessFrame(wx.Frame):
         vertical_pp = wx.BoxSizer(wx.VERTICAL)
         vertical_pp.Add(self.participant_static_text, 0, wx.CENTER, 5)
         vertical_pp.Add(self.participant_pool, 0, 0, 2)
+        vertical_pp.Add(self.one_or_split_rbutton, 0, 0, 2)
         vertical_pp.Add(self.preprocess_button, 0, 0, 2)
         horizontal_main.Add(vertical_pp)
         vertical_1 = wx.BoxSizer(wx.VERTICAL)
@@ -1426,10 +1458,19 @@ class PreprocessFrame(wx.Frame):
         vertical_ip = wx.BoxSizer(wx.VERTICAL)
         vertical_ip.Add(self.ignore_participant_static_text, 0, wx.CENTER, 5)
         vertical_ip.Add(self.ignore_pool, 0, wx.RIGHT, 2)
+        vertical_ip.Add(self.output_type_text, 0, 0, 2)
+        vertical_ip.Add(self.trial, 0, 0, 2)
+        vertical_ip.Add(self.block, 0, 0, 2)
+        vertical_ip.Add(self.target, 0, 0, 2)
+#        vertical_ip.Add(self.output_type, 0, wx.RIGHT, 2)
         horizontal_main.Add(vertical_ip)
         vertical_tp = wx.BoxSizer(wx.VERTICAL)
         vertical_tp.Add(self.task_static_text, 0, wx.CENTER, 5)
         vertical_tp.Add(self.task_pool, 0, 0, 2)
+        vertical_tp.Add(self.error_style, 0, 0, 2)
+#        vertical_tp.Add(self.error_text, 0, 0, 2)
+#        vertical_tp.Add(self.error_cbox_1, 0, 0, 2)
+#        vertical_tp.Add(self.error_cbox_2, 0, 0, 2)
         horizontal_main.Add(vertical_tp)
         vertical_2 = wx.BoxSizer(wx.VERTICAL)
         vertical_2.Add(self.task_to_ignore, 0, wx.TOP, 100)
@@ -1483,6 +1524,22 @@ class PreprocessFrame(wx.Frame):
             self.task_pool.Set(self.task_list_dynamic)
             self.ignore_task_pool.Set(self.ignore_task_list_dynamic)
         event.Skip()
+    def one_or_split_rbutton_click(self, event):
+        event.Skip()
+    def trial_click(self, event):
+        event.Skip()
+    def block_click(self, event):
+        event.Skip()
+    def target_click(self, event):
+        event.Skip()
+    def error_style_click(self, event):
+        event.Skip()
+#    def output_type_click(self, event):
+#        event.Skip()
+#    def error_cbox_1_click(self, event):
+#        event.Skip()
+#    def error_cbox_2_click(self, event):
+#        event.Skip()
     def preprocess_button_click(self, event):
         try:
             data_pointers = pp.data_name_list(self.participant_list_dynamic, self.task_list_dynamic, self.Parent.experiment_holder)
