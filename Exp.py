@@ -591,6 +591,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                      units='pix',
                      screen=experiment['settings']['screen'],
                      viewScale=view_scale)
+#        Win._setCurrent()
     except:
         print "Exception creating Window"
     ### Configure visual feedback settings here

@@ -492,7 +492,7 @@ class MyFrame(wx.Frame):
             except:
                 self.lag_txt.SetValue("0")
         except Exception as e:
-            print e
+            print e, "error 1"
         event.Skip()
     
     def task_list_box_dclick(self, event):

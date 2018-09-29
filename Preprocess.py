@@ -8,11 +8,11 @@ from os import path
 from json import load
 from numpy import array, float, mean, unique, delete, std, nan, ma, nanmean, nanstd
 from copy import deepcopy
-with open ("/home/julius/Desktop/PyVMEC/experiments/preprocessing.json", "rb") as f:
-    exp_test = load(f)
-plist = ['me-mi', 'JULIUS_1', 'marius_a', 'm2', 'JULIUS_2', 'FOUR me']
-tlist = ['aligned','rotated','reversal','errorclamps']
-cfg_test = {"dependent_variable": "cursor error", "trial":True, "block":True, "target":True, "output_style":"single file", "outliers": True, "outlier_scale": 2}
+#with open ("/home/julius/Desktop/PyVMEC/experiments/preprocessing.json", "rb") as f:
+#    exp_test = load(f)
+#plist = ['me-mi', 'JULIUS_1', 'marius_a', 'm2', 'JULIUS_2', 'FOUR me']
+#tlist = ['aligned','rotated','reversal','errorclamps']
+#cfg_test = {"dependent_variable": "cursor error", "trial":True, "block":True, "target":True, "output_style":"single file", "outliers": True, "outlier_scale": 2}
 def blocksizer(num_targets):
     if num_targets == 1:
         return 3
@@ -92,7 +92,7 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
                 if i == 0:
                     output_rows.append(input_row)
     return [output_fields, output_rows]
-test_directory_list = data_name_list(plist, tlist, exp_test)
+#test_directory_list = data_name_list(plist, tlist, exp_test)
 #print test_directory_list
 
 
