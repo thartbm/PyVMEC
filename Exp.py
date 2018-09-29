@@ -784,7 +784,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
-        task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
+        if (running[i]['trial_type'] != 'pause'):
+            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
         task_save = DataFrame({})
     running[i]['win'].close()
     return end_exp

@@ -5,6 +5,7 @@ from math import ceil
 from os import path, makedirs, remove, listdir, rename
 from json import load, dump
 from copy import deepcopy
+from numpy import array
 #import path
 import Tkinter as tk
 import Exp as exp
@@ -433,6 +434,7 @@ class MyFrame(wx.Frame):
         if not(path.exists(path.join("data", experimentFolder))):
             makedirs(path.join("data",experimentFolder))
         self.participant_list = listdir(path.join("data", self.current_experiment_name))
+        self.participant_list = [x for x in self.participant_list if ".csv" not in x]
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -467,6 +469,8 @@ class MyFrame(wx.Frame):
             self.Rotation_angle_slider.SetValue(self.current_experiment[self.highlit_task_num]['rotation_angle'])
 #            self.rotation_angle_direction.SetSelection(exp.rotation_direction_num(self.current_experiment[self.highlit_task_num]['rotation_angle_direction'], True))
             self.pause_check.SetValue(self.current_experiment[self.highlit_task_num]['pause_button_wait'])
+            self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
+            self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
             if (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'gradual'):
                 self.MIN_TRIAL_BOOL = True
             # Show or hide Pause menu
@@ -658,9 +662,10 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['min_angle'] = 40
             self.current_experiment[self.highlit_task_num]['max_angle'] = 140
             self.current_experiment[self.highlit_task_num]['terminal_feedback'] = False
-            self.current_experiment[self.highlit_task_num]['pausetime'] = 3
+            self.current_experiment[self.highlit_task_num]['pausetime'] = 5
             self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
             self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
+            self.current_experiment[self.highlit_task_num]['pause_instruction'] = ''
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:           
 #                dump(self.experiment_holder, f)
 #                f.close()
@@ -676,6 +681,8 @@ class MyFrame(wx.Frame):
             self.radio_box_1.SetSelection(exp.task_num(self.current_experiment[self.highlit_task_num]['trial_type'], True))
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['num_trials'])
             self.num_targ_CB.SetStringSelection(str(self.current_experiment[self.highlit_task_num]['num_targets']))
+            self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
+            self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
             # Show or hide Pause menu
             if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
                 self.pause_experiment_show()
@@ -683,7 +690,7 @@ class MyFrame(wx.Frame):
                     self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
                     self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
                 except:
-                    self.pause_txt.SetValue('0')
+                    self.pause_txt.SetValue('5')
                     self.pause_message_txt.SetValue('')
             else:
                 self.regular_experiment_show()     
@@ -863,11 +870,11 @@ class MyFrame(wx.Frame):
             self.num_trial_CB.SetValue(exp.myRounder(event.GetInt(), self.num_trial_mult))
             self.valid_trial_num = exp.myRounder(event.GetInt(), self.num_trial_mult)
         if event.GetInt() < self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] and self.MIN_TRIAL_BOOL == True:
-#            print ("IM HERE!!!")
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
             self.valid_trial_num = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
         self.num_trial_chosen = self.valid_trial_num
         self.current_experiment[self.highlit_task_num]['num_trials'] = int(self.num_trial_chosen)
+#        print self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
         ## SAVE        
 #        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
 #            dump(self.current_experiment, f)
@@ -1005,7 +1012,7 @@ class MyFrame(wx.Frame):
     
     def participants_list_box_click(self, event):
         self.highlit_participant = event.GetString()
-        print self.experiment_holder['participant'][self.highlit_participant]['state'], [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]
+#        print self.experiment_holder['participant'][self.highlit_participant]['state'], [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]
         
         if self.experiment_holder['participant'][self.highlit_participant]['state'] == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
             self.continue_Button.Disable()
@@ -1349,6 +1356,7 @@ class PreprocessFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
         ########## Initial Presets#############
+        self.cfg = {}
         self.highlit_participant = ""
         self.highlit_ignore = ""
         self.highlit_task = ""
@@ -1384,8 +1392,9 @@ class PreprocessFrame(wx.Frame):
         self.trial = wx.CheckBox(self, wx.ID_ANY, label='Trial')
         self.block = wx.CheckBox(self, wx.ID_ANY, label='Block')
         self.target = wx.CheckBox(self, wx.ID_ANY, label='Target')
-        self.error_style = wx.RadioBox(self, wx.ID_ANY, label='Error style', choices=['Cursor error', 'Reach Deviation'], style=wx.RA_SPECIFY_ROWS, majorDimension=2)
-
+        self.error_style = wx.RadioBox(self, wx.ID_ANY, label='Dependent variable', choices=['Cursor error', 'Reach Deviation'], style=wx.RA_SPECIFY_ROWS, majorDimension=2)
+        self.outlier_removal_check = wx.CheckBox(self, wx.ID_ANY, label="Remove outliers \n(slider scaled x10)")
+        self.outlier_removal_slider = wx.Slider(self, wx.ID_ANY, minValue = 1, maxValue = 40, value=20, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
 #        self.output_type = wx.RadioBox(self, wx.ID_ANY, label='Output type', choices=['Trial','Block','Target'], style=wx.RA_SPECIFY_ROWS, majorDimension=3)
 #        self.error_text = wx.StaticText(self, wx.ID_ANY, "Error output")
 #        self.error_cbox_1 = wx.CheckBox(self, wx.ID_ANY, label='Cursor error')
@@ -1405,6 +1414,8 @@ class PreprocessFrame(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.block_click, self.block)
         self.Bind(wx.EVT_CHECKBOX, self.target_click, self.target)
         self.Bind(wx.EVT_RADIOBOX, self.error_style_click, self.error_style)
+        self.Bind(wx.EVT_CHECKBOX, self.outlier_removal_check_click, self.outlier_removal_check)
+        self.Bind(wx.EVT_SLIDER, self.outlier_removal_slider_choose, self.outlier_removal_slider)
         
 #        self.Bind(wx.EVT_RADIOBOX, self.output_type_click, self.output_type)
 #        self.Bind(wx.EVT_CHECKBOX, self.error_cbox_1_click, self.error_cbox_1)
@@ -1427,9 +1438,18 @@ class PreprocessFrame(wx.Frame):
         self.ignore_to_task.SetMinSize(self.switch_button_size)
         self.block.SetValue(True)
         self.trial.SetValue(True)
-        
+        self.outlier_removal_slider.Disable()
+        self.cfg['dependent_variable'] = self.error_style.GetString(self.error_style.GetSelection()).lower()
+        self.cfg['trial'] = self.trial.IsChecked()
+        self.cfg['block'] = self.block.IsChecked()
+        self.cfg['target'] = self.target.IsChecked()
+        self.cfg['output_style'] = self.one_or_split_rbutton.GetString(self.one_or_split_rbutton.GetSelection()).lower()
+        self.cfg['outliers'] = self.outlier_removal_check.IsChecked()
+        self.cfg['outlier_scale'] = self.outlier_removal_slider.GetValue()
+
         ############ Pull Data from Parent frame ##########    
         self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
+        self.participant_list = [x for x in self.participant_list if '.csv' not in x]
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
@@ -1448,7 +1468,7 @@ class PreprocessFrame(wx.Frame):
         vertical_pp = wx.BoxSizer(wx.VERTICAL)
         vertical_pp.Add(self.participant_static_text, 0, wx.CENTER, 5)
         vertical_pp.Add(self.participant_pool, 0, 0, 2)
-        vertical_pp.Add(self.one_or_split_rbutton, 0, 0, 2)
+        vertical_pp.Add(self.error_style, 0, 0, 2)
         vertical_pp.Add(self.preprocess_button, 0, 0, 2)
         horizontal_main.Add(vertical_pp)
         vertical_1 = wx.BoxSizer(wx.VERTICAL)
@@ -1467,7 +1487,7 @@ class PreprocessFrame(wx.Frame):
         vertical_tp = wx.BoxSizer(wx.VERTICAL)
         vertical_tp.Add(self.task_static_text, 0, wx.CENTER, 5)
         vertical_tp.Add(self.task_pool, 0, 0, 2)
-        vertical_tp.Add(self.error_style, 0, 0, 2)
+        vertical_tp.Add(self.one_or_split_rbutton, 0, 0, 2)
 #        vertical_tp.Add(self.error_text, 0, 0, 2)
 #        vertical_tp.Add(self.error_cbox_1, 0, 0, 2)
 #        vertical_tp.Add(self.error_cbox_2, 0, 0, 2)
@@ -1479,6 +1499,8 @@ class PreprocessFrame(wx.Frame):
         vertical_itp = wx.BoxSizer(wx.VERTICAL)
         vertical_itp.Add(self.ignore_task_static_text, 0, wx.CENTER, 5)
         vertical_itp.Add(self.ignore_task_pool, 0, 0, 2)
+        vertical_itp.Add(self.outlier_removal_check, 0, 0, 2)
+        vertical_itp.Add(self.outlier_removal_slider, 0, wx.EXPAND, 2)
         horizontal_main.Add(vertical_itp)
         
         self.SetSizer(horizontal_main)
@@ -1525,30 +1547,54 @@ class PreprocessFrame(wx.Frame):
             self.ignore_task_pool.Set(self.ignore_task_list_dynamic)
         event.Skip()
     def one_or_split_rbutton_click(self, event):
+        self.cfg['output_style'] = event.GetString().lower()
         event.Skip()
     def trial_click(self, event):
+        self.cfg['trial'] = event.IsChecked()
         event.Skip()
     def block_click(self, event):
+        self.cfg['block'] = event.IsChecked()
         event.Skip()
     def target_click(self, event):
+        self.cfg['target'] = event.IsChecked()
         event.Skip()
     def error_style_click(self, event):
+        self.cfg['dependent_variable'] = event.GetString().lower()
         event.Skip()
-#    def output_type_click(self, event):
-#        event.Skip()
-#    def error_cbox_1_click(self, event):
-#        event.Skip()
-#    def error_cbox_2_click(self, event):
-#        event.Skip()
+    def outlier_removal_check_click(self, event):
+        if event.IsChecked() == True:
+            self.outlier_removal_slider.Enable()     
+        elif event.IsChecked() == False:
+            self.outlier_removal_slider.Disable()
+        self.cfg['outliers'] = event.IsChecked()
+        event.Skip()
+    def outlier_removal_slider_choose(self, event):
+        self.cfg['outlier_scale'] = float(event.GetInt())/float(10)
+        event.Skip()
+
     def preprocess_button_click(self, event):
         try:
-            data_pointers = pp.data_name_list(self.participant_list_dynamic, self.task_list_dynamic, self.Parent.experiment_holder)
-            preprocessed_data = pp.data_process(self.participant_list_dynamic, data_pointers)
-            file_name = path.join("data",self.Parent.current_experiment_name, "test_output.csv")
-            with open(file_name, 'wb') as csvfile:
-                csvwriter = csv.writer(csvfile)
-                csvwriter.writerow(preprocessed_data[0])
-                csvwriter.writerows(preprocessed_data[1])
+            preprocessed_data = pp.process_participants(self.participant_list_dynamic, self.task_list_dynamic, self.Parent.experiment_holder, self.cfg)
+            p_index = array([self.cfg['trial'], self.cfg['block'], self.cfg['target']]).nonzero()[0]
+            types = ['trial', 'block', 'target']
+            for idx in p_index:
+                outtype = types[idx]
+                file_name = "%s_%s"%(self.Parent.current_experiment_name, outtype)
+                if self.cfg['output_style'] == 'one file':
+                    file_path = path.join("data",self.Parent.current_experiment_name, file_name + ".csv")
+                    with open(file_path, 'wb') as csvfile:
+                        csvwriter = csv.writer(csvfile)
+                        csvwriter.writerow(preprocessed_data[0][idx])
+                        csvwriter.writerows(preprocessed_data[1][idx])
+                if self.cfg['output_style'] == 'split by task':
+                    for idx, task in enumerate(self.task_list_dynamic):
+                        file_path = path.join("data",self.Parent.current_experiment_name, file_name + "_" + str(idx) +".csv")
+                        task_index = (array(preprocessed_data[1][idx])[:,0] == task).nonzero()[0]
+                        task_data = array(preprocessed_data[1][idx])[task_index]
+                        with open(file_path, 'wb') as csvfile:
+                            csvwriter = csv.writer(csvfile)
+                            csvwriter.writerow(preprocessed_data[0][idx])
+                            csvwriter.writerows(task_data)
         except Exception as e:
             traceback.print_exc()
         event.Skip()
