@@ -441,6 +441,11 @@ class MyFrame(wx.Frame):
             self.participant_list_trimmed = ["Empty"]
         self.participants_list_box.Set(self.participant_list_trimmed)
         del self.participant_list_trimmed[:]
+        #### CHECK IF ANY TASKS ####
+        if len(self.experiment_holder['experiment']) > 0:
+            self.Run_Button.Enable()
+        else:
+            self.Run_Button.Disable()
         event.Skip()
     
     def list_box_click(self, event):
@@ -474,7 +479,7 @@ class MyFrame(wx.Frame):
             if (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'gradual'):
                 self.MIN_TRIAL_BOOL = True
             # Show or hide Pause menu
-            if self.current_experiment[self.highlit_task_num]['trial_type'] == "pause":
+            if self.experiment_holder['experiment'][self.highlit_task_num]['trial_type'] == "pause":
                 self.pause_experiment_show()
                 try:
                     self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
@@ -492,7 +497,7 @@ class MyFrame(wx.Frame):
             except:
                 self.lag_txt.SetValue("0")
         except Exception as e:
-            print e, "error 1"
+            print traceback.print_exc()
         event.Skip()
     
     def task_list_box_dclick(self, event):
@@ -585,7 +590,11 @@ class MyFrame(wx.Frame):
             self.participant_list_trimmed = ["Empty"]
         self.participants_list_box.Set(self.participant_list_trimmed)
         del self.participant_list_trimmed[:]
-        
+        #### CHECK IF ANY TASKS ####
+        if len(self.experiment_holder['experiment']) > 0:
+            self.Run_Button.Enable()
+        else:
+            self.Run_Button.Disable()
         event.Skip()
 
     def Save_Press(self, event):
@@ -601,6 +610,7 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter name', 'Participant')
         dlg.SetValue("Default")
         experimentFolder = self.current_experiment_name
+        self.Run_Button.Disable()
         if dlg.ShowModal() ==wx.ID_OK:  
             if (path.exists("data"+path.sep + experimentFolder + path.sep + dlg.GetValue())):
                 dlg2 = wx.MessageDialog(self, "Participant already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
@@ -619,12 +629,14 @@ class MyFrame(wx.Frame):
                 if (len(self.experiment_run) != 0):
                     self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except Exception as e:
+                self.Run_Button.Enable()
                 traceback.print_exc()
                 dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg3.ShowModal()
                 dlg3.Destroy()
                 return
         else:
+            self.Run_Button.Enable()
             pass
         #### REFRESH PARTICIPANT LIST #####
         if not(path.exists(path.join("data", experimentFolder))):
@@ -637,6 +649,7 @@ class MyFrame(wx.Frame):
         self.participants_list_box.Set(self.participant_list_trimmed)
         del self.participant_list_trimmed[:]
         dlg.Destroy()
+        self.Run_Button.Enable()
         event.Skip()
 
     def Plus_Press(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -665,7 +678,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['pausetime'] = 5
             self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
             self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
-            self.current_experiment[self.highlit_task_num]['pause_instruction'] = ''
+            self.current_experiment[self.highlit_task_num]['pause_instruction'] = ""
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:           
 #                dump(self.experiment_holder, f)
 #                f.close()
@@ -703,6 +716,11 @@ class MyFrame(wx.Frame):
         else:
             pass
         dlg.Destroy()
+        #### CHECK IF ANY TASKS ####
+        if len(self.experiment_holder['experiment']) > 0:
+            self.Run_Button.Enable()
+        else:
+            self.Run_Button.Disable()
         event.Skip()
 
     def Minus_Press(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -719,7 +737,11 @@ class MyFrame(wx.Frame):
             self.task_list_box.Set(['None'])
         else:
             self.task_list_box.Set(self.task_list)
-        
+        #### CHECK IF ANY TASKS ####
+        if len(self.experiment_holder['experiment']) > 0:
+            self.Run_Button.Enable()
+        else:
+            self.Run_Button.Disable()
         event.Skip()
 
     def Trial_Type_Press(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -1369,6 +1391,7 @@ class PreprocessFrame(wx.Frame):
         self.ignore_list_dynamic = []
         self.task_list_dynamic = []
         self.ignore_task_list_dynamic = []
+        
         ####################################
         self.list_box_size = [150,300]
         self.switch_button_size = [50,50]
@@ -1446,7 +1469,7 @@ class PreprocessFrame(wx.Frame):
         self.cfg['output_style'] = self.one_or_split_rbutton.GetString(self.one_or_split_rbutton.GetSelection()).lower()
         self.cfg['outliers'] = self.outlier_removal_check.IsChecked()
         self.cfg['outlier_scale'] = self.outlier_removal_slider.GetValue()
-
+        
         ############ Pull Data from Parent frame ##########    
         self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
         self.participant_list = [x for x in self.participant_list if '.csv' not in x]

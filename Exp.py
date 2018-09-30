@@ -4,6 +4,7 @@ from psychopy import event, core
 from psychopy.visual import shape
 from os import path, listdir
 from json import dump
+import pyautogui
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -694,6 +695,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
         Mouse = event.Mouse(win=Win, visible=False)
+        pyautogui.moveTo(10, 10)
     except Exception as e:
         print e
         print str(e)
