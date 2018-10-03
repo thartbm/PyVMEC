@@ -180,7 +180,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 block_row = []
                 rotation_angle = array(participant_data)[:,2][block_index[block]][0]
                 block_mean = nanmean(array(participant_data)[:,4][block_index[block]].astype(float))
-                block_row.extend([task, block, rotation_angle, block_mean])             
+                block_row.extend([task, block + 1, rotation_angle, block_mean])             
                 task_row.append(block_row)
             task_matrix_blocked.extend(task_row)
         participant_matrix_blocked.append(deepcopy(task_matrix_blocked))
@@ -219,6 +219,17 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 target_row.extend([task, target, rotation_angle, target_mean])
                 task_row_target.append(target_row)
             jump_value = jump_value + len(task_index)
+            ##### ORDER TARGETS SMALLEST TO GREATEST ANGLE ######
+            target_order = []
+            for task in task_row_target:
+                target_order.append(int(task[1]))
+            st_idx = []
+            for target in sorted(target_order):
+                st_idx.append(target_order.index(target))
+            task_row_target_array = array(task_row_target)
+            task_row_target_array[:] = task_row_target_array[st_idx]
+            task_row_target = task_row_target_array.tolist()
+            ##### ADD TO END OF LIST ######
             task_matrix_target.extend(task_row_target)
         participant_matrix_target.append(task_matrix_target)
         

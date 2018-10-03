@@ -1390,6 +1390,9 @@ class PreprocessFrame(wx.Frame):
         self.participant_list = []
         self.participant_list_trimmed = []
         self.task_list = []
+        self.std_list = []
+        for i in range(1, 9):
+            self.std_list.append(str(i*0.5))
         ########## Dynamic Data ###############
         self.participant_list_dynamic = []
         self.ignore_list_dynamic = []
@@ -1413,6 +1416,7 @@ class PreprocessFrame(wx.Frame):
         self.task_to_ignore = wx.Button(self, wx.ID_ANY, (u"\u2bab"))
         self.ignore_to_task = wx.Button(self, wx.ID_ANY, (u"\u2ba8"))
         self.preprocess_button = wx.Button(self, wx.ID_ANY, ("Pre-Process Participants"))
+        self.std_menu_list = wx.ComboBox(self, wx.ID_ANY, value='2.0', choices = self.std_list, style=wx.CB_DROPDOWN)
         ####################################
         self.one_or_split_rbutton = wx.RadioBox(self, wx.ID_ANY, label='File output style', choices=['One file','Split by task'], style=wx.RA_SPECIFY_ROWS, majorDimension=2)
         self.output_type_text = wx.StaticText(self, wx.ID_ANY, 'Output type')
@@ -1420,8 +1424,8 @@ class PreprocessFrame(wx.Frame):
         self.block = wx.CheckBox(self, wx.ID_ANY, label='Block')
         self.target = wx.CheckBox(self, wx.ID_ANY, label='Target')
         self.error_style = wx.RadioBox(self, wx.ID_ANY, label='Dependent variable', choices=['Cursor error', 'Reach Deviation'], style=wx.RA_SPECIFY_ROWS, majorDimension=2)
-        self.outlier_removal_check = wx.CheckBox(self, wx.ID_ANY, label="Remove outliers \n(slider scaled x10)")
-        self.outlier_removal_slider = wx.Slider(self, wx.ID_ANY, minValue = 1, maxValue = 40, value=20, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.outlier_removal_check = wx.CheckBox(self, wx.ID_ANY, label="Remove outliers")
+#        self.outlier_removal_slider = wx.Slider(self, wx.ID_ANY, minValue = 1, maxValue = 40, value=20, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
 #        self.output_type = wx.RadioBox(self, wx.ID_ANY, label='Output type', choices=['Trial','Block','Target'], style=wx.RA_SPECIFY_ROWS, majorDimension=3)
 #        self.error_text = wx.StaticText(self, wx.ID_ANY, "Error output")
 #        self.error_cbox_1 = wx.CheckBox(self, wx.ID_ANY, label='Cursor error')
@@ -1442,7 +1446,8 @@ class PreprocessFrame(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.target_click, self.target)
         self.Bind(wx.EVT_RADIOBOX, self.error_style_click, self.error_style)
         self.Bind(wx.EVT_CHECKBOX, self.outlier_removal_check_click, self.outlier_removal_check)
-        self.Bind(wx.EVT_SLIDER, self.outlier_removal_slider_choose, self.outlier_removal_slider)
+#        self.Bind(wx.EVT_SLIDER, self.outlier_removal_slider_choose, self.outlier_removal_slider)
+        self.Bind(wx.EVT_COMBOBOX, self.std_menu_list_choose, self.std_menu_list)
         
 #        self.Bind(wx.EVT_RADIOBOX, self.output_type_click, self.output_type)
 #        self.Bind(wx.EVT_CHECKBOX, self.error_cbox_1_click, self.error_cbox_1)
@@ -1465,14 +1470,15 @@ class PreprocessFrame(wx.Frame):
         self.ignore_to_task.SetMinSize(self.switch_button_size)
         self.block.SetValue(True)
         self.trial.SetValue(True)
-        self.outlier_removal_slider.Disable()
+#        self.outlier_removal_slider.Disable()
+        self.std_menu_list.Disable()
         self.cfg['dependent_variable'] = self.error_style.GetString(self.error_style.GetSelection()).lower()
         self.cfg['trial'] = self.trial.IsChecked()
         self.cfg['block'] = self.block.IsChecked()
         self.cfg['target'] = self.target.IsChecked()
         self.cfg['output_style'] = self.one_or_split_rbutton.GetString(self.one_or_split_rbutton.GetSelection()).lower()
         self.cfg['outliers'] = self.outlier_removal_check.IsChecked()
-        self.cfg['outlier_scale'] = self.outlier_removal_slider.GetValue()
+        self.cfg['outlier_scale'] = float(self.std_menu_list.GetValue())
         
         ############ Pull Data from Parent frame ##########    
         self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
@@ -1527,7 +1533,8 @@ class PreprocessFrame(wx.Frame):
         vertical_itp.Add(self.ignore_task_static_text, 0, wx.CENTER, 5)
         vertical_itp.Add(self.ignore_task_pool, 0, 0, 2)
         vertical_itp.Add(self.outlier_removal_check, 0, 0, 2)
-        vertical_itp.Add(self.outlier_removal_slider, 0, wx.EXPAND, 2)
+#        vertical_itp.Add(self.outlier_removal_slider, 0, wx.EXPAND, 2)
+        vertical_itp.Add(self.std_menu_list, 0, wx.EXPAND, 2)
         horizontal_main.Add(vertical_itp)
         
         self.SetSizer(horizontal_main)
@@ -1590,13 +1597,18 @@ class PreprocessFrame(wx.Frame):
         event.Skip()
     def outlier_removal_check_click(self, event):
         if event.IsChecked() == True:
-            self.outlier_removal_slider.Enable()     
+#            self.outlier_removal_slider.Enable()     
+            self.std_menu_list.Enable()
         elif event.IsChecked() == False:
-            self.outlier_removal_slider.Disable()
+#            self.outlier_removal_slider.Disable()
+            self.std_menu_list.Disable()
         self.cfg['outliers'] = event.IsChecked()
         event.Skip()
-    def outlier_removal_slider_choose(self, event):
-        self.cfg['outlier_scale'] = float(event.GetInt())/float(10)
+#    def outlier_removal_slider_choose(self, event):
+#        self.cfg['outlier_scale'] = float(event.GetInt())/float(10)
+#        event.Skip()
+    def std_menu_list_choose(self, event):
+        self.cfg['outlier_scale'] = float(event.GetString())
         event.Skip()
 
     def preprocess_button_click(self, event):
