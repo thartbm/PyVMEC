@@ -4,7 +4,7 @@ from psychopy import event, core
 from psychopy.visual import shape
 from os import path, listdir
 from json import dump
-#import pyautogui
+import pyautogui
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -215,6 +215,8 @@ def trial_runner(cfg={}):
             counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
             end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=cfg['flip_text'], color=( 1, 1, 1))
+            pyautogui.moveTo(root.winfo_screenwidth - 50, root.winfo_screenheight- 50)
+            pyautogui.click()
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()

@@ -126,7 +126,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                             dependent_variable = cursor_error
                         elif cfg['dependent_variable'] == 'reach deviation':
                             dependent_variable = reach_deviation
-                        dv_trial.extend([idx[1], idx[3], idx[5], idx[6], dependent_variable])
+                        dv_trial.extend([idx[1], idx[3], idx[5], idx[6], '%.2f'%(float(dependent_variable))])
                         break
                 dv_task.append(dv_trial)
             dv_participant.extend(dv_task)
@@ -180,7 +180,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 block_row = []
                 rotation_angle = array(participant_data)[:,2][block_index[block]][0]
                 block_mean = nanmean(array(participant_data)[:,4][block_index[block]].astype(float))
-                block_row.extend([task, block + 1, rotation_angle, block_mean])             
+                block_row.extend([task, block + 1, rotation_angle, '%.2f'%(float(block_mean))])             
                 task_row.append(block_row)
             task_matrix_blocked.extend(task_row)
         participant_matrix_blocked.append(deepcopy(task_matrix_blocked))
@@ -216,7 +216,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
 #                print target_index
                 rotation_angle = array(participant_data)[target_index][:,2][0]
                 target_mean = nanmean(array(participant_data)[:,4][target_index].astype(float))
-                target_row.extend([task, target, rotation_angle, target_mean])
+                target_row.extend([task, target, rotation_angle, '%.2f'%(float(target_mean))])
                 task_row_target.append(target_row)
             jump_value = jump_value + len(task_index)
             ##### ORDER TARGETS SMALLEST TO GREATEST ANGLE ######
@@ -251,4 +251,4 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     field_matrix.append(fields_trial)
     field_matrix.append(fields_block)
     field_matrix.append(fields_target)
-    return field_matrix, output_matrix
+    return field_matrix, output_matrix, participant_matrix
