@@ -64,7 +64,7 @@ class MyFrame(wx.Frame):
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
-        self.DEFAULT_FRAME_SIZE = ((708, 580))
+        self.DEFAULT_FRAME_SIZE = ((728, 580))
         self.PAUSE_FRAME_SIZE = ((536, 580))
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
@@ -257,6 +257,7 @@ class MyFrame(wx.Frame):
         sizer_12 = wx.BoxSizer(wx.VERTICAL)
         sizer_13 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_task_arrows = wx.BoxSizer(wx.VERTICAL)
         sizer_2.Add(self.Experiment_statictext, 0, wx.EXPAND, 0)
         sizer_2.Add(self.staticline_1, 0, wx.BOTTOM, 5)
         sizer_2.Add(self.experiment_settings_Button, 0, wx.RIGHT, 1)
@@ -287,6 +288,9 @@ class MyFrame(wx.Frame):
         sizer_3.Add(self.participants_list_box, 0, wx.RIGHT, 1)
         sizer_3.Add(self.continue_Button, 0, wx.RIGHT, 1)
         sizer_1.Add(sizer_3, 1, 0, 0)
+        sizer_task_arrows.Add(self.Move_Up_Button, 0, wx.TOP, 140)
+        sizer_task_arrows.Add(self.Move_Down_Button, 0, 0, 0)
+        sizer_1.Add(sizer_task_arrows, 1, 0, 0)
         sizer_10.Add(self.radio_box_1, 0, 0, 0)
         sizer_10.Add(self.static_line_3, 0, wx.BOTTOM, 2)
         sizer_10.Add(self.min_angle_statictext, 0, 0, 0)
@@ -303,8 +307,8 @@ class MyFrame(wx.Frame):
         sizer_10.Add(self.PM_static_text, 0, 0, 0)
         sizer_10.Add(self.pause_message_txt, 0, 0, 0)
         sizer_10.Add(self.pause_check, 0, 0, 0)
-        sizer_10.Add(self.Move_Up_Button, 0, 0, 0)
-        sizer_10.Add(self.Move_Down_Button, 0, 0, 0)
+#        sizer_10.Add(self.Move_Up_Button, 0, 0, 0)
+#        sizer_10.Add(self.Move_Down_Button, 0, 0, 0)
         sizer_8.Add(sizer_10, 1, 0, 0)
         sizer_9.Add(self.num_target_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.num_targ_CB, 0, wx.LEFT, 2)
@@ -323,7 +327,7 @@ class MyFrame(wx.Frame):
         sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.terminalfeedback_Radio, 0, wx.LEFT, 2)
         sizer_8.Add(sizer_9, 1, 0, 0)
-        sizer_1.Add(sizer_8, 1, 0, 0)
+        sizer_1.Add(sizer_8, 1, wx.LEFT, 10)
 #        sizer_7.Add(self.lag_static_text, 0, 0, 0)
 #        sizer_7.Add(self.lag_txt, 0, 0, 0)
         sizer_6.Add(sizer_7, 1, 0, 0)
@@ -502,7 +506,7 @@ class MyFrame(wx.Frame):
     
     def task_list_box_dclick(self, event):
         dlg = wx.TextEntryDialog(self, 'Change Task Name', 'Rename')
-        dlg.SetValue("Default")
+        dlg.SetValue("")
         if dlg.ShowModal() == wx.ID_OK:
             self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
         del self.task_list[:]
@@ -514,7 +518,7 @@ class MyFrame(wx.Frame):
 
     def New_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         dlg = wx.TextEntryDialog(self, 'Enter Name', 'Create new experiment')
-        dlg.SetValue("Default")
+        dlg.SetValue("")
         
         if listdir(self.experiment_folder) == []:
             del self.experiment_list_trimmed[:]
@@ -608,7 +612,7 @@ class MyFrame(wx.Frame):
 
     def Run_Press(self, event):  # wxGlade: MyFrame.<event_handle
         dlg = wx.TextEntryDialog(self, 'Enter name', 'Participant')
-        dlg.SetValue("Default")
+        dlg.SetValue("")
         experimentFolder = self.current_experiment_name
         self.Run_Button.Disable()
         if dlg.ShowModal() ==wx.ID_OK:  
@@ -630,7 +634,7 @@ class MyFrame(wx.Frame):
                     self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
             except Exception as e:
                 self.Run_Button.Enable()
-                traceback.print_exc()
+                print traceback.print_exc()
                 dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg3.ShowModal()
                 dlg3.Destroy()
@@ -654,7 +658,7 @@ class MyFrame(wx.Frame):
 
     def Plus_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         dlg = wx.TextEntryDialog(self, 'Enter Task Name', 'New Task')
-        dlg.SetValue("Default")
+        dlg.SetValue("")
         if dlg.ShowModal() == wx.ID_OK:
             new_task = {}
             self.experiment_holder['experiment'] = self.current_experiment 
@@ -1002,7 +1006,7 @@ class MyFrame(wx.Frame):
         
     def rename_task(self, event):
         dlg = wx.TextEntryDialog(self, 'Change Task Name', 'Rename')
-        dlg.SetValue("Default")
+        dlg.SetValue("")
         if dlg.ShowModal() == wx.ID_OK:
             self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
         del self.task_list[:]
