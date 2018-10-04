@@ -8,19 +8,11 @@ Requirements:
 
 Important dependencies:
 
-`pip install -U numpy scipy pandas six`
-
-`pip install psychopy==2.85.3`
-
-`pip install pyglet==1.3.0`
+`pip install -U numpy scipy pandas six psychopy==2.85.3 pyglet==1.3.0`
 
 Other dependencies:
 
-`pip install json_tricks`
-
-`pip install configobj`
-
-`pip install screeninfo`
+`pip install json_tricks configobj screeninfo pyautogui`
 
 Troubleshooting:
 Experiment window not showing any objects, or window not appearing at all:
