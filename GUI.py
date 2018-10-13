@@ -33,6 +33,8 @@ class MyFrame(wx.Frame):
         self.task_list = ['None']
         self.participant_list = []
         self.participant_list_trimmed = []
+        self.key_list = ['lag','terminal_multiplier', 'pause_button_wait', 'terminal_feedback', 'pausetime', 'pause_instruction']
+        self.def_list = [0, 1.025, False, False, 5, ""]
         ### Current Experiment
         self.current_experiment = []
         self.current_experiment_name = ""
@@ -624,6 +626,15 @@ class MyFrame(wx.Frame):
             if not(path.exists(path.join("data", experimentFolder, dlg.GetValue()))):
                 makedirs(path.join("data", experimentFolder, dlg.GetValue()))
             try:
+                #### CHECK JSON KEYS AND FILL MISSING KEYS WITH DEFAULTS ####
+                for task in self.experiment_holder['experiment']:
+                    for idx, key, in enumerate(self.key_list):
+                        if key in task.keys():
+                            continue
+                        else:
+                            task[key] = self.def_list[idx]
+                        
+                
                 participant = dlg.GetValue()
                 self.experiment_holder['participant'][participant] = {"state":[0, 0], "angles":[]}
                 with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
@@ -635,9 +646,9 @@ class MyFrame(wx.Frame):
             except Exception as e:
                 self.Run_Button.Enable()
                 print traceback.print_exc()
-                dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
-                dlg3.ShowModal()
-                dlg3.Destroy()
+#                dlg3 = wx.MessageDialog(self, 'No experiment selected!', style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+#                dlg3.ShowModal()
+#                dlg3.Destroy()
                 return
         else:
             self.Run_Button.Enable()

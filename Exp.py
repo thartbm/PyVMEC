@@ -529,7 +529,7 @@ def trial_runner(cfg={}):
                     timePos_dict['trial_num'] = cfg['trial_num']
                     timePos_dict['trial_type'] = cfg['trial_type']
                     timePos_dict['targetangle_deg'] = cfg['target_angle']
-                    timePos_dict['rotation_angle'] = rot_dir*cfg['rotation_angle']
+                    timePos_dict['rotation_angle'] = rot_dir*cfg['current_rotation_angle']
                     timePos_dict['homex_px'] = startPos[0]
                     timePos_dict['homey_px'] = startPos[1]*cfg['flipscreen'] + cfg['active_height']/2
                     timePos_dict['targetx_px'] = endPos[0]
@@ -552,6 +552,7 @@ def trial_runner(cfg={}):
                         timePos_dict['trial_num'] = cfg['trial_num']
                         timePos_dict['trial_type'] = cfg['trial_type']
                         timePos_dict['targetangle_deg'] = cfg['target_angle']
+                        timePos_dict['rotation_angle'] = rot_dir*cfg['current_rotation_angle']
                         timePos_dict['homex_px'] = startPos[0]
                         timePos_dict['homey_px'] = startPos[1] + cfg['active_height']/2
                         timePos_dict['targetx_px'] = endPos[0]
@@ -697,6 +698,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
         Mouse = event.Mouse(win=Win, visible=False)
+        screen_info_monitors = screeninfo.get_monitors()
 #        pyautogui.moveTo(10, 10)
     except Exception as e:
         print e
@@ -714,10 +716,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
             running[i]['poll_type'] = 'psychopy'
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
-        if (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 1):
+        if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
             running[i]['screen_on'] = 1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
-        elif (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 0):
+        elif (len(screen_info_monitors) > 1 and settings['screen'] == 0):
             running[i]['screen_on'] = -1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
         else:
@@ -754,8 +756,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != 'rotation_angle' and trial_num > 0):
+                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
                     running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
+                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
+                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
@@ -923,7 +927,7 @@ def continue_experiment(fulls, participant, experiment = {}):
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
         Mouse = event.Mouse(win=Win, visible=False)
-    
+        screen_info_monitors = screeninfo.get_monitors()
         
     except Exception as e:
         print e
@@ -941,10 +945,10 @@ def continue_experiment(fulls, participant, experiment = {}):
             running[i]['poll_type'] = 'psychopy'
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
-        if (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 1):
+        if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
             running[i]['screen_on'] = 1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
-        elif (len(screeninfo.get_monitors()) > 1 and settings['screen'] == 0):
+        elif (len(screen_info_monitors) > 1 and settings['screen'] == 0):
             running[i]['screen_on'] = -1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
         else:
@@ -978,10 +982,13 @@ def continue_experiment(fulls, participant, experiment = {}):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != 'rotation_angle' and trial_num > 0):
+                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
                     running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
+                elif (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
+                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+                print running[i]['current_rotation_angle'], running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 try:
                     chosen_target = choice(targetList)
