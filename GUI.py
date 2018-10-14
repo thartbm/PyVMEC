@@ -1066,6 +1066,8 @@ class MyFrame(wx.Frame):
     def continue_Button_Press(self, event):
         dlg = wx.MessageDialog(self, "Continue running this participant?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
+            #### GET CURRENT EXPERIMENT STATE ####
+        
             exp.continue_experiment(self.experiment_holder['settings']['fullscreen'], self.highlit_participant, self.experiment_holder)
         dlg.Destroy()
         event.Skip()
