@@ -31,4 +31,7 @@ And you need wxPython==3.0.2.0 for now. This is still the default on Linux Mint,
 
 https://sourceforge.net/projects/wxpython/files/wxPython/3.0.2.0/
 
+Project Developers:
+
+Julius Martin - September 2017 to December 2018
 
