@@ -11,7 +11,7 @@ import pyautogui
 from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean
 import math
 from pandas import concat, DataFrame
-from random import choice
+from random import choice, seed, shuffle
 from Tkinter import Tk
 from copy import deepcopy
 import sys
@@ -747,11 +747,13 @@ def run_experiment_2(fulls, participant, experiment = {}):
         elif running[i]['num_targets'] == 1:
             targetList = [running[i]['min_angle']]
         fulltargetList = tuple(targetList)
+        #### FIRST SEED FOR TARGET ANGLES ####
+        
         if (running[i]['trial_type'] != 'pause'):
-            if running[i]['num_targets'] > 1:
-                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
-            elif running[i]['num_targets'] == 1:
-                targetList = [running[i]['min_angle']]
+#            if running[i]['num_targets'] > 1:
+#                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+#            elif running[i]['num_targets'] == 1:
+#                targetList = [running[i]['min_angle']]
             for trial_num in range (0, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):

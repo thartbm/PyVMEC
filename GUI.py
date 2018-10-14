@@ -462,6 +462,13 @@ class MyFrame(wx.Frame):
         self.highlit_task = event.GetString()
         self.highlit_task_num = event.GetSelection()
         try:
+             #### CHECK JSON KEYS AND FILL MISSING KEYS WITH DEFAULTS ####
+            for task in self.experiment_holder['experiment']:
+                for idx, key, in enumerate(self.key_list):
+                    if key in task.keys():
+                        continue
+                    else:
+                        task[key] = self.def_list[idx]
             ### Trial number stuff
             self.valid_trial_num = self.current_experiment[self.highlit_task_num]['num_trials']
             if self.current_experiment[self.highlit_task_num]['num_targets'] > 2:
