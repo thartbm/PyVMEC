@@ -441,6 +441,8 @@ def trial_runner(cfg={}):
                     if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
                         phase_1 = True
                         show_target = True
+                        show_home = False
+                        show_cursor = False
                 elif (cfg['trial_type'] == 'error_clamp'):
                     if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
                         phase_1 = True
@@ -481,11 +483,9 @@ def trial_runner(cfg={}):
                     if (pixels_per_sample > 1 and timerSet == True):
                         timerSet = False
                         stop_time = 0
-                    if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):
-                        show_home = False
-                        show_target = True
+                    if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):       
                         nc_check_1 = True
-                        show_cursor = False
+                        
                     if (get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
                         if current_timestamp > .5:
                             idx = (array(timeArray) > (current_timestamp - .5)).nonzero()[0]
@@ -494,6 +494,7 @@ def trial_runner(cfg={}):
                                 phase_2 = True
                                 show_target = False
                                 show_home = True
+                                end_point = circle_pos
                 if (cfg['trial_type'] == 'error_clamp'):
                     if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
                         phase_2 = True
@@ -521,15 +522,17 @@ def trial_runner(cfg={}):
 
             if (phase_1 == True and phase_2 == True):
 
-                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
+#                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
+#                    show_arrow = True
+#                    show_arrowFill = True
+#                
+#                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
+#                    show_arrow = False
+#                    show_arrowFill = False
+                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, end_point) >= get_dist(startPos,endPos)/10):
                     show_arrow = True
-                    show_arrowFill = True
-                
-                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
-                
-                    show_arrow = False
-                    show_arrowFill = False
-                
+                    show_arrowFill = True 
+                    
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) > 3*get_dist(startPos, endPos)/20):
                     show_cursor = False
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
