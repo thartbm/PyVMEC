@@ -365,7 +365,10 @@ def trial_runner(cfg={}):
                         circle_pos = [rotated_X, rotated_Y]
 
                 elif (cfg['trial_type'] == 'no_cursor'):
-                    circle_pos = mousePos
+                    if (cfg['rotation_angle'] == 0):
+                        circle_pos = mousePos
+                    else:
+                        circle_pos = [rotated_X, rotated_Y]
                 elif (cfg['trial_type'] == 'error_clamp'):
                     circle_pos = mousePos
                     vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))

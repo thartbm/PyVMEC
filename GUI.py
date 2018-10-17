@@ -354,7 +354,7 @@ class MyFrame(wx.Frame):
         self.rotation_change_staticline.Show()
         self.lag_static_text.Show()
         self.lag_txt.Show()
-        ##### # # # # # # # # # # # # # # #
+        ###########
         self.min_angle_CB.Show()
         self.min_angle_statictext.Show()
         self.min_max_staticline.Show()
@@ -368,12 +368,12 @@ class MyFrame(wx.Frame):
 #        self.rotation_angle_direction.Show()
         ### Show ###
         if (self.current_experiment[self.highlit_task_num]['trial_type'] == 'no_cursor'):
-            self.Rotation_angle_statictext.Hide()     
-            self.Rotation_angle_slider.Hide()
-            self.rotation_angle_staticline.Hide()
-#            self.rotation_angle_direction.Hide()
-            self.rot_change_statictext.Hide()
-            self.rotation_change_staticline.Hide()
+#            self.Rotation_angle_statictext.Hide()     
+#            self.Rotation_angle_slider.Hide()
+#            self.rotation_angle_staticline.Hide()
+##            self.rotation_angle_direction.Hide()
+#            self.rot_change_statictext.Hide()
+#            self.rotation_change_staticline.Hide()
             self.lag_static_text.Hide()
             self.lag_txt.Hide() 
             self.terminalfeedback_Radio.Hide()
@@ -418,8 +418,7 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Show()
         self.pause_message_txt.Show()
         self.pause_check.Show()
-        self.SetSize(self.PAUSE_FRAME_SIZE)
-        
+        self.SetSize(self.PAUSE_FRAME_SIZE)  
         
         
     def list_box_dclick(self, event):
