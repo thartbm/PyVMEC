@@ -765,7 +765,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
             targetList = [running[i]['min_angle']]
         #### FIRST SEED FOR TARGET ANGLES ####
         setParticipantSeed(participant_seed + str(i))
-        fulltargetList = shuffleTargets4task(targetList, blocks=running[i]['num_trials']/running[i]['num_targets'])
+        fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
         if (running[i]['trial_type'] != 'pause'):
 #            if running[i]['num_targets'] > 1:
 #                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
@@ -992,13 +992,13 @@ def continue_experiment(fulls, participant, experiment = {}):
         running[i]['min_distance'] = cfg['active_height']/2
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
-        running[i]['current_rotation_angle'] = 0
+        running[i]['current_rotation_angle'] = participant_state[1]
         if running[i]['num_targets'] > 1:
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
             targetList = [running[i]['min_angle']]
         setParticipantSeed(participant_seed + str(i))
-        fulltargetList = shuffleTargets4task(targetList, blocks=running[i]['num_trials']/running[i]['num_targets'])
+        fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
         if (running[i]['trial_type'] != 'pause'):
             for trial_num in range ((participant_state[1])*continued, int(running[i]['num_trials'])):
                 continued = 0
@@ -1011,7 +1011,7 @@ def continue_experiment(fulls, participant, experiment = {}):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-                print running[i]['current_rotation_angle'], running[i]['rotation_angle']
+#                print running[i]['current_rotation_angle'], running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 try:
                     chosen_target = fulltargetList[trial_num]
