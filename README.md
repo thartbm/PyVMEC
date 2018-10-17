@@ -22,5 +22,5 @@ Experiment window not showing any objects, or window not appearing at all:
 
 ## Developers:
 
-Julius Martin - September 2017 to December 2018
+Julius Martin [@juliusjgm12] - September 2017 to December 2018
 
