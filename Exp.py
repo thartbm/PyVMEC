@@ -793,6 +793,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
+                    experiment['participant'][participant]['angles'] = targetList
+                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return DataFrame({})
                 else:           
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
@@ -822,7 +824,7 @@ def continue_experiment(fulls, participant, experiment = {}):
     participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
     participant_seed = participant + settings['experiment_folder']  
-    continued = False
+    continued = 1
     if experiment['settings']['flipscreen'] == True:
         view_scale = [1, -1]
     else:
@@ -995,7 +997,8 @@ def continue_experiment(fulls, participant, experiment = {}):
         setParticipantSeed(participant_seed + str(i))
         fulltargetList = shuffleTargets4task(targetList, blocks=running[i]['num_trials']/running[i]['num_targets'])
         if (running[i]['trial_type'] != 'pause'):
-            for trial_num in range (participant_state[1] + 1, int(running[i]['num_trials'])):
+            for trial_num in range ((participant_state[1])*continued, int(running[i]['num_trials'])):
+                continued = 0
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
@@ -1016,10 +1019,13 @@ def continue_experiment(fulls, participant, experiment = {}):
                 running[i]['time'] = core.getTime()
 #                try:
                 exp = trial_runner(running[i])
+                
 #                except:
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
+                    experiment['participant'][participant]['angles'] = targetList
+                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return end_exp
                 else:           
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
