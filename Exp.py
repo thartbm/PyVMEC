@@ -138,7 +138,18 @@ def rotation_num(rotation_type, function):
             return 'abrupt'
         if (rotation_type == 1):
             return 'gradual'
+def setParticipantSeed(participant):
+    
+    seed(sum([ord(c) for c in participant]))
 
+def shuffleTargets4task(targets, blocks):
+    taskTargets = []
+    
+    for block in range(blocks):
+      shuffle(targets)
+      taskTargets = taskTargets + targets  
+    return(taskTargets)
+    
 def rotation_direction_num(rotation_direction, function):
     if (function == True):
         if (rotation_direction == 'Counter-clockwise'):
@@ -578,7 +589,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
     participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
     #### Generate seed ####
-    participant_seed = (sum([ord(c) for c in settings['experiment_folder']]) + (sum([ord(c) for c in participant]) * 9999))
+    participant_seed = participant + settings['experiment_folder']
+    
     if experiment['settings']['flipscreen'] == True:
         view_scale = [1, -1]
     else:
@@ -748,10 +760,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
             targetList = [running[i]['min_angle']]
-        fulltargetList = tuple(targetList)
         #### FIRST SEED FOR TARGET ANGLES ####
-        seed(participant_seed)
-        shuffle(targetList)
+        setParticipantSeed(participant_seed + str(i))
+        fulltargetList = shuffleTargets4task(targetList, blocks=running[i]['num_trials']/running[i]['num_targets'])
         if (running[i]['trial_type'] != 'pause'):
 #            if running[i]['num_targets'] > 1:
 #                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
@@ -769,11 +780,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 try:
-                    chosen_target = targetList[trial_num%len(targetList)]
+                    chosen_target = fulltargetList[trial_num]
                 except:
                     print "Exception randomizing target"
-                running[i]['target_angle'] = chosen_target
-                
+                running[i]['target_angle'] = chosen_target    
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
 #                try:
@@ -811,6 +821,7 @@ def continue_experiment(fulls, participant, experiment = {}):
     settings = deepcopy(experiment['settings'])
     participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
+    participant_seed = participant + settings['experiment_folder']  
     continued = False
     if experiment['settings']['flipscreen'] == True:
         view_scale = [1, -1]
@@ -977,13 +988,14 @@ def continue_experiment(fulls, participant, experiment = {}):
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         running[i]['current_rotation_angle'] = 0
-        filltargetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
-        fulltargetList = tuple(filltargetList)
-        if continued == False:
-            targetList = experiment['participant'][participant]['angles']
-            continued = True
+        if running[i]['num_targets'] > 1:
+            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+        elif running[i]['num_targets'] == 1:
+            targetList = [running[i]['min_angle']]
+        setParticipantSeed(participant_seed + str(i))
+        fulltargetList = shuffleTargets4task(targetList, blocks=running[i]['num_trials']/running[i]['num_targets'])
         if (running[i]['trial_type'] != 'pause'):
-            for trial_num in range (participant_state[1], int(running[i]['num_trials'])):
+            for trial_num in range (participant_state[1] + 1, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
@@ -996,11 +1008,10 @@ def continue_experiment(fulls, participant, experiment = {}):
                 print running[i]['current_rotation_angle'], running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 try:
-                    chosen_target = choice(targetList)
+                    chosen_target = fulltargetList[trial_num]
                 except:
                     print "Exception randomizing target"
-                running[i]['target_angle'] = chosen_target
-                
+                running[i]['target_angle'] = chosen_target               
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
 #                try:
@@ -1016,7 +1027,7 @@ def continue_experiment(fulls, participant, experiment = {}):
                     end_exp = concat([end_exp, df_exp])
                     experiment['participant'][participant]['angles'] = targetList
                     experiment['participant'][participant]['state'] = [i, trial_num]
-                    targetList.remove(chosen_target)
+#                    targetList.remove(chosen_target)
                     with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
                         dump(experiment, f)
                         f.close()
