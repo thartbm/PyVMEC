@@ -500,6 +500,7 @@ def trial_runner(cfg={}):
                                 end_point = circle_pos
                 if (cfg['trial_type'] == 'error_clamp'):
                     if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
+                        end_point = circle_pos
                         phase_2 = True
                         show_home = True
                         show_cursor = False
