@@ -3,6 +3,7 @@ import wx
 from gettext import install
 from math import ceil
 from os import path, makedirs, remove, listdir, rename
+from shutil import copyfile
 from json import load, dump
 from copy import deepcopy
 from numpy import array
@@ -66,8 +67,8 @@ class MyFrame(wx.Frame):
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
-        self.DEFAULT_FRAME_SIZE = ((728, 580))
-        self.PAUSE_FRAME_SIZE = ((536, 580))
+        self.DEFAULT_FRAME_SIZE = ((728, 619))
+        self.PAUSE_FRAME_SIZE = ((536, 619))
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -112,7 +113,9 @@ class MyFrame(wx.Frame):
 #        self.max_angle_CB = wx.ComboBox(self, wx.ID_ANY, choices=[("Cursor"), ("No Cursor"), ("Error Clamp")], style=wx.CB_DROPDOWN)       
         self.Move_Up_Button = wx.Button(self, wx.ID_ANY, (u"\u25b2"))
         self.Move_Down_Button = wx.Button(self, wx.ID_ANY, (u"\u25bc"))
-        self.preprocess_Button = wx.Button(self, wx.ID_ANY, ("Pre-Process"))        
+        self.preprocess_Button = wx.Button(self, wx.ID_ANY, ("Pre-Process"))      
+        self.duplicate_experiment_Button = wx.Button(self, wx.ID_ANY, ('Duplicate'))
+        self.duplicate_task_Button = wx.Button(self, wx.ID_ANY, ("Duplicate"))
         
         self.num_target_statictext = wx.StaticText(self, wx.ID_ANY, ("# Targets"))
         self.num_targ_CB = wx.ComboBox(self, wx.ID_ANY, value="3", choices=self.num_target_list, style=wx.CB_DROPDOWN)
@@ -158,6 +161,8 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_RADIOBOX, self.Trial_Type_Press, self.radio_box_1)
         self.Bind(wx.EVT_BUTTON, self.experiment_settings_Button_Press, self.experiment_settings_Button)
         self.Bind(wx.EVT_BUTTON, self.continue_Button_Press, self.continue_Button)        
+        self.Bind(wx.EVT_BUTTON, self.duplicate_experiment, self.duplicate_experiment_Button)
+        self.Bind(wx.EVT_BUTTON, self.duplicate_task, self.duplicate_task_Button)
         
         self.Bind(wx.EVT_SLIDER, self.min_angle_choose, self.min_angle_CB)       
         self.Bind(wx.EVT_SLIDER, self.max_angle_choose, self.max_angle_CB)
@@ -204,6 +209,8 @@ class MyFrame(wx.Frame):
         self.participants_list_box.SetSelection(0)
         self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
+        self.duplicate_experiment_Button.SetMinSize((175, 29))
+        self.duplicate_task_Button.SetMinSize((175, 29))
         self.continue_Button.SetMinSize((175, 29))
         self.preprocess_Button.SetMinSize((175, 29))
         self.experiment_settings_Button.SetMinSize((175, 29))
@@ -267,7 +274,8 @@ class MyFrame(wx.Frame):
         sizer_5.Add(self.New_Button, 0, wx.ALL, 2)
         sizer_5.Add(self.rename_experiment_button, 0, wx.ALL, 2)
         sizer_5.Add(self.Delete_Button, 0, wx.ALL, 2)
-        sizer_2.Add(sizer_5, 1, 0, 0)
+        sizer_2.Add(sizer_5, 0, 0, 0)
+        sizer_2.Add(self.duplicate_experiment_Button, 0, wx.ALL, 0)
         sizer_13.Add(self.Load_Button, 0, wx.ALL, 2)
         sizer_13.Add(self.Save_Button, 0, wx.ALL, 2)
         sizer_12.Add(sizer_13, 1, wx.ALL, 1)
@@ -285,6 +293,7 @@ class MyFrame(wx.Frame):
         sizer_4.Add(self.rename_task_button, 0, wx.ALL, 2)
         sizer_4.Add(self.Minus_Button, 0, wx.ALL, 2)
         sizer_3.Add(sizer_4, 1, 0, 0)
+        sizer_3.Add(self.duplicate_task_Button, 0, wx.ALL, 2)
         sizer_3.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
         sizer_3.Add(self.participants_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.participants_list_box, 0, wx.RIGHT, 1)
@@ -1069,6 +1078,73 @@ class MyFrame(wx.Frame):
         
             exp.continue_experiment(self.experiment_holder['settings']['fullscreen'], self.highlit_participant, self.experiment_holder)
         dlg.Destroy()
+        event.Skip()
+    def duplicate_experiment(self, event):
+        dlg = wx.TextEntryDialog(self, 'Enter Name', 'Duplicate experiment')
+        dlg.SetValue("") 
+        if dlg.ShowModal() == wx.ID_OK:
+            copyfile(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
+
+#            self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
+            self.current_experiment_name = dlg.GetValue()
+            with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
+                self.experiment_holder = load(f)
+            self.experiment_holder['settings']['experiment_folder'] = dlg.GetValue()
+            self.experiment_holder['participant'] = {}
+            with open(self.experiment_folder + self.current_experiment_name + ".json", 'wb') as f:
+                dump(self.experiment_holder, f)
+                f.close()
+            if not(path.exists(path.join("data", self.experiment_holder['settings']['experiment_folder']))):
+                makedirs(path.join("data", self.experiment_holder['settings']['experiment_folder']))
+            self.experiment_list_trimmed.append(dlg.GetValue())
+            self.exp_list_box.Set(self.experiment_list_trimmed)
+            self.exp_list_box.SetSelection(self.experiment_list_trimmed.index(dlg.GetValue()))
+            self.current_experiment_name = dlg.GetValue()
+            self.highlit_experiment = dlg.GetValue()
+            experimentFolder = self.highlit_experiment
+            with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
+                self.experiment_holder = load(f)
+                del self.task_list[:]
+            self.current_experiment = self.experiment_holder['experiment']
+            for i in range (0, len(self.current_experiment)):
+                self.task_list.append(self.current_experiment[i]["task_name"])
+            if len(self.task_list) == 0:
+                self.task_list_box.Set(['Empty'])
+            else:
+                self.task_list_box.Set(self.task_list)
+            #### REFRESH PARTICIPANT LIST #####
+            if not(path.exists(path.join("data", experimentFolder))):
+                makedirs(path.join("data",experimentFolder))
+            self.participant_list = listdir(path.join("data", self.current_experiment_name))
+            for i in self.participant_list:
+                self.participant_list_trimmed.append(i.replace(".csv", ""))
+            if len(self.participant_list_trimmed) == 0:
+                self.participant_list_trimmed = ["Empty"]
+            self.participants_list_box.Set(self.participant_list_trimmed)
+            del self.participant_list_trimmed[:]
+            #### CHECK IF ANY TASKS ####
+            if len(self.experiment_holder['experiment']) > 0:
+                self.Run_Button.Enable()
+            else:
+                self.Run_Button.Disable()
+            
+        dlg.Destroy()
+        event.Skip()
+    def duplicate_task(self, event):
+        dlg = wx.TextEntryDialog(self, 'Change Task Name', 'Duplicate Task')
+        dlg.SetValue("")
+        if dlg.ShowModal() == wx.ID_OK:
+            copy_task = deepcopy(self.current_experiment[self.highlit_task_num])
+            self.current_experiment.append(copy_task)
+            self.highlit_task_num = len(self.current_experiment) - 1
+            self.highlit_task = dlg.GetValue() 
+            self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
+        del self.task_list[:]
+        for i in range (0, len(self.current_experiment)):
+            self.task_list.append(self.current_experiment[i]['task_name'])
+        self.task_list_box.Set(self.task_list)
+        dlg.Destroy()
+        self.task_list_box.SetSelection(self.highlit_task_num)
         event.Skip()
     
     def concat_csv(self, participant):
