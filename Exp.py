@@ -463,6 +463,7 @@ def trial_runner(cfg={}):
                         phase_2 = True
                         show_home = True
                         show_target = False
+                        end_point = circle_pos
                         while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
                             myCircle.draw()
                             if (cfg['poll_type'] == 'psychopy'):
@@ -636,7 +637,15 @@ def run_experiment_2(fulls, participant, experiment = {}):
         if settings['custom_stim_enable'] == True:
             custom_stim_holder = []
             icon_directory = listdir(settings['custom_stim_file'])
-            for i in range(1, len(icon_directory)/2 + 1):
+            
+            icon_directory[:] = [png for png in icon_directory if ".png" in png]
+            icon_directory[:] = [i.replace('cursor_','') for i in icon_directory]
+            icon_directory[:] = [i.replace('target_','') for i in icon_directory]
+            icon_directory[:] = [i.replace('.png','') for i in icon_directory]
+            indexes = list(set(icon_directory))
+            indexes = [int(i) for i in indexes]
+            
+            for i in indexes:
                 try:
                     custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
                 except:
