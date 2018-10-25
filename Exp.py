@@ -635,17 +635,13 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                  lineColor=[0,0,0])
         if settings['custom_stim_enable'] == True:
             custom_stim_holder = []
-            icon_directory = listdir(settings['custom_stim_file'])
-            
+            icon_directory = listdir(settings['custom_stim_file'])   
             icon_directory[:] = [png for png in icon_directory if ".png" in png]
             icon_directory_nums = [i.replace('cursor_','') for i in icon_directory]
             icon_directory_nums[:] = [i.replace('target_','') for i in icon_directory_nums]
             indexes = [i.replace('.png','') for i in icon_directory_nums]
             indexes = [int(i) for i in indexes]
             indexes = list(set(indexes))
-
-            
-            
             for i in indexes:
                 try:
                     custom_target = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
@@ -680,8 +676,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
-                                     lineColor=[0, 0, 0])
-                                     
+                                     lineColor=[0, 0, 0])                                
                 custom_stim_holder.append([custom_cursor, custom_target])
         if settings['custom_cursor_enable'] == False:
             myCircle = Circle(win=Win,
@@ -788,8 +783,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         running[i]['current_rotation_angle'] = 0
-        if running[i]['rotation_angle'] < 0:
-            rot_dir = -1
         if running[i]['num_targets'] > 1:
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
