@@ -34,8 +34,8 @@ class MyFrame(wx.Frame):
         self.task_list = ['None']
         self.participant_list = []
         self.participant_list_trimmed = []
-        self.key_list = ['lag','terminal_multiplier', 'pause_button_wait', 'terminal_feedback', 'pausetime', 'pause_instruction']
-        self.def_list = [0, 1.025, False, False, 5, ""]
+        self.key_list = ['lag','terminal_multiplier', 'pause_button_wait', 'terminal_feedback', 'pausetime', 'pause_instruction', 'rotation_direction']
+        self.def_list = [0, 1.025, False, False, 5, "", 1]
         ### Current Experiment
         self.current_experiment = []
         self.current_experiment_name = ""
@@ -634,6 +634,7 @@ class MyFrame(wx.Frame):
         self.Run_Button.Disable()
         if dlg.ShowModal() ==wx.ID_OK:  
             if (path.exists("data"+path.sep + experimentFolder + path.sep + dlg.GetValue())):
+                self.Run_Button.Enable()
                 dlg2 = wx.MessageDialog(self, "Participant already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg2.ShowModal()
                 dlg2.Destroy()
@@ -648,6 +649,10 @@ class MyFrame(wx.Frame):
                             continue
                         else:
                             task[key] = self.def_list[idx]
+                    if task['rotation_angle'] < 0:
+                        task['rotation_direction'] = -1
+                    else:
+                        task['rotation_direction'] = 1
                         
                 
                 participant = dlg.GetValue()
@@ -942,6 +947,10 @@ class MyFrame(wx.Frame):
             self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
             self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
                 
+        if self.current_experiment[self.highlit_task_num]['rotation_angle'] < 0:
+            self.current_experiment[self.highlit_task_num]['rotation_direction'] = -1
+        else:
+            self.current_experiment[self.highlit_task_num]['rotation_direction'] = 1
 #        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
 #            dump(self.current_experiment, f)
 #            f.close()

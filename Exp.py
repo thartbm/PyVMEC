@@ -5,6 +5,7 @@ from psychopy.visual import shape
 from os import path, listdir
 from json import dump
 import pyautogui
+import traceback
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -50,6 +51,7 @@ def addWorkSpaceLimits(screen, cfg = {}):
     cfg['active_width'] = trimmed_width
     cfg['active_height'] = trimmed_height
     cfg['circle_radius'] = trimmed_height*0.025
+    cfg['icon_diameter'] = trimmed_height*0.075
     cfg['screen_dimensions'] = [screen_width, screen_height]
     cfg['winType'] = 'pyglet'
     return cfg
@@ -354,10 +356,7 @@ def trial_runner(cfg={}):
                     change_in_time = current_timestamp - prev_timestamp
                     velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
                     pixels_per_sample = velocity*change_in_time
-#                print rotated_vector, get_vect([prev_X, prev_Y], current_pos)
-#                rotated_X = current_pos[0]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle'])) - current_pos[1]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle']))
-#                rotated_Y = current_pos[0]*math.sin(math.radians(rot_dir*cfg['current_rotation_angle'])) + current_pos[1]*math.cos(math.radians(rot_dir*cfg['current_rotation_angle']))
-                rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], rot_dir*cfg['current_rotation_angle'])
+                rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['rotation_angle'] == 0):
                         circle_pos = mousePos
@@ -639,15 +638,26 @@ def run_experiment_2(fulls, participant, experiment = {}):
             icon_directory = listdir(settings['custom_stim_file'])
             
             icon_directory[:] = [png for png in icon_directory if ".png" in png]
-            icon_directory[:] = [i.replace('cursor_','') for i in icon_directory]
-            icon_directory[:] = [i.replace('target_','') for i in icon_directory]
-            icon_directory[:] = [i.replace('.png','') for i in icon_directory]
-            indexes = list(set(icon_directory))
+            icon_directory_nums = [i.replace('cursor_','') for i in icon_directory]
+            icon_directory_nums[:] = [i.replace('target_','') for i in icon_directory_nums]
+            indexes = [i.replace('.png','') for i in icon_directory_nums]
             indexes = [int(i) for i in indexes]
+            indexes = list(set(indexes))
+
+            
             
             for i in indexes:
                 try:
-                    custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                    custom_target = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                    
+                    target_x, target_y = list(custom_target.size)
+                    
+                    if target_x <= target_y:
+                        target_AR = [float(target_x)/float(target_x), float(target_y)/float(target_x)]
+                    else:
+                        target_AR = [float(target_x)/float(target_y), float(target_y)/float(target_y)]
+                    target_size = [z*cfg['icon_diameter']for z in target_AR]
+                    custom_target.setSize(target_size)
                 except:
                     custom_target = Circle(win=Win,
                                      radius=cfg['circle_radius'],
@@ -656,7 +666,14 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
                 try:   
-                    custom_cursor = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                    custom_cursor = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                    cursor_x, cursor_y = list(custom_cursor.size)
+                    if cursor_x < cursor_y:
+                        cursor_AR = [float(cursor_x)/float(cursor_x), float(cursor_y)/float(cursor_x)]
+                    else:
+                        cursor_AR = [float(cursor_x)/float(cursor_y), float(cursor_y)/float(cursor_y)]
+                    cursor_size = [z*cfg['icon_diameter'] for z in cursor_AR]
+                    custom_cursor.setSize(cursor_size)
                 except:
                     custom_cursor = Circle(win=Win,
                                      radius=cfg['circle_radius'],
@@ -729,7 +746,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       lineColor=[0, 0, 0])
         Mouse = event.Mouse(win=Win, visible=False)
         screen_info_monitors = screeninfo.get_monitors()
-#        pyautogui.moveTo(10, 10)
     except Exception as e:
         print e
         print str(e)
@@ -772,6 +788,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         running[i]['current_rotation_angle'] = 0
+        if running[i]['rotation_angle'] < 0:
+            rot_dir = -1
         if running[i]['num_targets'] > 1:
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
@@ -789,7 +807,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
                 if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
+                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + running[i]['rotation_direction']
                 if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
@@ -878,9 +896,24 @@ def continue_experiment(fulls, participant, experiment = {}):
         if settings['custom_stim_enable'] == True:
             custom_stim_holder = []
             icon_directory = listdir(settings['custom_stim_file'])
-            for i in range(1, len(icon_directory)/2 + 1):
+            icon_directory[:] = [png for png in icon_directory if ".png" in png]
+            icon_directory_nums = [i.replace('cursor_','') for i in icon_directory]
+            icon_directory_nums[:] = [i.replace('target_','') for i in icon_directory_nums]
+            indexes = [i.replace('.png','') for i in icon_directory_nums]
+            indexes = [int(i) for i in indexes]
+            indexes = list(set(indexes))
+            for i in indexes:
                 try:
-                    custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                    custom_target = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                    
+                    target_x, target_y = list(custom_target.size)
+                    
+                    if target_x <= target_y:
+                        target_AR = [float(target_x)/float(target_x), float(target_y)/float(target_x)]
+                    else:
+                        target_AR = [float(target_x)/float(target_y), float(target_y)/float(target_y)]
+                    target_size = [z*cfg['icon_diameter']for z in target_AR]
+                    custom_target.setSize(target_size)
                 except:
                     custom_target = Circle(win=Win,
                                      radius=cfg['circle_radius'],
@@ -889,7 +922,14 @@ def continue_experiment(fulls, participant, experiment = {}):
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
                 try:   
-                    custom_cursor = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                    custom_cursor = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                    cursor_x, cursor_y = list(custom_cursor.size)
+                    if cursor_x < cursor_y:
+                        cursor_AR = [float(cursor_x)/float(cursor_x), float(cursor_y)/float(cursor_x)]
+                    else:
+                        cursor_AR = [float(cursor_x)/float(cursor_y), float(cursor_y)/float(cursor_y)]
+                    cursor_size = [z*cfg['icon_diameter'] for z in cursor_AR]
+                    custom_cursor.setSize(cursor_size)
                 except:
                     custom_cursor = Circle(win=Win,
                                      radius=cfg['circle_radius'],
