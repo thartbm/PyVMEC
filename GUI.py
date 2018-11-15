@@ -1596,7 +1596,8 @@ class PreprocessFrame(wx.Frame):
         del self.participant_list_trimmed[:]
         
         for i in range(0, len(self.Parent.current_experiment)):
-            self.task_list.append(self.Parent.current_experiment[i]["task_name"])
+            if (self.Parent.current_experiment[i]['trial_type'] != 'pause'):
+                self.task_list.append(self.Parent.current_experiment[i]["task_name"])
         self.task_list_dynamic = deepcopy(self.task_list)
         self.task_pool.Set(self.task_list)
         

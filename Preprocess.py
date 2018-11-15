@@ -44,9 +44,10 @@ def data_name_list(participant_list = [], task_list = [], experiment = {}):
         data_list_participant = []
         for i in range(0, len(experiment['experiment'])):
             data_list_task = []
-            task_name = task_list[i]
-            for j in range(0, experiment['experiment'][i]['num_trials']):
-                data_list_task.append(path.join("data", experiment['settings']['experiment_folder'], participant_list[h], task_name + "_" + str(j) + ".csv"))
+            if experiment['experiment'][i]['task_name'] in task_list:
+                task_name = experiment['experiment'][i]['task_name']
+                for j in range(0, experiment['experiment'][i]['num_trials']):
+                    data_list_task.append(path.join("data", experiment['settings']['experiment_folder'], participant_list[h], task_name + "_" + str(j) + ".csv"))
             data_list_participant.append(data_list_task)
         data_list.append(data_list_participant)
     return data_list

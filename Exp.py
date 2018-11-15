@@ -5,7 +5,6 @@ from psychopy.visual import shape
 from os import path, listdir
 from json import dump
 import pyautogui
-import traceback
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
@@ -189,6 +188,12 @@ def get_vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
     scalar_proj = dot(moving_vect, static_uvect)
     return scalar_proj*static_uvect
+    
+def vector_projection(moving_vect, static_vect):
+    static_uvect = get_uvect(static_vect)
+    scalar_proj = dot(moving_vect, static_uvect)/(linalg.norm(static_vect))
+    return list(scalar_proj*static_uvect)
+    
 def angle_split(min_angle, max_angle, num_splits):
     angles = []
     for i in range(0, num_splits):
@@ -372,6 +377,7 @@ def trial_runner(cfg={}):
                     circle_pos = mousePos
                     vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
                     vector_proj = ndarray.tolist(vector_proj_array)
+                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
                     clamped_X_vector = vector_proj[0]
                     clamped_Y_vector = vector_proj[1]
                     if (phase_1 == False):
@@ -384,7 +390,7 @@ def trial_runner(cfg={}):
                         else:
                             active_X = prev_X_cursor + clamped_X_vector
                             active_Y = prev_Y_cursor + clamped_Y_vector
-                    circle_pos_clamped = [active_X, active_Y]
+                    circle_pos_clamped = [startPos[0] + cursor_direction_vector[0], startPos[1] + cursor_direction_vector[1]]
             except:
                 pass
     ########################### SET CURSOR POSITIONS #############################
@@ -645,9 +651,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
             for i in indexes:
                 try:
                     custom_target = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
-                    
-                    target_x, target_y = list(custom_target.size)
-                    
+                    target_x, target_y = list(custom_target.size)   
                     if target_x <= target_y:
                         target_AR = [float(target_x)/float(target_x), float(target_y)/float(target_x)]
                     else:
