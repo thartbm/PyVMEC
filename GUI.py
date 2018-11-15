@@ -540,6 +540,11 @@ class MyFrame(wx.Frame):
         if listdir(self.experiment_folder) == []:
             del self.experiment_list_trimmed[:]
         if dlg.ShowModal() == wx.ID_OK:
+            if dlg.GetValue() in self.experiment_list_trimmed:
+                dlg_warning = wx.MessageDialog(self, "Experiment already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
             new_experiment = []
             self.experiment_holder = {"experiment":[], "settings":{}, "participant":{}}
             experimentFolder = dlg.GetValue()
@@ -691,6 +696,11 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Task Name', 'New Task')
         dlg.SetValue("")
         if dlg.ShowModal() == wx.ID_OK:
+            if dlg.GetValue() in self.task_list:
+                dlg_warning = wx.MessageDialog(self, "Task name already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
             new_task = {}
             self.experiment_holder['experiment'] = self.current_experiment 
             self.current_experiment.append(new_task)
@@ -1020,6 +1030,11 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Name', 'Rename experiment')
         dlg.SetValue("") 
         if dlg.ShowModal() == wx.ID_OK:
+            if dlg.GetValue() in self.experiment_list_trimmed:
+                dlg_warning = wx.MessageDialog(self, "Experiment already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
             rename(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
             rename(path.join("data", self.current_experiment_name), path.join("data", dlg.GetValue()))
             self.experiment_list = listdir(self.experiment_folder)
@@ -1043,7 +1058,13 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Change Task Name', 'Rename')
         dlg.SetValue("")
         if dlg.ShowModal() == wx.ID_OK:
-            self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
+            if dlg.GetValue() not in self.task_list:
+                self.current_experiment[self.highlit_task_num]["task_name"] = dlg.GetValue()
+            else:
+                dlg_warning = wx.MessageDialog(self, "Task name already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
         del self.task_list[:]
         for i in range (0, len(self.current_experiment)):
             self.task_list.append(self.current_experiment[i]['task_name'])
@@ -1092,6 +1113,11 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Enter Name', 'Duplicate experiment')
         dlg.SetValue("") 
         if dlg.ShowModal() == wx.ID_OK:
+            if dlg.GetValue() in self.experiment_list_trimmed:
+                dlg_warning = wx.MessageDialog(self, "Experiment already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
             copyfile(self.experiment_folder + self.current_experiment_name + ".json", self.experiment_folder + dlg.GetValue() + ".json")
 
 #            self.exp_list_box.SetSelection(len(self.experiment_list_trimmed) - 1)
@@ -1143,6 +1169,11 @@ class MyFrame(wx.Frame):
         dlg = wx.TextEntryDialog(self, 'Change Task Name', 'Duplicate Task')
         dlg.SetValue("")
         if dlg.ShowModal() == wx.ID_OK:
+            if dlg.GetValue() in self.task_list:
+                dlg_warning = wx.MessageDialog(self, "Task name already exists!", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
             copy_task = deepcopy(self.current_experiment[self.highlit_task_num])
             self.current_experiment.append(copy_task)
             self.highlit_task_num = len(self.current_experiment) - 1
