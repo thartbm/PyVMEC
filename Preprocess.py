@@ -68,7 +68,6 @@ def check_for_incomplete_data(data_list=[]):
                 with open(trial, "rb") as csvfile:
                     csv_reader = csv.reader(csvfile)
                     row_count = sum(1 for row in csv_reader)
-                    print trial,row_count
                     if row_count < 5:
                         return trial
                     else:

@@ -1751,7 +1751,8 @@ class PreprocessFrame(wx.Frame):
         try:
             preprocessed_data = pp.process_participants(self.participant_list_dynamic, self.task_list_dynamic, self.Parent.experiment_holder, self.cfg)
             if isinstance(preprocessed_data, basestring):
-                dlg_warning = wx.MessageDialog(self, "(" + preprocessed_data + ")" + " contains incomplete data!\n\nConsider ignoring for pre-processing or deleting participant entirely", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                participant_name = preprocessed_data.split("/")[2]
+                dlg_warning = wx.MessageDialog(self, "(" + preprocessed_data + ")" + " contains incomplete data!\n\n" + "From participant: " + participant_name + "\n\nConsider ignoring for pre-processing or deleting participant entirely", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
                 dlg_warning.ShowModal()
                 dlg_warning.Destroy()
                 return
