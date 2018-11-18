@@ -126,7 +126,7 @@ class MyFrame(wx.Frame):
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Rotation Angle"))
 #        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
         self.Rotation_angle_slider = wx.Slider(self, wx.ID_ANY, minValue = -75, maxValue = 75, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
-        
+        self.Rotation_angle_end_statictext = wx.StaticText(self, wx.ID_ANY, ("End rotation angle"))
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
 #        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
@@ -558,7 +558,7 @@ class MyFrame(wx.Frame):
             self.current_experiment_name = dlg.GetValue()
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
                 self.current_experiment = load(f)
-                del self.task_list[:]     
+                del self.task_list[:]
             self.task_list_box.Set(["Empty"])
             self.experiment_holder['settings']['fullscreen'] = True
             self.experiment_holder['settings']['flipscreen'] = False
@@ -1750,6 +1750,12 @@ class PreprocessFrame(wx.Frame):
     def preprocess_button_click(self, event):
         try:
             preprocessed_data = pp.process_participants(self.participant_list_dynamic, self.task_list_dynamic, self.Parent.experiment_holder, self.cfg)
+            if isinstance(preprocessed_data, basestring):
+                dlg_warning = wx.MessageDialog(self, "(" + preprocessed_data + ")" + " contains incomplete data!\n\nConsider ignoring for pre-processing or deleting participant entirely", style=wx.OK|wx.CENTRE|wx.ICON_WARNING)
+                dlg_warning.ShowModal()
+                dlg_warning.Destroy()
+                return
+                
             p_index = array([self.cfg['trial'], self.cfg['block'], self.cfg['target']]).nonzero()[0]
             types = ['trial', 'block', 'target']
             for idx in p_index:

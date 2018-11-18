@@ -51,11 +51,29 @@ def data_name_list(participant_list = [], task_list = [], experiment = {}):
             data_list_participant.append(data_list_task)
         data_list.append(data_list_participant)
     return data_list
-#p_list = ["finished", "unfinished"]
-#t_list = ['first', 'second']
-#data_dir = data_name_list(p_list, t_list, exp_test)
-#print data_dir
-#process_cfg = {"include_trial": True}
+def check_data_exists(data_list = []):
+    for participant in data_list:
+        for task in participant:
+            for trial in task:
+                if path.exists(trial):
+                    continue
+                else:
+                    print trial     
+    return
+    
+def check_for_incomplete_data(data_list=[]):
+    for idx_particpant, participant in enumerate(data_list):
+        for idx_task, task in enumerate(participant):
+            for idx_trial, trial in enumerate(task):
+                with open(trial, "rb") as csvfile:
+                    csv_reader = csv.reader(csvfile)
+                    row_count = sum(1 for row in csv_reader)
+                    print trial,row_count
+                    if row_count < 5:
+                        return trial
+                    else:
+                        continue
+    return True
 
 def data_process(participant_list = [], data_dir = [], cfg = {}):
     output_fields = ['task', 'trial','rotation_angle_deg', 'target_angle_deg']
@@ -99,6 +117,12 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
 
 def process_participants(participant_list = [], task_list = [], experiment = {}, cfg = {}):
     directory_matrix = data_name_list(participant_list, task_list, experiment)
+#    check_data_exists(directory_matrix)
+    data_check = check_for_incomplete_data(directory_matrix)
+    if data_check == True:
+        pass
+    else:
+        return data_check
     participant_matrix = []
     output_matrix = []
     field_matrix = []
@@ -152,6 +176,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 jump_to = jump_to + len(task_index)
             participant_matrix_tmp.append(participant_array.tolist())
         participant_matrix = participant_matrix_tmp
+        
     ############ OUTPUT BY TRIALS ##################
     data_matrix = []
     for idx_0, data in enumerate(participant_matrix):
