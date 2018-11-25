@@ -40,7 +40,8 @@ class MyFrame(wx.Frame):
         self.current_experiment = []
         self.current_experiment_name = ""
         self.highlit_experiment = ""
-        self.experiment_holder = {'experiment': self.current_experiment, 'settings':{}, 'participant':{}}
+        self.experiment_holder = {'experiment': self.current_experiment, 'settings':{}}
+        self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
         ### Current Task
         self.highlit_task = ""
         self.highlit_task_num = 0
@@ -67,8 +68,8 @@ class MyFrame(wx.Frame):
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
-        self.DEFAULT_FRAME_SIZE = ((728, 619))
-        self.PAUSE_FRAME_SIZE = ((536, 619))
+        self.DEFAULT_FRAME_SIZE = ((728, 649))
+        self.PAUSE_FRAME_SIZE = ((536, 649))
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -78,9 +79,10 @@ class MyFrame(wx.Frame):
         self.Load_Button = wx.Button(self, wx.ID_ANY, ("Load"))
         self.Save_Button = wx.Button(self, wx.ID_ANY, ("Save"))
         self.Run_Button = wx.Button(self, wx.ID_ANY, ("Run"))
-        self.continue_Button = wx.Button(self, wx.ID_ANY, ("Continue Run"))
+        self.continue_Button = wx.Button(self, wx.ID_ANY, ("Continue run"))
+        self.recombine_Button = wx.Button(self, wx.ID_ANY, ("Recombine data"))
         self.Task_statictext = wx.StaticText(self, wx.ID_ANY, ("Tasks"))
-        self.experiment_settings_Button = wx.Button(self, wx.ID_ANY, "Experiment Settings")
+        self.experiment_settings_Button = wx.Button(self, wx.ID_ANY, "Experiment settings")
         
         self.participants_statictext = wx.StaticText(self, wx.ID_ANY, "Participants")
         self.participants_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
@@ -160,7 +162,8 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.Minus_Press, self.Minus_Button)
         self.Bind(wx.EVT_RADIOBOX, self.Trial_Type_Press, self.radio_box_1)
         self.Bind(wx.EVT_BUTTON, self.experiment_settings_Button_Press, self.experiment_settings_Button)
-        self.Bind(wx.EVT_BUTTON, self.continue_Button_Press, self.continue_Button)        
+        self.Bind(wx.EVT_BUTTON, self.continue_Button_Press, self.continue_Button)
+        self.Bind(wx.EVT_BUTTON, self.recombine_Button_Press, self.recombine_Button)           
         self.Bind(wx.EVT_BUTTON, self.duplicate_experiment, self.duplicate_experiment_Button)
         self.Bind(wx.EVT_BUTTON, self.duplicate_task, self.duplicate_task_Button)
         
@@ -212,12 +215,14 @@ class MyFrame(wx.Frame):
         self.duplicate_experiment_Button.SetMinSize((175, 29))
         self.duplicate_task_Button.SetMinSize((175, 29))
         self.continue_Button.SetMinSize((175, 29))
+        self.recombine_Button.SetMinSize((175, 29))
         self.preprocess_Button.SetMinSize((175, 29))
         self.experiment_settings_Button.SetMinSize((175, 29))
         self.Save_Button.SetMinSize((85, 29))
         self.rename_experiment_button.SetMinSize((55, 29))
         self.rename_task_button.SetMinSize((55, 29))        
         self.continue_Button.Disable()
+        self.recombine_Button.Disable()
         
         self.New_Button.SetMinSize((55, 29))
         self.Delete_Button.SetMinSize((55, 29))
@@ -298,6 +303,7 @@ class MyFrame(wx.Frame):
         sizer_3.Add(self.participants_statictext, 0, wx.EXPAND, 0)
         sizer_3.Add(self.participants_list_box, 0, wx.RIGHT, 1)
         sizer_3.Add(self.continue_Button, 0, wx.RIGHT, 1)
+        sizer_3.Add(self.recombine_Button,0, wx.RIGHT, 1)
         sizer_1.Add(sizer_3, 1, 0, 0)
         sizer_task_arrows.Add(self.Move_Up_Button, 0, wx.TOP, 140)
         sizer_task_arrows.Add(self.Move_Down_Button, 0, 0, 0)
@@ -546,7 +552,7 @@ class MyFrame(wx.Frame):
                 dlg_warning.Destroy()
                 return
             new_experiment = []
-            self.experiment_holder = {"experiment":[], "settings":{}, "participant":{}}
+            self.experiment_holder = {"experiment":[], "settings":{}}
             experimentFolder = dlg.GetValue()
             self.highlit_experiment = dlg.GetValue()
             with open(self.experiment_folder + dlg.GetValue() + ".json", "wb") as f:
@@ -661,13 +667,16 @@ class MyFrame(wx.Frame):
                         
                 
                 participant = dlg.GetValue()
-                self.experiment_holder['participant'][participant] = {"state":[0, 0], "angles":[]}
                 with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+                    dump(self.experiment_holder, f)
+                    f.close()
+                #### Write Current Json into Participant Folder ####
+                with open(path.join("data", self.current_experiment_name, participant, self.current_experiment_name + ".json"), "wb" ) as f:
                     dump(self.experiment_holder, f)
                     f.close()
                 self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], participant, self.experiment_holder)
                 if (len(self.experiment_run) != 0):
-                    self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + ".csv"), index=False)
+                    self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + "_COMPLETE.csv"), index=False)
             except Exception as e:
                 self.Run_Button.Enable()
                 print traceback.print_exc()
@@ -1095,20 +1104,61 @@ class MyFrame(wx.Frame):
     def participants_list_box_click(self, event):
         self.highlit_participant = event.GetString()
 #        print self.experiment_holder['participant'][self.highlit_participant]['state'], [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]
-        
-        if self.experiment_holder['participant'][self.highlit_participant]['state'] == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+#        exp.concat_full(self.highlit_participant, self.experiment_holder)
+        if exp.get_participant_state(self.highlit_participant, self.experiment_holder) == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
             self.continue_Button.Disable()
+            self.recombine_Button.Enable()
         else:
             self.continue_Button.Enable()
+            self.recombine_Button.Disable()
         event.Skip()
     def continue_Button_Press(self, event):
         dlg = wx.MessageDialog(self, "Continue running this participant?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
             #### GET CURRENT EXPERIMENT STATE ####
-        
             exp.continue_experiment(self.experiment_holder['settings']['fullscreen'], self.highlit_participant, self.experiment_holder)
         dlg.Destroy()
         event.Skip()
+    
+    def recombine_Button_Press(self, event):
+        dlg = wx.MessageDialog(self, "Recombine this participants data?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
+        if dlg.ShowModal() == wx.ID_YES:
+            #### GET CURRENT EXPERIMENT STATE ####
+            exp.concat_full(self.highlit_participant, self.experiment_holder)
+        dlg.Destroy()
+        event.Skip()  
+    
+    def generate_participant_markers(self):
+        for participant in self.participant_list:
+            participant_experiment_file = {}
+            with open(path.join("data", self.current_experiment_name, self.highlit_participant, self.current_experiment_name + ".json"), "rb") as f:
+                participant_experiment_file = load(f)
+                f.close()
+            if exp.get_participant_state(participant, self.experiment_holder) == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+                if participant_experiment_file == self.experiment_holder:
+                    self.participant_markers[0].append(participant)
+                elif participant_experiment_file != self.experiment_holder:
+                    self.participant_markers[2].append(participant)
+            elif exp.get_participant_state(participant, self.experiment_holder) != [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+                if participant_experiment_file == self.experiment_holder:
+                    self.participant_markers[1].append(participant)
+                elif participant_experiment_file != self.experiment_holder:
+                    self.participant_markers[2].append(participant)
+            else:
+                self.participant_markers[3].append(participant)
+    
+    def compare(self, participant, current_experiment):
+        participant_experiment_file = {}
+        try:
+            with open(path.join("data", current_experiment['settings']['experiment_folder'], participant, current_experiment['settings']['experiment_folder'] + ".json"), "rb") as f:
+                participant_experiment_file = load(f)
+                f.close()
+        
+            comparison = participant_experiment_file == current_experiment
+            return comparison
+        except:
+            print "No json found in participant folder"
+            
     def duplicate_experiment(self, event):
         dlg = wx.TextEntryDialog(self, 'Enter Name', 'Duplicate experiment')
         dlg.SetValue("") 
@@ -1125,7 +1175,7 @@ class MyFrame(wx.Frame):
             with open(self.experiment_folder + self.current_experiment_name + ".json", "rb") as f:
                 self.experiment_holder = load(f)
             self.experiment_holder['settings']['experiment_folder'] = dlg.GetValue()
-            self.experiment_holder['participant'] = {}
+#            self.experiment_holder['participant'] = {}
             with open(self.experiment_folder + self.current_experiment_name + ".json", 'wb') as f:
                 dump(self.experiment_holder, f)
                 f.close()
@@ -1769,8 +1819,8 @@ class PreprocessFrame(wx.Frame):
                         csvwriter.writerow(preprocessed_data[0][idx])
                         csvwriter.writerows(preprocessed_data[1][idx])
                 if self.cfg['output_style'] == 'split by task':
-                    for idx, task in enumerate(self.task_list_dynamic):
-                        file_path = path.join("data",self.Parent.current_experiment_name, file_name + "_" + str(idx) +".csv")
+                    for split, task in enumerate(self.task_list_dynamic):
+                        file_path = path.join("data",self.Parent.current_experiment_name, file_name + "_" + task +".csv")
                         task_index = (array(preprocessed_data[1][idx])[:,0] == task).nonzero()[0]
                         task_data = array(preprocessed_data[1][idx])[task_index]
                         with open(file_path, 'wb') as csvfile:

@@ -9,6 +9,7 @@ import pyautogui
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
 from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean
+import csv
 import math
 from pandas import concat, DataFrame
 from random import choice, seed, shuffle
@@ -301,7 +302,6 @@ def trial_runner(cfg={}):
         show_arrowFill = False
         nc_check_1 = False
         timerSet = False
-        timer_timestamp = 0
         stabilize = False
         screen_edge = (root.winfo_screenwidth()/2) - (cfg['screen_on']*cfg['screen_dimensions'][0])
         ### These variables record timestamps and mouse positions (Used to calculate mouse velocity)
@@ -375,22 +375,26 @@ def trial_runner(cfg={}):
                         circle_pos = [rotated_X, rotated_Y]
                 elif (cfg['trial_type'] == 'error_clamp'):
                     circle_pos = mousePos
-                    vector_proj_array = get_vector_projection(get_vect([prev_X, prev_Y], current_pos), get_vect(startPos, endPos))
+                    vector_proj_array = get_vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
                     vector_proj = ndarray.tolist(vector_proj_array)
-                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
-                    clamped_X_vector = vector_proj[0]
-                    clamped_Y_vector = vector_proj[1]
-                    if (phase_1 == False):
-                        active_X = circle_pos[0]
-                        active_Y = circle_pos[1]
-                    else:
-                        if (active_Y < startPos[1] - 20 and clamped_Y_vector < 0):
-                            active_X = active_X - clamped_X_vector
-                            active_Y = active_Y - clamped_Y_vector
-                        else:
-                            active_X = prev_X_cursor + clamped_X_vector
-                            active_Y = prev_Y_cursor + clamped_Y_vector
-                    circle_pos_clamped = [startPos[0] + cursor_direction_vector[0], startPos[1] + cursor_direction_vector[1]]
+                    rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2], startPos, cfg['current_rotation_angle'])
+#                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
+#                    clamped_X_vector = vector_proj[0]
+#                    clamped_Y_vector = vector_proj[1]
+#                    if (phase_1 == False):
+#                        active_X = circle_pos[0]
+#                        active_Y = circle_pos[1]
+#                    else:
+##                        if (active_Y < startPos[1] - 20 and clamped_Y_vector < 0):
+##                            active_X = active_X - clamped_X_vector
+##                            active_Y = active_Y - clamped_Y_vector
+##                        else:
+##                            active_X = prev_X_cursor + clamped_X_vector
+##                            active_Y = prev_Y_cursor + clamped_Y_vector
+#                        active_X = vector_proj[0]
+#                        active_Y = vector_proj[1]
+#                    circle_pos_clamped = [vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2]
+                    circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
             except:
                 pass
     ########################### SET CURSOR POSITIONS #############################
@@ -505,12 +509,33 @@ def trial_runner(cfg={}):
                                 show_home = True
                                 end_point = circle_pos
                 if (cfg['trial_type'] == 'error_clamp'):
-                    if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
-                        end_point = circle_pos
+                    if cfg['terminal_feedback'] == False:
+                        if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
+                            end_point = circle_pos
+                            phase_2 = True
+                            show_home = True
+                            show_cursor = False
+                            show_target = False
+                    elif (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
+                        timer = core.getTime()
                         phase_2 = True
                         show_home = True
-                        show_cursor = False
                         show_target = False
+                        end_point = circle_pos
+                        while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
+                            myCircle.draw()
+                            if (cfg['poll_type'] == 'psychopy'):
+                                timeArray.append(core.getTime() - myTime)
+                                mouseposXArray.append(myMouse.getPos()[0])
+                                mouseposYArray.append(myMouse.getPos()[1] + cfg['active_height']/2)
+                            elif (cfg['poll_type'] == 'x11'):
+                                timeArray.append(myMouse.Pos()[2] - myTime)
+                                mouseposXArray.append(myMouse.Pos()[0])
+                                mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
+                            cursorposXArray.append(rotated_X)
+                            cursorposYArray.append(rotated_Y + cfg['active_height']/2)
+                            myWin.flip()
+                        
     ############################ DATA COLLECTION #################################
             prev_timestamp = current_timestamp
             prev_X = current_pos[0]
@@ -599,7 +624,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
     task_save = DataFrame({})
     running = deepcopy(experiment['experiment'])
     settings = deepcopy(experiment['settings'])
-    participant_state = deepcopy(experiment['participant'][participant]['state'])
+#    participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
     #### Generate seed ####
     participant_seed = participant + settings['experiment_folder']
@@ -743,7 +768,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False)
+        Mouse = event.Mouse(win=Win, visible=True)
         screen_info_monitors = screeninfo.get_monitors()
     except Exception as e:
         print e
@@ -824,16 +849,16 @@ def run_experiment_2(fulls, participant, experiment = {}):
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
-                    experiment['participant'][participant]['angles'] = targetList
-                    experiment['participant'][participant]['state'] = [i, trial_num]
+#                    experiment['participant'][participant]['angles'] = targetList
+#                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return DataFrame({})
                 else:           
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     task_save = concat([task_save, df_exp])
                     end_exp = concat([end_exp, df_exp])
-                    experiment['participant'][participant]['angles'] = targetList
-                    experiment['participant'][participant]['state'] = [i, trial_num]
+#                    experiment['participant'][participant]['angles'] = targetList
+#                    experiment['participant'][participant]['state'] = [i, trial_num]
 #                    targetList.remove(chosen_target)
                     with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
                         dump(experiment, f)
@@ -841,18 +866,68 @@ def run_experiment_2(fulls, participant, experiment = {}):
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
-        if (running[i]['trial_type'] != 'pause'):
-            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
+#        if (running[i]['trial_type'] != 'pause'):
+#            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
         task_save = DataFrame({})
     running[i]['win'].close()
     return end_exp
+    
+    
+    
+def get_participant_state(participant, experiment = {}):
+    tasks_uncut = experiment['experiment']
+    tasks = []
+    for task in tasks_uncut:
+        if task['trial_type'] != 'pause':
+            tasks.append(task)
+    for task_num, task in enumerate(tasks):
+        for i in range(0, task['num_trials']):
+            f_path = path.join("data", experiment['settings']['experiment_folder'], participant, task['task_name'] + "_" + str(i) + ".csv")
+            file_check = path.exists(f_path)
+            if file_check:
+                continue                
+            else:
+                return [task_num, i]
+    return [len(tasks_uncut) - 1, tasks_uncut[-1]['num_trials'] - 1]
+
+def concat_full(participant, experiment = {}):
+    tasks_uncut = experiment['experiment']
+    tasks = []
+    #### CUT PAUSE TASKS ####
+    for task in tasks_uncut:
+        if task['trial_type'] != 'pause':
+            tasks.append(task)
+    directory_list = []
+    for task_num, task in enumerate(tasks):
+        for i in range(0, task['num_trials']):
+            f_path = path.join("data", experiment['settings']['experiment_folder'], participant, task['task_name'] + "_" + str(i) + ".csv")
+            directory_list.append(f_path)
+    fields = []
+    full_data = []
+    for idx_data, data in enumerate(directory_list):
+        with open(data, "rb") as csvfile:
+            rows = []
+            csv_reader = csv.reader(csvfile)
+            for row in csv_reader:
+                rows.append(row)
+            if idx_data == 0:
+                fields = rows[0]
+            del rows[0]
+            full_data.extend(rows) 
+    full_data_path = path.join("data", experiment['settings']['experiment_folder'], participant, participant + "_COMPLETE.csv")
+    with open(full_data_path, "wb") as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(fields)
+        csvwriter.writerows(full_data)
+    
 
 def continue_experiment(fulls, participant, experiment = {}):
     end_exp = DataFrame({})
     task_save = DataFrame({})
     running = deepcopy(experiment['experiment'])
     settings = deepcopy(experiment['settings'])
-    participant_state = deepcopy(experiment['participant'][participant]['state'])
+    participant_state = get_participant_state(participant, experiment)
+    
     cfg = {}
     participant_seed = participant + settings['experiment_folder']  
     continued = 1
@@ -1077,15 +1152,15 @@ def continue_experiment(fulls, participant, experiment = {}):
 #                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
-                    experiment['participant'][participant]['angles'] = targetList
-                    experiment['participant'][participant]['state'] = [i, trial_num]
+#                    experiment['participant'][participant]['angles'] = targetList
+#                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return end_exp
                 else:           
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     end_exp = concat([end_exp, df_exp])
-                    experiment['participant'][participant]['angles'] = targetList
-                    experiment['participant'][participant]['state'] = [i, trial_num]
+#                    experiment['participant'][participant]['angles'] = targetList
+#                    experiment['participant'][participant]['state'] = [i, trial_num]
 #                    targetList.remove(chosen_target)
                     with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
                         dump(experiment, f)
@@ -1096,236 +1171,236 @@ def continue_experiment(fulls, participant, experiment = {}):
     running[i]['win'].close()
     return end_exp
 ##### CONTINUE EXPERIMENT RUN V2 ###########
-def continue_experiment_2(fulls, participant, experiment = {}, state = []):
-    end_exp = DataFrame({})
-    task_save = DataFrame({})
-    running = deepcopy(experiment['experiment'])
-    settings = deepcopy(experiment['settings'])
-    participant_state = deepcopy(experiment['participant'][participant]['state'])
-    cfg = {}
-    #### Generate seed ####
-    participant_seed = (sum([ord(c) for c in settings['experiment_folder']]) + (sum([ord(c) for c in participant]) * 9999))
-    if experiment['settings']['flipscreen'] == True:
-        view_scale = [1, -1]
-    else:
-        view_scale = [1, 1]
-    try:
-        addWorkSpaceLimits(experiment['settings']['screen'], cfg)
-    except:
-        print "Exception adding workspace limits"
-    try:
-        Win = Window(cfg['screen_dimensions'],
-                     winType=cfg['winType'],
-                     colorSpace='rgb',
-                     fullscr=fulls,
-                     name='MousePosition',
-                     color=(-1, -1, -1),
-                     units='pix',
-                     screen=experiment['settings']['screen'],
-                     viewScale=view_scale)
-#        Win._setCurrent()
-    except:
-        print "Exception creating Window"
-    ### Configure visual feedback settings here
-    try:
-        arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
-        arrowFill = ShapeStim(win=Win,
-                                     vertices=arrowFillVert,
-                                     fillColor=[-1,-1,-1],
-                                     size=cfg['circle_radius']*0.6,
-                                     lineColor=[-1,-1,-1])
-        arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
-        arrow = ShapeStim(win=Win,
-                                 vertices=arrowVert,
-                                 fillColor=[0, 0, 0],
-                                 size=cfg['circle_radius']*0.6,
-                                 lineColor=[0,0,0])
-        if settings['custom_stim_enable'] == True:
-            custom_stim_holder = []
-            icon_directory = listdir(settings['custom_stim_file'])
-            for i in range(1, len(icon_directory)/2 + 1):
-                try:
-                    custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
-                except:
-                    custom_target = Circle(win=Win,
-                                     radius=cfg['circle_radius'],
-                                     edges=32,
-                                     units='pix',
-                                     fillColor=[0, 0, 0],
-                                     lineColor=[0, 0, 0])
-                try:   
-                    custom_cursor = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
-                except:
-                    custom_cursor = Circle(win=Win,
-                                     radius=cfg['circle_radius'],
-                                     edges=32,
-                                     units='pix',
-                                     fillColor=[0, 0, 0],
-                                     lineColor=[0, 0, 0])
-                                     
-                custom_stim_holder.append([custom_cursor, custom_target])
-        if settings['custom_cursor_enable'] == False:
-            myCircle = Circle(win=Win,
-                                     radius=cfg['circle_radius'],
-                                     edges=32,
-                                     units='pix',
-                                     fillColor=[0, 0, 0],
-                                     lineColor=[0, 0, 0])
-            testCircle = Circle(win=Win,
-                                     radius=cfg['circle_radius'],
-                                     edges=32,
-                                     units='pix',
-                                     fillColor=[-1, 0, 1],
-                                     lineColor=[0, 0, 0])
-        else:
-            try:
-                myCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
-            except:
-                myCircle = Circle(win=Win,
-                                     radius=cfg['circle_radius'],
-                                     edges=32,
-                                     units='pix',
-                                     fillColor=[0, 0, 0],
-                                     lineColor=[0, 0, 0])
-        if settings['custom_home_enable'] == False:
-            startCircle = Circle(win=Win,
-                                        radius=cfg['circle_radius'],
-                                        lineWidth=2,
-                                        edges=32,
-                                        units='pix',
-                                        fillColor=[-1, -1, -1],
-                                         lineColor=[0, 0, 0])
-        else:
-            try:
-                startCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
-            except:
-                startCircle = Circle(win=Win,
-                                        radius=cfg['circle_radius'],
-                                        lineWidth=2,
-                                        edges=32,
-                                        units='pix',
-                                        fillColor=[-1, -1, -1],
-                                         lineColor=[0, 0, 0])
-        if settings['custom_target_enable'] == False:
-            endCircle = Circle(win=Win,
-                                      radius=cfg['circle_radius'],
-                                      lineWidth=2,
-                                      edges=32,
-                                      units='pix',
-                                      fillColor=[-1, -1, -1],
-                                      lineColor=[0, 0, 0])
-        else:
-            try:
-                endCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
-            except:
-                endCircle = Circle(win=Win,
-                                      radius=cfg['circle_radius'],
-                                      lineWidth=2,
-                                      edges=32,
-                                      units='pix',
-                                      fillColor=[-1, -1, -1],
-                                      lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False)
-        screen_info_monitors = screeninfo.get_monitors()
-#        pyautogui.moveTo(10, 10)
-    except Exception as e:
-        print e
-        print str(e)
-    for i in range (0, len(running)):
-        if experiment['settings']['flipscreen'] == True:
-            running[i]['flipscreen'] = 1
-            running[i]['flip_text'] = True
-        else:
-            running[i]['flipscreen'] = 1
-            running[i]['flip_text'] = False
-        try:
-            running[i]['x11_mouse'] = myMouse()
-        except:
-            running[i]['poll_type'] = 'psychopy'
-        if settings['custom_stim_enable'] == True:
-            running[i]['custom_stim'] = custom_stim_holder
-        if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
-            running[i]['screen_on'] = 1
-            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
-        elif (len(screen_info_monitors) > 1 and settings['screen'] == 0):
-            running[i]['screen_on'] = -1
-            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
-        else:
-            running[i]['screen_on'] = 0
-            running[i]['screen_dimensions'] = cfg['screen_dimensions']
-        running[i]['custom_stim_enable'] = settings['custom_stim_enable']
-        running[i]['return_movement'] = experiment['settings']['return_movement']
-        running[i]['cursor_circle'] = myCircle
-        running[i]['test_circle'] = testCircle
-        running[i]['start_circle'] = startCircle
-        running[i]['end_circle'] = endCircle
-        running[i]['mouse'] = Mouse
-        running[i]['win'] = Win
-        running[i]['circle_radius'] = cfg['circle_radius']
-        running[i]['arrow_stim'] = arrow
-        running[i]['arrowFill_stim'] = arrowFill
-        running[i]['task_num'] = i + 1
-        running[i]['max_distance'] = cfg['active_height']
-        running[i]['min_distance'] = cfg['active_height']/2
-        running[i]['active_height'] = cfg['active_height']
-        running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
-        running[i]['current_rotation_angle'] = 0
-        if running[i]['num_targets'] > 1:
-            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
-        elif running[i]['num_targets'] == 1:
-            targetList = [running[i]['min_angle']]
-        fulltargetList = tuple(targetList)
-        #### FIRST SEED FOR TARGET ANGLES ####
-        seed(participant_seed)
-        shuffle(targetList)
-        if (running[i]['trial_type'] != 'pause'):
-#            if running[i]['num_targets'] > 1:
-#                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
-#            elif running[i]['num_targets'] == 1:
-#                targetList = [running[i]['min_angle']]
-            for trial_num in range (0, int(running[i]['num_trials'])):
-                running[i]['trial_num'] = trial_num + 1
-                if (len(targetList) == 0):
-                    targetList = list(fulltargetList)
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-                elif (running[i]['rotation_change_type'] == 'abrupt'):
-                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-#                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
-                try:
-                    chosen_target = targetList[trial_num%len(targetList)]
-                except:
-                    print "Exception randomizing target"
-                running[i]['target_angle'] = chosen_target
-                
-                running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
-                running[i]['time'] = core.getTime()
+#def continue_experiment_2(fulls, participant, experiment = {}, state = []):
+#    end_exp = DataFrame({})
+#    task_save = DataFrame({})
+#    running = deepcopy(experiment['experiment'])
+#    settings = deepcopy(experiment['settings'])
+#    participant_state = deepcopy(experiment['participant'][participant]['state'])
+#    cfg = {}
+#    #### Generate seed ####
+#    participant_seed = (sum([ord(c) for c in settings['experiment_folder']]) + (sum([ord(c) for c in participant]) * 9999))
+#    if experiment['settings']['flipscreen'] == True:
+#        view_scale = [1, -1]
+#    else:
+#        view_scale = [1, 1]
+#    try:
+#        addWorkSpaceLimits(experiment['settings']['screen'], cfg)
+#    except:
+#        print "Exception adding workspace limits"
+#    try:
+#        Win = Window(cfg['screen_dimensions'],
+#                     winType=cfg['winType'],
+#                     colorSpace='rgb',
+#                     fullscr=fulls,
+#                     name='MousePosition',
+#                     color=(-1, -1, -1),
+#                     units='pix',
+#                     screen=experiment['settings']['screen'],
+#                     viewScale=view_scale)
+##        Win._setCurrent()
+#    except:
+#        print "Exception creating Window"
+#    ### Configure visual feedback settings here
+#    try:
+#        arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
+#        arrowFill = ShapeStim(win=Win,
+#                                     vertices=arrowFillVert,
+#                                     fillColor=[-1,-1,-1],
+#                                     size=cfg['circle_radius']*0.6,
+#                                     lineColor=[-1,-1,-1])
+#        arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
+#        arrow = ShapeStim(win=Win,
+#                                 vertices=arrowVert,
+#                                 fillColor=[0, 0, 0],
+#                                 size=cfg['circle_radius']*0.6,
+#                                 lineColor=[0,0,0])
+#        if settings['custom_stim_enable'] == True:
+#            custom_stim_holder = []
+#            icon_directory = listdir(settings['custom_stim_file'])
+#            for i in range(1, len(icon_directory)/2 + 1):
 #                try:
-                exp = trial_runner(running[i])
-           
+#                    custom_target = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
 #                except:
-#                    print "Exception in running trial_runner function"
-                if exp == 'escaped':
-                    running[i]['win'].close()
-                    return DataFrame({})
-                else:           
-                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
-                    df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
-                    task_save = concat([task_save, df_exp])
-                    end_exp = concat([end_exp, df_exp])
-                    experiment['participant'][participant]['angles'] = targetList
-                    experiment['participant'][participant]['state'] = [i, trial_num]
-#                    targetList.remove(chosen_target)
-                    with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
-                        dump(experiment, f)
-                        f.close()
-        elif (running[i]['trial_type'] == 'pause'):
-            running[i]['time'] = core.getTime()
-            exp = trial_runner(running[i])
-        if (running[i]['trial_type'] != 'pause'):
-            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
-        task_save = DataFrame({})
-    running[i]['win'].close()
-    return end_exp
+#                    custom_target = Circle(win=Win,
+#                                     radius=cfg['circle_radius'],
+#                                     edges=32,
+#                                     units='pix',
+#                                     fillColor=[0, 0, 0],
+#                                     lineColor=[0, 0, 0])
+#                try:   
+#                    custom_cursor = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2.5, image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+#                except:
+#                    custom_cursor = Circle(win=Win,
+#                                     radius=cfg['circle_radius'],
+#                                     edges=32,
+#                                     units='pix',
+#                                     fillColor=[0, 0, 0],
+#                                     lineColor=[0, 0, 0])
+#                                     
+#                custom_stim_holder.append([custom_cursor, custom_target])
+#        if settings['custom_cursor_enable'] == False:
+#            myCircle = Circle(win=Win,
+#                                     radius=cfg['circle_radius'],
+#                                     edges=32,
+#                                     units='pix',
+#                                     fillColor=[0, 0, 0],
+#                                     lineColor=[0, 0, 0])
+#            testCircle = Circle(win=Win,
+#                                     radius=cfg['circle_radius'],
+#                                     edges=32,
+#                                     units='pix',
+#                                     fillColor=[-1, 0, 1],
+#                                     lineColor=[0, 0, 0])
+#        else:
+#            try:
+#                myCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
+#            except:
+#                myCircle = Circle(win=Win,
+#                                     radius=cfg['circle_radius'],
+#                                     edges=32,
+#                                     units='pix',
+#                                     fillColor=[0, 0, 0],
+#                                     lineColor=[0, 0, 0])
+#        if settings['custom_home_enable'] == False:
+#            startCircle = Circle(win=Win,
+#                                        radius=cfg['circle_radius'],
+#                                        lineWidth=2,
+#                                        edges=32,
+#                                        units='pix',
+#                                        fillColor=[-1, -1, -1],
+#                                         lineColor=[0, 0, 0])
+#        else:
+#            try:
+#                startCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
+#            except:
+#                startCircle = Circle(win=Win,
+#                                        radius=cfg['circle_radius'],
+#                                        lineWidth=2,
+#                                        edges=32,
+#                                        units='pix',
+#                                        fillColor=[-1, -1, -1],
+#                                         lineColor=[0, 0, 0])
+#        if settings['custom_target_enable'] == False:
+#            endCircle = Circle(win=Win,
+#                                      radius=cfg['circle_radius'],
+#                                      lineWidth=2,
+#                                      edges=32,
+#                                      units='pix',
+#                                      fillColor=[-1, -1, -1],
+#                                      lineColor=[0, 0, 0])
+#        else:
+#            try:
+#                endCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
+#            except:
+#                endCircle = Circle(win=Win,
+#                                      radius=cfg['circle_radius'],
+#                                      lineWidth=2,
+#                                      edges=32,
+#                                      units='pix',
+#                                      fillColor=[-1, -1, -1],
+#                                      lineColor=[0, 0, 0])
+#        Mouse = event.Mouse(win=Win, visible=False)
+#        screen_info_monitors = screeninfo.get_monitors()
+##        pyautogui.moveTo(10, 10)
+#    except Exception as e:
+#        print e
+#        print str(e)
+#    for i in range (0, len(running)):
+#        if experiment['settings']['flipscreen'] == True:
+#            running[i]['flipscreen'] = 1
+#            running[i]['flip_text'] = True
+#        else:
+#            running[i]['flipscreen'] = 1
+#            running[i]['flip_text'] = False
+#        try:
+#            running[i]['x11_mouse'] = myMouse()
+#        except:
+#            running[i]['poll_type'] = 'psychopy'
+#        if settings['custom_stim_enable'] == True:
+#            running[i]['custom_stim'] = custom_stim_holder
+#        if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
+#            running[i]['screen_on'] = 1
+#            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
+#        elif (len(screen_info_monitors) > 1 and settings['screen'] == 0):
+#            running[i]['screen_on'] = -1
+#            running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
+#        else:
+#            running[i]['screen_on'] = 0
+#            running[i]['screen_dimensions'] = cfg['screen_dimensions']
+#        running[i]['custom_stim_enable'] = settings['custom_stim_enable']
+#        running[i]['return_movement'] = experiment['settings']['return_movement']
+#        running[i]['cursor_circle'] = myCircle
+#        running[i]['test_circle'] = testCircle
+#        running[i]['start_circle'] = startCircle
+#        running[i]['end_circle'] = endCircle
+#        running[i]['mouse'] = Mouse
+#        running[i]['win'] = Win
+#        running[i]['circle_radius'] = cfg['circle_radius']
+#        running[i]['arrow_stim'] = arrow
+#        running[i]['arrowFill_stim'] = arrowFill
+#        running[i]['task_num'] = i + 1
+#        running[i]['max_distance'] = cfg['active_height']
+#        running[i]['min_distance'] = cfg['active_height']/2
+#        running[i]['active_height'] = cfg['active_height']
+#        running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
+#        running[i]['current_rotation_angle'] = 0
+#        if running[i]['num_targets'] > 1:
+#            targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+#        elif running[i]['num_targets'] == 1:
+#            targetList = [running[i]['min_angle']]
+#        fulltargetList = tuple(targetList)
+#        #### FIRST SEED FOR TARGET ANGLES ####
+#        seed(participant_seed)
+#        shuffle(targetList)
+#        if (running[i]['trial_type'] != 'pause'):
+##            if running[i]['num_targets'] > 1:
+##                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
+##            elif running[i]['num_targets'] == 1:
+##                targetList = [running[i]['min_angle']]
+#            for trial_num in range (0, int(running[i]['num_trials'])):
+#                running[i]['trial_num'] = trial_num + 1
+#                if (len(targetList) == 0):
+#                    targetList = list(fulltargetList)
+#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
+#                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
+#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
+#                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+#                elif (running[i]['rotation_change_type'] == 'abrupt'):
+#                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+##                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
+#                try:
+#                    chosen_target = targetList[trial_num%len(targetList)]
+#                except:
+#                    print "Exception randomizing target"
+#                running[i]['target_angle'] = chosen_target
+#                
+#                running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
+#                running[i]['time'] = core.getTime()
+##                try:
+#                exp = trial_runner(running[i])
+#           
+##                except:
+##                    print "Exception in running trial_runner function"
+#                if exp == 'escaped':
+#                    running[i]['win'].close()
+#                    return DataFrame({})
+#                else:           
+#                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
+#                    df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
+#                    task_save = concat([task_save, df_exp])
+#                    end_exp = concat([end_exp, df_exp])
+#                    experiment['participant'][participant]['angles'] = targetList
+#                    experiment['participant'][participant]['state'] = [i, trial_num]
+##                    targetList.remove(chosen_target)
+#                    with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
+#                        dump(experiment, f)
+#                        f.close()
+#        elif (running[i]['trial_type'] == 'pause'):
+#            running[i]['time'] = core.getTime()
+#            exp = trial_runner(running[i])
+#        if (running[i]['trial_type'] != 'pause'):
+#            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
+#        task_save = DataFrame({})
+#    running[i]['win'].close()
+#    return end_exp
