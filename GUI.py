@@ -68,8 +68,8 @@ class MyFrame(wx.Frame):
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
-        self.DEFAULT_FRAME_SIZE = ((728, 649))
-        self.PAUSE_FRAME_SIZE = ((536, 649))
+        self.DEFAULT_FRAME_SIZE = ((748, 649))
+        self.PAUSE_FRAME_SIZE = ((566, 649))
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -125,10 +125,11 @@ class MyFrame(wx.Frame):
         self.num_trials_statictext = wx.StaticText(self, wx.ID_ANY, ("# Trials"))
         self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=self.MIN_TRIALS, max=self.MAX_TRIALS, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
         
-        self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Rotation Angle"))
+        self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Rotation"))
 #        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
         self.Rotation_angle_slider = wx.Slider(self, wx.ID_ANY, minValue = -75, maxValue = 75, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
-        self.Rotation_angle_end_statictext = wx.StaticText(self, wx.ID_ANY, ("End rotation angle"))
+        self.Rotation_angle_end_statictext = wx.StaticText(self, wx.ID_ANY, ("Final rotation"))
+        self.Rotation_angle_end_slider = wx.Slider(self, wx.ID_ANY, minValue = -75, maxValue = 75, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
 #        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
@@ -179,6 +180,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_SPINCTRL, self.num_trial_choose, self.num_trial_CB)
 #        self.Bind(wx.EVT_COMBOBOX, self.rot_angle_choose, self.Rotation_angle_CB)
         self.Bind(wx.EVT_SLIDER, self.rot_angle_choose, self.Rotation_angle_slider)
+        self.Bind(wx.EVT_SLIDER, self.rot_angle_end_choose, self.Rotation_angle_end_slider)
         
         self.Bind(wx.EVT_RADIOBOX, self.Rot_Change_Press, self.rot_change_statictext)
 #        self.Bind(wx.EVT_RADIOBOX, self.rotation_angle_direction_press, self.rotation_angle_direction)        
@@ -223,6 +225,8 @@ class MyFrame(wx.Frame):
         self.rename_task_button.SetMinSize((55, 29))        
         self.continue_Button.Disable()
         self.recombine_Button.Disable()
+        self.Rotation_angle_end_slider.Disable()
+        self.Rotation_angle_end_statictext.Disable()
         
         self.New_Button.SetMinSize((55, 29))
         self.Delete_Button.SetMinSize((55, 29))
@@ -335,6 +339,9 @@ class MyFrame(wx.Frame):
         sizer_9.Add(self.num_trials_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.Rotation_angle_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.Rotation_angle_slider, 0, wx.EXPAND, 2)
+        sizer_9.Add(self.Rotation_angle_end_statictext, 0, wx.LEFT, 2)
+        sizer_9.Add(self.Rotation_angle_end_slider, 0, wx.EXPAND, 2)
+        
         sizer_9.Add(self.rotation_angle_staticline, 0, wx.BOTTOM, 2)
 #        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
         sizer_9.Add(self.rot_change_statictext, 0, wx.LEFT, 2)
@@ -364,6 +371,9 @@ class MyFrame(wx.Frame):
         self.num_trials_staticline.Show()
         self.Rotation_angle_statictext.Show()     
         self.Rotation_angle_slider.Show()
+        self.Rotation_angle_end_statictext.Show()
+        self.Rotation_angle_end_slider.Show()
+        
         self.rotation_angle_staticline.Show() 
         self.rot_change_statictext.Show()
         self.rotation_change_staticline.Show()
@@ -416,6 +426,8 @@ class MyFrame(wx.Frame):
         self.lag_static_text.Hide()
         self.lag_txt.Hide()
         ###
+        self.Rotation_angle_end_statictext.Hide()
+        self.Rotation_angle_end_slider.Hide()
         self.min_angle_CB.Hide()
         self.min_angle_statictext.Hide()
         self.min_max_staticline.Hide()
@@ -459,6 +471,8 @@ class MyFrame(wx.Frame):
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
             self.participant_list_trimmed = ["Empty"]
+        self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
+        self.generate_participant_markers()
         self.participants_list_box.Set(self.participant_list_trimmed)
         del self.participant_list_trimmed[:]
         #### CHECK IF ANY TASKS ####
@@ -499,12 +513,21 @@ class MyFrame(wx.Frame):
             self.target_distance_slider.SetValue(self.current_experiment[self.highlit_task_num]['target_distance_ratio']*100)
             self.rot_change_statictext.SetSelection(exp.rotation_num(self.current_experiment[self.highlit_task_num]['rotation_change_type'], True))
             self.Rotation_angle_slider.SetValue(self.current_experiment[self.highlit_task_num]['rotation_angle'])
+            self.Rotation_angle_end_slider.SetValue(self.current_experiment[self.highlit_task_num]['final_rotation_angle'])
 #            self.rotation_angle_direction.SetSelection(exp.rotation_direction_num(self.current_experiment[self.highlit_task_num]['rotation_angle_direction'], True))
             self.pause_check.SetValue(self.current_experiment[self.highlit_task_num]['pause_button_wait'])
             self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
             self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
+            
             if (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'gradual'):
-                self.MIN_TRIAL_BOOL = True
+#                self.MIN_TRIAL_BOOL = True
+                self.Rotation_angle_statictext.SetLabel("Initial rotation")
+                self.Rotation_angle_end_statictext.Enable()
+                self.Rotation_angle_end_slider.Enable()
+            elif (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'abrupt'):
+                self.Rotation_angle_statictext.SetLabel("Rotation")
+                self.Rotation_angle_end_slider.Disable()
+                self.Rotation_angle_end_statictext.Disable()
             # Show or hide Pause menu
             if self.experiment_holder['experiment'][self.highlit_task_num]['trial_type'] == "pause":
                 self.pause_experiment_show()
@@ -620,6 +643,9 @@ class MyFrame(wx.Frame):
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
             self.participant_list_trimmed = ["Empty"]
+        self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
+        self.generate_participant_markers()
+        #### ENCODE COLORS TO PARTICIPANT LIST ####
         self.participants_list_box.Set(self.participant_list_trimmed)
         del self.participant_list_trimmed[:]
         #### CHECK IF ANY TASKS ####
@@ -628,7 +654,15 @@ class MyFrame(wx.Frame):
         else:
             self.Run_Button.Disable()
         event.Skip()
+        
+    def encode_color(self):
+        ### DOESN'T WORK IN WXPYTHON GUI
+        for participant in self.participant_list:
+            if participant in self.participant_markers[1] or self.participant_markers[2]:
+                participant = "\33[33m" + participant
 
+    def decode_color(self):
+        pass
     def Save_Press(self, event):
         dlg = wx.MessageDialog(self, "Save Experiment?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
@@ -733,6 +767,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['poll_type'] = 'x11'
             self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
             self.current_experiment[self.highlit_task_num]['pause_instruction'] = ""
+            self.current_experiment[self.highlit_task_num]['final_rotation_angle'] = 0
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:           
 #                dump(self.experiment_holder, f)
 #                f.close()
@@ -905,25 +940,29 @@ class MyFrame(wx.Frame):
 
     def num_target_choose(self, event):  # wxGlade: MyFrame.<event_handler>       
         self.num_target_chosen = int(event.GetString())
-        
+#        print self.num_trial_CB.GetValue()
+#        print self.MIN_TRIAL_BOOL
         self.current_experiment[self.highlit_task_num]['num_targets'] = self.num_target_chosen
         self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = ceil(float(self.Rotation_angle_slider.GetValue())/float(int(self.num_targ_CB.GetValue())))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())        
         ## Set num trial default
         if self.num_target_chosen > 2:
-            self.num_trial_CB.SetValue(self.num_target_chosen)
+            if self.num_trial_CB.GetValue() < self.num_target_chosen:
+                self.num_trial_CB.SetValue(self.num_target_chosen)
             self.num_trial_mult = self.num_target_chosen
         elif self.num_target_chosen == 1:
-            self.num_trial_CB.SetValue(3)
+            if self.num_trial_CB.GetValue() < self.num_target_chosen:
+                self.num_trial_CB.SetValue(3)
             self.num_trial_mult = 3
         elif self.num_target_chosen == 2:
-            self.num_trial_CB.SetValue(4)
+            if self.num_trial_CB.GetValue() < self.num_target_chosen:
+                self.num_trial_CB.SetValue(4)
             self.num_trial_mult = 4
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_CB.GetValue()
-        self.valid_trial_num = self.num_trial_CB.GetValue()
+#        self.valid_trial_num = self.num_trial_CB.GetValue()
         
-        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
-            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
-            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+#        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
+#            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+#            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
             
         ## SAVE
 #        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
@@ -961,30 +1000,40 @@ class MyFrame(wx.Frame):
         self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 5)
         self.Rotation_angle_slider.SetValue(self.rotation_angle_chosen)
         self.current_experiment[self.highlit_task_num]['rotation_angle'] = self.rotation_angle_chosen
-        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (ceil(float(int(abs(self.Rotation_angle_slider.GetValue()))/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
-        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
-            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
-            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
-                
-        if self.current_experiment[self.highlit_task_num]['rotation_angle'] < 0:
-            self.current_experiment[self.highlit_task_num]['rotation_direction'] = -1
-        else:
-            self.current_experiment[self.highlit_task_num]['rotation_direction'] = 1
-#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-#            dump(self.current_experiment, f)
-#            f.close()
+        
+        ### Gradual minimum trials (Outdated?) ####
+#        self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'] = (ceil(float(int(abs(self.Rotation_angle_slider.GetValue()))/float(int(self.num_targ_CB.GetValue())))))*(float(int(self.num_targ_CB.GetValue()))) + int(self.num_targ_CB.GetValue())
+#        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
+#            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+#            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+#                
+#        if self.current_experiment[self.highlit_task_num]['rotation_angle'] < 0:
+#            self.current_experiment[self.highlit_task_num]['rotation_direction'] = -1
+#        else:
+#            self.current_experiment[self.highlit_task_num]['rotation_direction'] = 1
+        event.Skip()
+    def rot_angle_end_choose(self, event):
+        self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 5)
+        self.Rotation_angle_end_slider.SetValue(self.rotation_angle_chosen)
+        self.current_experiment[self.highlit_task_num]['final_rotation_angle'] = self.rotation_angle_chosen      
         event.Skip()
 
     def Rot_Change_Press(self, event):  # wxGlade: MyFrame.<event_handler>
         self.current_experiment[self.highlit_task_num]['rotation_change_type'] = (event.GetString()).lower()
         if (event.GetString().lower() == 'abrupt'):
-            self.MIN_TRIAL_BOOL = False
+#            self.MIN_TRIAL_BOOL = False
+            self.Rotation_angle_end_slider.Disable()
+            self.Rotation_angle_end_statictext.Disable()
+            self.Rotation_angle_statictext.SetLabel("Rotation")
         elif (event.GetString().lower() == 'gradual'):
-            self.MIN_TRIAL_BOOL = True
-        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
-            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
-            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
-                
+#            self.MIN_TRIAL_BOOL = True
+            self.Rotation_angle_end_slider.Enable()
+            self.Rotation_angle_end_statictext.Enable()
+            self.Rotation_angle_statictext.SetLabel("Initial rotation")
+#        if self.MIN_TRIAL_BOOL == True and int(self.num_trial_CB.GetValue()) < int(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']):
+#            self.num_trial_CB.SetValue(self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN'])
+#            self.current_experiment[self.highlit_task_num]['num_trials'] = self.current_experiment[self.highlit_task_num]['NUM_TRIAL_GRADUAL_MIN']
+#                
         event.Skip()
 
     def Lag_Enter(self, event):  # wxGlade: MyFrame.<event_handler>
@@ -1105,11 +1154,18 @@ class MyFrame(wx.Frame):
         self.highlit_participant = event.GetString()
 #        print self.experiment_holder['participant'][self.highlit_participant]['state'], [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]
 #        exp.concat_full(self.highlit_participant, self.experiment_holder)
-        if exp.get_participant_state(self.highlit_participant, self.experiment_holder) == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+        self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
+        self.generate_participant_markers()
+#        print self.participant_markers
+#        if exp.get_participant_state(self.highlit_participant, self.experiment_holder) == [len(self.experiment_holder['experiment']), self.experiment_holder['experiment'][-1]['num_trials']]:
+        if self.highlit_participant in self.participant_markers[0]:
             self.continue_Button.Disable()
             self.recombine_Button.Enable()
-        else:
+        elif self.highlit_participant in self.participant_markers[1]:
             self.continue_Button.Enable()
+            self.recombine_Button.Disable()
+        else:
+            self.continue_Button.Disable()
             self.recombine_Button.Disable()
         event.Skip()
     def continue_Button_Press(self, event):
@@ -1131,15 +1187,18 @@ class MyFrame(wx.Frame):
     def generate_participant_markers(self):
         for participant in self.participant_list:
             participant_experiment_file = {}
-            with open(path.join("data", self.current_experiment_name, self.highlit_participant, self.current_experiment_name + ".json"), "rb") as f:
-                participant_experiment_file = load(f)
-                f.close()
-            if exp.get_participant_state(participant, self.experiment_holder) == [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+            try:
+                with open(path.join("data", self.current_experiment_name, participant, self.current_experiment_name + ".json"), "rb") as f:
+                    participant_experiment_file = load(f)
+                    f.close()
+            except:
+                pass
+            if exp.get_participant_state(participant, self.experiment_holder) == [len(self.experiment_holder['experiment']), self.experiment_holder['experiment'][-1]['num_trials']]:
                 if participant_experiment_file == self.experiment_holder:
                     self.participant_markers[0].append(participant)
                 elif participant_experiment_file != self.experiment_holder:
                     self.participant_markers[2].append(participant)
-            elif exp.get_participant_state(participant, self.experiment_holder) != [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]:
+            elif exp.get_participant_state(participant, self.experiment_holder) != [len(self.experiment_holder['experiment']), self.experiment_holder['experiment'][-1]['num_trials']]:
                 if participant_experiment_file == self.experiment_holder:
                     self.participant_markers[1].append(participant)
                 elif participant_experiment_file != self.experiment_holder:
@@ -1666,16 +1725,19 @@ class PreprocessFrame(wx.Frame):
         self.cfg['outlier_scale'] = float(self.std_menu_list.GetValue())
         
         ############ Pull Data from Parent frame ##########    
-        self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
-        self.participant_list = [x for x in self.participant_list if '.csv' not in x]
-        for i in self.participant_list:
-            self.participant_list_trimmed.append(i.replace(".csv", ""))
-        if len(self.participant_list_trimmed) == 0:
-            self.participant_list_trimmed = ["Empty"]
-        self.participant_pool.Set(self.participant_list_trimmed)
-        self.participant_list_dynamic = deepcopy(self.participant_list_trimmed)
-        del self.participant_list_trimmed[:]
-        
+#        self.participant_list = listdir(path.join("data", self.Parent.current_experiment_name))
+#        self.participant_list = [x for x in self.participant_list if '.csv' not in x]
+#        for i in self.participant_list:
+#            self.participant_list_trimmed.append(i.replace(".csv", ""))
+#        if len(self.participant_list_trimmed) == 0:
+#            self.participant_list_trimmed = ["Empty"]
+#        self.participant_pool.Set(self.participant_list_trimmed)
+#        self.participant_list_dynamic = deepcopy(self.participant_list_trimmed)
+#        del self.participant_list_trimmed[:]
+        self.Parent.participant_markers = {0:[], 1:[], 2:[], 3:[]}
+        self.Parent.generate_participant_markers()
+        self.participant_list_dynamic = deepcopy(self.Parent.participant_markers[0])
+        self.participant_pool.Set(self.participant_list_dynamic)
         for i in range(0, len(self.Parent.current_experiment)):
             if (self.Parent.current_experiment[i]['trial_type'] != 'pause'):
                 self.task_list.append(self.Parent.current_experiment[i]["task_name"])

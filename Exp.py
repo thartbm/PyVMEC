@@ -8,7 +8,7 @@ import pyautogui
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
-from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean
+from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean, linspace
 import csv
 import math
 from pandas import concat, DataFrame
@@ -618,6 +618,9 @@ def trial_runner(cfg={}):
         except:
             pass
 
+def generate_rotation_list(initial, final, num_trials):
+    rotation_list = linspace(initial,final,num_trials)
+    return rotation_list
 ############################# RUN EXPERIMENT V2 ###############################
 def run_experiment_2(fulls, participant, experiment = {}):
     end_exp = DataFrame({})
@@ -768,7 +771,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=True)
+        Mouse = event.Mouse(win=Win, visible=False)
         screen_info_monitors = screeninfo.get_monitors()
     except Exception as e:
         print e
@@ -812,6 +815,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         running[i]['current_rotation_angle'] = 0
+        if running[i]['rotation_change_type'] == 'gradual':
+            rotation = generate_rotation_list(running[i]['rotation_angle'], running[i]['final_rotation_angle'], running[i]['num_trials'])
         if running[i]['num_targets'] > 1:
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
@@ -828,10 +833,12 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + running[i]['rotation_direction']
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
+#                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + running[i]['rotation_direction']
+#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
+#                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+                if (running[i]['rotation_change_type'] == 'gradual'):
+                    running[i]['current_rotation_angle'] = rotation[trial_num]
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
 #                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
@@ -876,19 +883,23 @@ def run_experiment_2(fulls, participant, experiment = {}):
     
 def get_participant_state(participant, experiment = {}):
     tasks_uncut = experiment['experiment']
-    tasks = []
-    for task in tasks_uncut:
+#    tasks = []
+#    num_pause = 0
+#    for task in tasks_uncut:
+#        if task['trial_type'] != 'pause':
+#            tasks.append(task)
+    for task_num, task in enumerate(tasks_uncut):
         if task['trial_type'] != 'pause':
-            tasks.append(task)
-    for task_num, task in enumerate(tasks):
-        for i in range(0, task['num_trials']):
-            f_path = path.join("data", experiment['settings']['experiment_folder'], participant, task['task_name'] + "_" + str(i) + ".csv")
-            file_check = path.exists(f_path)
-            if file_check:
-                continue                
-            else:
-                return [task_num, i]
-    return [len(tasks_uncut) - 1, tasks_uncut[-1]['num_trials'] - 1]
+            for i in range(0, task['num_trials']):
+                f_path = path.join("data", experiment['settings']['experiment_folder'], participant, task['task_name'] + "_" + str(i) + ".csv")
+                file_check = path.exists(f_path)
+                if file_check:
+                    continue                
+                else:
+                    return [task_num, i]
+        else:
+            continue
+    return [len(tasks_uncut), tasks_uncut[-1]['num_trials']]
 
 def concat_full(participant, experiment = {}):
     tasks_uncut = experiment['experiment']
@@ -1079,6 +1090,7 @@ def continue_experiment(fulls, participant, experiment = {}):
         print e
         print str(e)
     for i in range (participant_state[0], len(running)):
+        print i
         if experiment['settings']['flipscreen'] == True:
             running[i]['flipscreen'] = 1
             running[i]['flip_text'] = True
@@ -1117,7 +1129,9 @@ def continue_experiment(fulls, participant, experiment = {}):
         running[i]['min_distance'] = cfg['active_height']/2
         running[i]['active_height'] = cfg['active_height']
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
-        running[i]['current_rotation_angle'] = participant_state[1]
+        if running[i]['rotation_change_type'] == 'gradual':
+            rotation = generate_rotation_list(running[i]['rotation_angle'], running[i]['final_rotation_angle'], running[i]['num_trials'])
+#        running[i]['current_rotation_angle'] = participant_state[1]
         if running[i]['num_targets'] > 1:
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
@@ -1130,10 +1144,12 @@ def continue_experiment(fulls, participant, experiment = {}):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
-                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
-                elif (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
-                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
+#                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
+#                elif (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
+#                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+                if (running[i]['rotation_change_type'] == 'gradual'):
+                    running[i]['current_rotation_angle'] = rotation[trial_num]
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
 #                print running[i]['current_rotation_angle'], running[i]['rotation_angle']
