@@ -473,7 +473,8 @@ class MyFrame(wx.Frame):
             self.participant_list_trimmed = ["Empty"]
         self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
         self.generate_participant_markers()
-        self.participants_list_box.Set(self.participant_list_trimmed)
+        marked_participants = self.mark_participants()
+        self.participants_list_box.Set(marked_participants)
         del self.participant_list_trimmed[:]
         #### CHECK IF ANY TASKS ####
         if len(self.experiment_holder['experiment']) > 0:
@@ -639,14 +640,16 @@ class MyFrame(wx.Frame):
         if not(path.exists(path.join("data", experimentFolder))):
             makedirs(path.join("data",experimentFolder))
         self.participant_list = listdir(path.join("data", self.current_experiment_name))
+        self.participant_list = [x for x in self.participant_list if ".csv" not in x]
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
             self.participant_list_trimmed = ["Empty"]
         self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
         self.generate_participant_markers()
-        #### ENCODE COLORS TO PARTICIPANT LIST ####
-        self.participants_list_box.Set(self.participant_list_trimmed)
+        #### MARKERS TO PARTICIPANT LIST ####
+        marked_participants = self.mark_participants()
+        self.participants_list_box.Set(marked_participants)
         del self.participant_list_trimmed[:]
         #### CHECK IF ANY TASKS ####
         if len(self.experiment_holder['experiment']) > 0:
@@ -655,14 +658,24 @@ class MyFrame(wx.Frame):
             self.Run_Button.Disable()
         event.Skip()
         
-    def encode_color(self):
-        ### DOESN'T WORK IN WXPYTHON GUI
-        for participant in self.participant_list:
-            if participant in self.participant_markers[1] or self.participant_markers[2]:
-                participant = "\33[33m" + participant
+    def mark_participants(self):
+        ### DOESN'T WORK IN WXPYTHON GUI ###
+        marked_participant_list = []
+        for participant in self.participant_list_trimmed:
+            if participant in self.participant_markers[1]:
+                marked_participant_list.append("[" + participant + "]")
+            elif (participant in self.participant_markers[2]) or (participant in self.participant_markers[3]):
+               marked_participant_list.append("~" + participant + "~")
+            else:
+                marked_participant_list.append(participant)
+        return marked_participant_list
 
-    def decode_color(self):
-        pass
+    def unmark_participant(self, participant):
+        unmarked = participant
+        unmarked = unmarked.replace("~", "")
+        unmarked = unmarked.replace("[", "")
+        unmarked = unmarked.replace("]", "")
+        return unmarked
     def Save_Press(self, event):
         dlg = wx.MessageDialog(self, "Save Experiment?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
@@ -698,8 +711,6 @@ class MyFrame(wx.Frame):
                         task['rotation_direction'] = -1
                     else:
                         task['rotation_direction'] = 1
-                        
-                
                 participant = dlg.GetValue()
                 with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
                     dump(self.experiment_holder, f)
@@ -725,11 +736,15 @@ class MyFrame(wx.Frame):
         if not(path.exists(path.join("data", experimentFolder))):
             makedirs(path.join("data", experimentFolder))
         self.participant_list = listdir(path.join("data", self.current_experiment_name))
+        self.participant_list = [x for x in self.participant_list if ".csv" not in x]
         for i in self.participant_list:
             self.participant_list_trimmed.append(i.replace(".csv", ""))
         if len(self.participant_list_trimmed) == 0:
             self.participant_list_trimmed = ["Empty"]
-        self.participants_list_box.Set(self.participant_list_trimmed)
+        self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
+        self.generate_participant_markers()
+        marked_participants = self.mark_participants()
+        self.participants_list_box.Set(marked_participants)
         del self.participant_list_trimmed[:]
         dlg.Destroy()
         self.Run_Button.Enable()
@@ -1151,11 +1166,12 @@ class MyFrame(wx.Frame):
         event.Skip()
     
     def participants_list_box_click(self, event):
-        self.highlit_participant = event.GetString()
+        self.highlit_participant = self.unmark_participant(event.GetString())
 #        print self.experiment_holder['participant'][self.highlit_participant]['state'], [len(self.experiment_holder['experiment']) - 1, self.experiment_holder['experiment'][-1]['num_trials'] - 1]
 #        exp.concat_full(self.highlit_participant, self.experiment_holder)
         self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
         self.generate_participant_markers()
+        print self.highlit_participant
 #        print self.participant_markers
 #        if exp.get_participant_state(self.highlit_participant, self.experiment_holder) == [len(self.experiment_holder['experiment']), self.experiment_holder['experiment'][-1]['num_trials']]:
         if self.highlit_participant in self.participant_markers[0]:

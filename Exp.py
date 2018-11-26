@@ -8,7 +8,7 @@ import pyautogui
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
-from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean, linspace
+from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean, arange
 import csv
 import math
 from pandas import concat, DataFrame
@@ -509,8 +509,15 @@ def trial_runner(cfg={}):
                                 show_home = True
                                 end_point = circle_pos
                 if (cfg['trial_type'] == 'error_clamp'):
-                    if cfg['terminal_feedback'] == False:
+                    if cfg['terminal_feedback'] == False and abs(cfg['current_rotation_angle']) == 0:
                         if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35):
+                            end_point = circle_pos
+                            phase_2 = True
+                            show_home = True
+                            show_cursor = False
+                            show_target = False
+                    elif cfg['terminal_feedback'] == False and abs(cfg['current_rotation_angle']) > 0:
+                        if (get_dist(circle_pos, startPos) >= get_dist(startPos, endPos) and velocity < 35):
                             end_point = circle_pos
                             phase_2 = True
                             show_home = True
@@ -618,8 +625,8 @@ def trial_runner(cfg={}):
         except:
             pass
 
-def generate_rotation_list(initial, final, num_trials):
-    rotation_list = linspace(initial,final,num_trials)
+def generate_rotation_list(initial, final, trials):
+    rotation_list = ndarray.tolist((((final-initial)/trials)*arange(trials)) + initial)
     return rotation_list
 ############################# RUN EXPERIMENT V2 ###############################
 def run_experiment_2(fulls, participant, experiment = {}):

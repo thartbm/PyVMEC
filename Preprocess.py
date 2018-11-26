@@ -126,8 +126,8 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     output_matrix = []
     field_matrix = []
     fields_trial = ['task', 'trial','rotation_angle_deg']
-    fields_block = ['task', 'block','rotation_angle_deg']
-    fields_target = ['task', 'target','rotation_angle_deg']
+    fields_block = ['task', 'block',]
+    fields_target = ['task', 'target']
     dependent_variable = 0
     ############ CREATE PARTICIPANT MATRIX ###############
     for participant in (directory_matrix):
@@ -205,7 +205,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 block_row = []
                 rotation_angle = array(participant_data)[:,2][block_index[block]][0]
                 block_mean = nanmean(array(participant_data)[:,4][block_index[block]].astype(float))
-                block_row.extend([task, block + 1, rotation_angle, '%.2f'%(float(block_mean))])             
+                block_row.extend([task, block + 1, '%.2f'%(float(block_mean))])             
                 task_row.append(block_row)
             task_matrix_blocked.extend(task_row)
         participant_matrix_blocked.append(deepcopy(task_matrix_blocked))
@@ -241,7 +241,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
 #                print target_index
                 rotation_angle = array(participant_data)[target_index][:,2][0]
                 target_mean = nanmean(array(participant_data)[:,4][target_index].astype(float))
-                target_row.extend([task, target, rotation_angle, '%.2f'%(float(target_mean))])
+                target_row.extend([task, target, '%.2f'%(float(target_mean))])
                 task_row_target.append(target_row)
             jump_value = jump_value + len(task_index)
             ##### ORDER TARGETS SMALLEST TO GREATEST ANGLE ######
