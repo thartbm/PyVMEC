@@ -189,6 +189,11 @@ def get_vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
     scalar_proj = dot(moving_vect, static_uvect)
     return scalar_proj*static_uvect
+def get_clamped_vector(moving_vect, static_vect):
+    moving_magnitude = linalg.norm(moving_vect)
+    static_uvect = get_uvect(static_vect)
+    clamped_vector = moving_magnitude*static_uvect
+    return clamped_vector
     
 def vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
@@ -375,7 +380,7 @@ def trial_runner(cfg={}):
                         circle_pos = [rotated_X, rotated_Y]
                 elif (cfg['trial_type'] == 'error_clamp'):
                     circle_pos = mousePos
-                    vector_proj_array = get_vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
+                    vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
                     vector_proj = ndarray.tolist(vector_proj_array)
                     rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2], startPos, cfg['current_rotation_angle'])
 #                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
