@@ -6,7 +6,7 @@ import Exp as exp
 from math import degrees
 from os import path
 from json import load
-from numpy import array, float, mean, unique, delete, std, nan, ma, nanmean, nanstd
+from numpy import array, float, mean, unique, delete, std, nan, ma, nanmean, nanstd, warnings
 from copy import deepcopy
 #with open ("/home/julius/Desktop/PyVMEC/experiments/preprocessing.json", "rb") as f:
 #    exp_test = load(f)
@@ -75,6 +75,7 @@ def check_for_incomplete_data(data_list=[]):
     return True
 
 def data_process(participant_list = [], data_dir = [], cfg = {}):
+    
     output_fields = ['task', 'trial','rotation_angle_deg', 'target_angle_deg']
     output_rows = []
     for i in range (0, len(data_dir)):   
@@ -115,6 +116,7 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
 
 
 def process_participants(participant_list = [], task_list = [], experiment = {}, cfg = {}):
+    warnings.filterwarnings('ignore')
     directory_matrix = data_name_list(participant_list, task_list, experiment)
 #    check_data_exists(directory_matrix)
     data_check = check_for_incomplete_data(directory_matrix)
@@ -157,7 +159,21 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
         participant_matrix.append(deepcopy(dv_participant))
     ############ PARTICIPANT MATRIX CREATED ################
     
-    ############ REMOVE OUTLIERS ###################
+    ############ REMOVE OUTLIERS###################
+    ############ RO: BY WINDOW #####################
+#    if cfg['outliers'] == True:
+    if cfg['outliers_win'] == True:
+        participant_matrix_tmp_win = []
+        for participant in participant_matrix:
+            jump_to = 0
+            participant_array = array(participant)
+            window_idx = ((participant_array[:,4].astype(float) > cfg['window_upper']) | (participant_array[:,4].astype(float) < cfg['window_lower'])).nonzero()[0]
+            participant_array[:,4][window_idx] = nan
+            participant_matrix_tmp_win.append(participant_array.tolist())
+        participant_matrix = participant_matrix_tmp_win
+
+
+    ############ RO: BY STANDARD DEVIATION ################
     if cfg['outliers'] == True:
         participant_matrix_tmp = []
         for participant in participant_matrix:
@@ -166,15 +182,15 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
             for task in task_list:
                 task_index = (array(participant)[:,0] == task).nonzero()[0]
                 task_array = (array(participant)[:,4][task_index])
-                task_mean = mean(task_array.astype(float))
+                
+                task_mean = nanmean(task_array.astype(float))
                 task_std = std(task_array.astype(float))
-#                print task_mean, task_std, task_array
-#                outlier_index = array((task_array.astype(float) > (task_mean + cfg['outlier_scale'] * task_std)) | (task_array.astype(float) < (task_mean - cfg['outlier_scale'] * task_std))).nonzero()[0] + jump_to
                 outlier_index = ((task_array.astype(float) > (task_mean + cfg['outlier_scale']*task_std)) | (task_array.astype(float) < (task_mean - cfg['outlier_scale']*task_std))).nonzero()[0] + jump_to
                 participant_array[:,4][outlier_index] = nan
                 jump_to = jump_to + len(task_index)
             participant_matrix_tmp.append(participant_array.tolist())
         participant_matrix = participant_matrix_tmp
+        
         
     ############ OUTPUT BY TRIALS ##################
     data_matrix = []
@@ -217,7 +233,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
         else:
             dv_column = []
             for row in data:
-                dv_column.append(row[3])
+                dv_column.append(row[2])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
     output_matrix.append(deepcopy(data_matrix))
@@ -266,7 +282,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
         else:
             dv_column = []
             for row in data:
-                dv_column.append(row[3])
+                dv_column.append(row[2])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
     output_matrix.append(data_matrix)

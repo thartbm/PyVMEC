@@ -363,13 +363,13 @@ def trial_runner(cfg={}):
                     pixels_per_sample = velocity*change_in_time
                 rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
                 if (cfg['trial_type'] == 'cursor'):
-                    if (cfg['rotation_angle'] == 0):
+                    if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
                     else:
                         circle_pos = [rotated_X, rotated_Y]
 
                 elif (cfg['trial_type'] == 'no_cursor'):
-                    if (cfg['rotation_angle'] == 0):
+                    if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
                     else:
                         circle_pos = [rotated_X, rotated_Y]
