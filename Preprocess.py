@@ -165,11 +165,28 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     if cfg['outliers_win'] == True:
         participant_matrix_tmp_win = []
         for participant in participant_matrix:
-            jump_to = 0
-            participant_array = array(participant)
-            window_idx = ((participant_array[:,4].astype(float) > cfg['window_upper']) | (participant_array[:,4].astype(float) < cfg['window_lower'])).nonzero()[0]
-            participant_array[:,4][window_idx] = nan
-            participant_matrix_tmp_win.append(participant_array.tolist())
+            participant_rows_tmp = []
+            for row in participant:
+#                print row[2], type(int(row[2]))
+#                print (((cfg['window_limit']/2) + float(row[2]))), row[4]
+                if int(row[2]) >= 0:
+#                    print "here 1"
+                    if (float(row[4]) > ((cfg['window_limit']/2) + float(row[2]))) | (float(row[4]) < ((-cfg['window_limit']/2))):
+#                        print "upper bound: "+ str(((cfg['window_limit']/2) + float(row[2]))), "lower bound: " + str((-cfg['window_limit']/2)), row[4]
+                        row[4] = nan
+                elif int(row[2]) < 0:
+#                    print "here 2"
+                    if (float(row[4]) > ((cfg['window_limit']/2))) | (float(row[4]) < ((-cfg['window_limit']/2) + float(row[2]))):
+#                        print "upper bound: " + str((cfg['window_limit']/2)), "lower bound: "+ str(((-cfg['window_limit']/2) + float(row[2]))), row[4]
+                        row[4] = nan
+                participant_rows_tmp.append(row)
+            participant_matrix_tmp_win.append(participant_rows_tmp)
+#                print row
+                
+#            participant_array = array(participant)
+#            window_idx = ((participant_array[:,4].astype(float) > (cfg['window_limit']/2)) | (participant_array[:,4].astype(float) < (-cfg['window_limit']/2))).nonzero()[0]
+#            participant_array[:,4][window_idx] = nan
+#            participant_matrix_tmp_win.append(participant_array.tolist())
         participant_matrix = participant_matrix_tmp_win
 
 
