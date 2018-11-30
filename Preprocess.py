@@ -145,6 +145,8 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                         rows.append(row)
                 del(rows[0])
                 for idx in rows:
+                    if idx[5] == "":
+                        idx[5] = "0"
                     if exp.get_dist([0,0], [float(idx[15]), float(idx[16])])/exp.get_dist([0,0],[float(idx[10]), float(idx[11])]) >= (float(1)/float(3)):
                         cursor_error = degrees(exp.cart2pol([float(idx[15]), float(idx[16])])[1]) - float(idx[6])
                         reach_deviation = degrees(exp.cart2pol([float(idx[13]), float(idx[14])])[1]) - float(idx[6])
@@ -167,8 +169,6 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
         for participant in participant_matrix:
             participant_rows_tmp = []
             for row in participant:
-#                print row[2], type(int(row[2]))
-#                print (((cfg['window_limit']/2) + float(row[2]))), row[4]
                 if int(row[2]) >= 0:
 #                    print "here 1"
                     if (float(row[4]) > ((cfg['window_limit']/2) + float(row[2]))) | (float(row[4]) < ((-cfg['window_limit']/2))):
@@ -199,9 +199,8 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
             for task in task_list:
                 task_index = (array(participant)[:,0] == task).nonzero()[0]
                 task_array = (array(participant)[:,4][task_index])
-                
                 task_mean = nanmean(task_array.astype(float))
-                task_std = std(task_array.astype(float))
+                task_std = nanstd(task_array.astype(float), ddof=1)
                 outlier_index = ((task_array.astype(float) > (task_mean + cfg['outlier_scale']*task_std)) | (task_array.astype(float) < (task_mean - cfg['outlier_scale']*task_std))).nonzero()[0] + jump_to
                 participant_array[:,4][outlier_index] = nan
                 jump_to = jump_to + len(task_index)
@@ -221,7 +220,17 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 dv_column.append(row[4])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
-    output_matrix.append(deepcopy(data_matrix))
+    ############ Standard Deviation & Average In Participants #################
+    tmp_data = []
+    fields_trial.extend(["Participants Average", "Participants Standard Deviation"])
+    for row in array(data_matrix):
+        participant_average = nanmean(row[3:].astype(float))
+        participant_std = nanstd(row[3:].astype(float), ddof=1)
+        row = row.tolist()
+        row.append('%.2f'%(float(participant_average)))
+        row.append('%.2f'%(float(participant_std)))
+        tmp_data.append(row)
+    output_matrix.append(deepcopy(tmp_data))
     
     ############ OUTPUT BY BLOCKS ##################
             ##### USING PARTICIPANT MATRIX TO PRODUCE BLOCK DATA #########
@@ -253,7 +262,17 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 dv_column.append(row[2])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
-    output_matrix.append(deepcopy(data_matrix))
+    ############ Standard Deviation & Average In Participants #################
+    tmp_data = []
+    fields_block.extend(["Participants Average", "Participants Standard Deviation"])
+    for row in array(data_matrix):
+        participant_average = nanmean(row[2:].astype(float))
+        participant_std = nanstd(row[2:].astype(float), ddof=1)
+        row = row.tolist()
+        row.append('%.2f'%(float(participant_average)))
+        row.append('%.2f'%(float(participant_std)))
+        tmp_data.append(row)
+    output_matrix.append(deepcopy(tmp_data))
     
     
     ############ OUTPUT BY TARGET #################
@@ -302,7 +321,17 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 dv_column.append(row[2])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
-    output_matrix.append(data_matrix)
+    ############ Standard Deviation & Average In Participants #################
+    tmp_data = []
+    fields_target.extend(["Participants Average", "Participants Standard Deviation"])
+    for row in array(data_matrix):
+        participant_average = nanmean(row[2:].astype(float))
+        participant_std = nanstd(row[2:].astype(float), ddof=1)
+        row = row.tolist()
+        row.append('%.2f'%(float(participant_average)))
+        row.append('%.2f'%(float(participant_std)))
+        tmp_data.append(row)
+    output_matrix.append(deepcopy(tmp_data))
     ##### OUTPUT MATRIX FORM ###############################################
     #[participants by trial, participants by block, participants by target]#
     ########################################################################self.participant_list
