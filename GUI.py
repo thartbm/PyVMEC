@@ -34,7 +34,7 @@ class MyFrame(wx.Frame):
         self.task_list = ['None']
         self.participant_list = []
         self.participant_list_trimmed = []
-        self.key_list = ['lag','terminal_multiplier', 'pause_button_wait', 'terminal_feedback', 'pausetime', 'pause_instruction', 'rotation_direction']
+        self.key_list = ['terminal_multiplier', 'pause_button_wait', 'terminal_feedback', 'pausetime', 'pause_instruction', 'rotation_direction']
         self.def_list = [0, 1.025, False, False, 5, "", 1]
         ### Current Experiment
         self.current_experiment = []
@@ -51,14 +51,14 @@ class MyFrame(wx.Frame):
         self.num_target_chosen = 1
         self.num_trial_chosen = 1
         self.rotation_angle_chosen = 0
-        self.lag_chosen = ""
-        self.lag_chosen_err = ""
+#        self.lag_chosen = ""
+#        self.lag_chosen_err = ""
         self.num_target_list = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] 
         self.rotation_angle_list = ["0" , "30", "45", "60", "75"]
         self.highlit_group = ""
         self.highlit_participant = ""
         ######################## VALID TEXT STUFF ##############################
-        self.valid_lag_text = ""    
+#        self.valid_lag_text = ""    
         self.valid_pause_text = ""
         self.valid_trial_num = 0
         
@@ -133,8 +133,8 @@ class MyFrame(wx.Frame):
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
 #        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
-        self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
-        self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
+#        self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
+#        self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
         self.pause_static_text = wx.StaticText(self, wx.ID_ANY, ("Pause Time(s)"))
         self.pause_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
         self.PM_static_text = wx.StaticText(self, wx.ID_ANY, (" Pause Message"))
@@ -184,7 +184,7 @@ class MyFrame(wx.Frame):
         
         self.Bind(wx.EVT_RADIOBOX, self.Rot_Change_Press, self.rot_change_statictext)
 #        self.Bind(wx.EVT_RADIOBOX, self.rotation_angle_direction_press, self.rotation_angle_direction)        
-        self.Bind(wx.EVT_TEXT, self.Lag_Enter, self.lag_txt)
+#        self.Bind(wx.EVT_TEXT, self.Lag_Enter, self.lag_txt)
         self.Bind(wx.EVT_CHECKBOX, self.terminalfeedback_check_press, self.terminalfeedback_Radio)
         ### Pause events
         self.Bind(wx.EVT_TEXT, self.Pause_Enter, self.pause_txt)
@@ -346,8 +346,8 @@ class MyFrame(wx.Frame):
 #        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
         sizer_9.Add(self.rot_change_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.rotation_change_staticline, 0, wx.BOTTOM, 2)
-        sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
-        sizer_9.Add(self.lag_txt, 0, wx.LEFT, 2)
+#        sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
+#        sizer_9.Add(self.lag_txt, 0, wx.LEFT, 2)
         sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.BOTTOM, 2)
         sizer_9.Add(self.terminalfeedback_Radio, 0, wx.LEFT, 2)
         sizer_8.Add(sizer_9, 1, 0, 0)
@@ -377,8 +377,8 @@ class MyFrame(wx.Frame):
         self.rotation_angle_staticline.Show() 
         self.rot_change_statictext.Show()
         self.rotation_change_staticline.Show()
-        self.lag_static_text.Show()
-        self.lag_txt.Show()
+#        self.lag_static_text.Show()
+#        self.lag_txt.Show()
         ###########
         self.min_angle_CB.Show()
         self.min_angle_statictext.Show()
@@ -399,8 +399,8 @@ class MyFrame(wx.Frame):
 ##            self.rotation_angle_direction.Hide()
             self.rot_change_statictext.Hide()
             self.rotation_change_staticline.Hide()
-            self.lag_static_text.Hide()
-            self.lag_txt.Hide() 
+#            self.lag_static_text.Hide()
+#            self.lag_txt.Hide() 
             self.terminalfeedback_Radio.Hide()
             self.terminalfeedback_Radio_staticline.Hide()
         self.pause_static_text.Hide()
@@ -423,8 +423,8 @@ class MyFrame(wx.Frame):
         self.rotation_angle_staticline.Hide()        
         self.rot_change_statictext.Hide()
         self.rotation_change_staticline.Hide()
-        self.lag_static_text.Hide()
-        self.lag_txt.Hide()
+#        self.lag_static_text.Hide()
+#        self.lag_txt.Hide()
         ###
         self.Rotation_angle_end_statictext.Hide()
         self.Rotation_angle_end_slider.Hide()
@@ -544,9 +544,11 @@ class MyFrame(wx.Frame):
             self.min_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['min_angle'])                        
             self.max_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['max_angle'])
             try:
-                self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
+#                self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
+                pass
             except:
-                self.lag_txt.SetValue("0")
+                pass
+#                self.lag_txt.SetValue("0")
         except Exception as e:
             print traceback.print_exc()
         event.Skip()
@@ -772,7 +774,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['trial_type'] = 'cursor'
             self.current_experiment[self.highlit_task_num]['terminal_feedback_time'] = 0.5
             self.current_experiment[self.highlit_task_num]['num_targets'] = 3
-            self.current_experiment[self.highlit_task_num]['lag'] = 0
+#            self.current_experiment[self.highlit_task_num]['lag'] = 0
             self.current_experiment[self.highlit_task_num]['num_trials'] = 3
             self.current_experiment[self.highlit_task_num]['terminal_multiplier'] = 1.025
             self.current_experiment[self.highlit_task_num]['pause_button_wait'] = False
@@ -815,9 +817,11 @@ class MyFrame(wx.Frame):
             self.min_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['min_angle'])                        
             self.max_angle_CB.SetValue(self.current_experiment[self.highlit_task_num]['max_angle'])
             try:
-                self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
+                pass
+#                self.lag_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['lag_value']))
             except:
-                self.lag_txt.SetValue("0")
+                pass
+#                self.lag_txt.SetValue("0")
         else:
             pass
         dlg.Destroy()
@@ -1052,23 +1056,23 @@ class MyFrame(wx.Frame):
 #                
         event.Skip()
 
-    def Lag_Enter(self, event):  # wxGlade: MyFrame.<event_handler>
-        lag_conversion_factor = 37.2495/1000
-        curr_string = event.GetString()
-        if all(x in '0123456789' for x in curr_string):
-            self.valid_lag_text = curr_string
-        else:
-            self.lag_txt.SetValue(self.valid_lag_text)
-        if (event.GetString() == ''):
-            self.current_experiment[self.highlit_task_num]['lag'] = 0
-        else:
-            self.current_experiment[self.highlit_task_num]['lag'] = int(int(event.GetString())*lag_conversion_factor)
-            self.current_experiment[self.highlit_task_num]['lag_value'] = int(event.GetString())
-#        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
-#            dump(self.experiment_holder, f)
-#            f.close()
-            
-        event.Skip()
+#    def Lag_Enter(self, event):  # wxGlade: MyFrame.<event_handler>
+#        lag_conversion_factor = 37.2495/1000
+#        curr_string = event.GetString()
+#        if all(x in '0123456789' for x in curr_string):
+#            self.valid_lag_text = curr_string
+#        else:
+#            self.lag_txt.SetValue(self.valid_lag_text)
+#        if (event.GetString() == ''):
+#            self.current_experiment[self.highlit_task_num]['lag'] = 0
+#        else:
+#            self.current_experiment[self.highlit_task_num]['lag'] = int(int(event.GetString())*lag_conversion_factor)
+#            self.current_experiment[self.highlit_task_num]['lag_value'] = int(event.GetString())
+##        with open(self.experiment_folder+self.current_experiment_name+".json", "wb") as f:
+##            dump(self.experiment_holder, f)
+##            f.close()
+#            
+#        event.Skip()
 
     def Pause_Enter(self, event):  # wxGlade: MyFrame.<event_handler>
         curr_string = event.GetString()
