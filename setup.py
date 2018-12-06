@@ -79,6 +79,7 @@ setup(
     options = {
         "py2exe": {
             "includes": ["pandas",
+                         "pyautogui",
                          "psychopy",
                          "psychopy.visual.shape",
                          "psychopy.visual.circle",

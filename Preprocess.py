@@ -128,8 +128,8 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     output_matrix = []
     field_matrix = []
     fields_trial = ['task', 'task_type', 'trial','rotation_angle_deg']
-    fields_block = ['task', 'task_type', 'block',]
-    fields_target = ['task', 'task_type', 'target']
+    fields_block = ['task','task_type', 'block',]
+    fields_target = ['task','task_type', 'target']
     dependent_variable = 0
     ############ CREATE PARTICIPANT MATRIX ###############
     for participant in (directory_matrix):
@@ -154,7 +154,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                             dependent_variable = cursor_error
                         elif cfg['dependent_variable'] == 'reach deviation':
                             dependent_variable = reach_deviation
-                        dv_trial.extend([idx[1], idx[3], idx[5], idx[6], '%.2f'%(float(dependent_variable))])
+                        dv_trial.extend([idx[1], idx[3], idx[5], idx[6], '%.2f'%(float(dependent_variable)), idx[2]])
                         break
                 dv_task.append(dv_trial)
             dv_participant.extend(dv_task)
@@ -221,7 +221,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     for idx_0, data in enumerate(participant_matrix):
         fields_trial.append(participant_list[idx_0])
         if idx_0 == 0:
-            data_matrix = array(data)[:,[0,1,2,4]].tolist()
+            data_matrix = array(data)[:,[0,5,1,2,4]].tolist()
         else:
             dv_column = []
             for row in data:
@@ -230,7 +230,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 data_matrix[idx_1].append(dv_column[idx_1])
     ############ Standard Deviation & Average In Participants #################
     tmp_data = []
-    fields_trial.extend(["Participants Average", "Participants Standard Deviation"])
+    fields_trial.extend(["average", "sd"])
     for row in array(data_matrix):
         participant_average = nanmean(row[3:].astype(float))
         participant_std = nanstd(row[3:].astype(float), ddof=1)
@@ -254,8 +254,9 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
             for block in range(0, num_blocks(blocksize, task, experiment)):
                 block_row = []
                 rotation_angle = array(participant_data)[:,2][block_index[block]][0]
+                task_type = array(participant_data)[:,5][block_index[block]][0]
                 block_mean = nanmean(array(participant_data)[:,4][block_index[block]].astype(float))
-                block_row.extend([task, block + 1, '%.2f'%(float(block_mean))])             
+                block_row.extend([task, task_type, block + 1, '%.2f'%(float(block_mean))])   
                 task_row.append(block_row)
             task_matrix_blocked.extend(task_row)
         participant_matrix_blocked.append(deepcopy(task_matrix_blocked))
@@ -267,7 +268,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
         else:
             dv_column = []
             for row in data:
-                dv_column.append(row[2])
+                dv_column.append(row[3])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
     ############ Standard Deviation & Average In Participants #################
@@ -300,14 +301,15 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 target_index = target_index + jump_value
 #                print target_index
                 rotation_angle = array(participant_data)[target_index][:,2][0]
+                task_type = array(participant_data)[target_index][:,5][0]
                 target_mean = nanmean(array(participant_data)[:,4][target_index].astype(float))
-                target_row.extend([task, target, '%.2f'%(float(target_mean))])
+                target_row.extend([task, task_type, target, '%.2f'%(float(target_mean))])
                 task_row_target.append(target_row)
             jump_value = jump_value + len(task_index)
             ##### ORDER TARGETS SMALLEST TO GREATEST ANGLE ######
             target_order = []
             for task in task_row_target:
-                target_order.append(int(task[1]))
+                target_order.append(int(task[2]))
             st_idx = []
             for target in sorted(target_order):
                 st_idx.append(target_order.index(target))
@@ -326,15 +328,15 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
         else:
             dv_column = []
             for row in data:
-                dv_column.append(row[2])
+                dv_column.append(row[3])
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
     ############ Standard Deviation & Average In Participants #################
     tmp_data = []
-    fields_target.extend(["Participants Average", "Participants Standard Deviation"])
+    fields_target.extend(["average", "sd"])
     for row in array(data_matrix):
-        participant_average = nanmean(row[2:].astype(float))
-        participant_std = nanstd(row[2:].astype(float), ddof=1)
+        participant_average = nanmean(row[3:].astype(float))
+        participant_std = nanstd(row[3:].astype(float), ddof=1)
         row = row.tolist()
         row.append('%.2f'%(float(participant_average)))
         row.append('%.2f'%(float(participant_std)))

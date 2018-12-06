@@ -328,8 +328,6 @@ class MyFrame(wx.Frame):
         sizer_10.Add(self.PM_static_text, 0, 0, 0)
         sizer_10.Add(self.pause_message_txt, 0, 0, 0)
         sizer_10.Add(self.pause_check, 0, 0, 0)
-#        sizer_10.Add(self.Move_Up_Button, 0, 0, 0)
-#        sizer_10.Add(self.Move_Down_Button, 0, 0, 0)
         sizer_8.Add(sizer_10, 1, 0, 0)
         sizer_9.Add(self.num_target_statictext, 0, wx.LEFT, 2)
         sizer_9.Add(self.num_targ_CB, 0, wx.LEFT, 2)
@@ -977,6 +975,8 @@ class MyFrame(wx.Frame):
             if self.num_trial_CB.GetValue() < self.num_target_chosen:
                 self.num_trial_CB.SetValue(4)
             self.num_trial_mult = 4
+        if self.num_trial_CB.GetValue()%self.num_target_chosen != 0:
+            self.num_trial_CB.SetValue(exp.myRounder(self.num_trial_CB.GetValue(),self.num_target_chosen))
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_CB.GetValue()
 #        self.valid_trial_num = self.num_trial_CB.GetValue()
         
@@ -1937,6 +1937,7 @@ class PreprocessFrame(wx.Frame):
                             csvwriter = csv.writer(csvfile)
                             csvwriter.writerow(preprocessed_data[0][idx])
                             csvwriter.writerows(task_data)
+                self.Destroy()
         except Exception as e:
             traceback.print_exc()
         event.Skip()
