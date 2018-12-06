@@ -1,5 +1,8 @@
 # this file has functions that create, populate and update the GUI
 import wx
+from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
+from psychopy import event, core
+from psychopy.visual import shape
 from gettext import install
 from math import ceil
 from os import path, makedirs, remove, listdir, rename
@@ -975,6 +978,8 @@ class MyFrame(wx.Frame):
             if self.num_trial_CB.GetValue() < self.num_target_chosen:
                 self.num_trial_CB.SetValue(4)
             self.num_trial_mult = 4
+        else:
+            self.num_trial_mult = self.num_target_chosen
         if self.num_trial_CB.GetValue()%self.num_target_chosen != 0:
             self.num_trial_CB.SetValue(exp.myRounder(self.num_trial_CB.GetValue(),self.num_target_chosen))
         self.current_experiment[self.highlit_task_num]['num_trials'] = self.num_trial_CB.GetValue()
