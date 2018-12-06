@@ -103,7 +103,8 @@ setup(
             "dll_excludes":["MSVCP90.dll"],
             "excludes":["gevent._socket3"],
             "skip_archive": True,
-            "optimize": 2
+            "optimize": 2,
+            "dist_dir": "PyVMEC-0.9.3"
             }
     },
     console=['PyVMEC.py'],
