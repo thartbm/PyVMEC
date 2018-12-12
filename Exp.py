@@ -95,11 +95,11 @@ except:
   
   
   
-  
-def moveMouse(x,y):
-    myMouse.setPos([x,y])
-    myWin.winHandle._mouse_x = x  # hack to change pyglet window
-    myWin.winHandle._mouse_y = y
+# function not used?  
+#def moveMouse(x,y):
+#    myMouse.setPos([x,y])
+#    myWin.winHandle._mouse_x = x  # hack to change pyglet window
+#    myWin.winHandle._mouse_y = y
     
 def myRounder(x, base):
     return int(base * round(float(x)/base))
@@ -202,6 +202,8 @@ def pol2cart(rho, phi):
 def get_dist(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return linalg.norm(vector)
+    # is this better than just doing pythagoras in 1 line?
+    
 def get_vect(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return vector
@@ -209,10 +211,12 @@ def get_vect(select_pos, target_pos):
 def get_uvect(vector):
     uvect = vector/linalg.norm(vector)
     return uvect
+    
 def get_vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
     scalar_proj = dot(moving_vect, static_uvect)
     return scalar_proj*static_uvect
+    
 def get_clamped_vector(moving_vect, static_vect):
     moving_magnitude = linalg.norm(moving_vect)
     static_uvect = get_uvect(static_vect)
@@ -409,18 +413,20 @@ def trial_runner(cfg={}):
                     mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']]
                     current_pos = mousePos
                     current_timestamp = myMouse.Pos()[2] - myTime
+                
         ########################## SPECIAL CURSOR CONFIGURATIONS #####################
                 if (prev_timestamp != 0):
                     change_in_time = current_timestamp - prev_timestamp
                     velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
                     pixels_per_sample = velocity*change_in_time
+                
                 rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
+                
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
                     else:
                         circle_pos = [rotated_X, rotated_Y]
-
                 elif (cfg['trial_type'] == 'no_cursor'):
                     if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
@@ -428,9 +434,29 @@ def trial_runner(cfg={}):
                         circle_pos = [rotated_X, rotated_Y]
                 elif (cfg['trial_type'] == 'error_clamp'):
                     circle_pos = mousePos
-                    vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
-                    vector_proj = ndarray.tolist(vector_proj_array)
-                    rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2], startPos, cfg['current_rotation_angle'])
+                    #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
+                    #vector_proj = ndarray.tolist(vector_proj_array)
+                    #rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - startPos[1]], startPos, cfg['current_rotation_angle'])
+                    
+                    ################################################
+                    ## ERROR CLAMPING IS NOT WORKING....
+                    ################################################
+                    
+                    home_dist = get_dist(mousePos, startPos)
+                    target_dist = get_dist(mousePos, endPos)
+#                    print(home_dist)
+                    cursor_angle = cfg['target_angle'] + cfg['current_rotation_angle']
+#                    print(cfg['current_rotation_angle'])
+                    #if (target_dist > cfg['target_distance']) :
+                    #  cursor_angle = cursor_angle + 180
+                    
+#                    print(cursor_angle)
+                    rotated_X_clamped = (math.cos(math.radians(cursor_angle)) * home_dist) + startPos[0]
+                    rotated_Y_clamped = ((math.sin(math.radians(cursor_angle)) * home_dist) + startPos[1]) * cfg['flipscreen']
+                    
+                    # we still have to multiply by flipscreen?
+                    
+                    
 #                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
 #                    clamped_X_vector = vector_proj[0]
 #                    clamped_Y_vector = vector_proj[1]
@@ -448,6 +474,7 @@ def trial_runner(cfg={}):
 #                        active_Y = vector_proj[1]
 #                    circle_pos_clamped = [vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2]
                     circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
+#                    print(circle_pos_clamped)
             except:
                 pass
     ########################### SET CURSOR POSITIONS #############################
@@ -462,14 +489,28 @@ def trial_runner(cfg={}):
                         stabilize = True
                     if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
                         circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
-                    if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
+                    if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge): # does this put the cursor in the lower corner at the start of the experiment?
                         circle_pos[0] = (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
                     if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')):
-                        arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
-                        arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
+                        
+                        # everything should be calculated relative to the home position, so that one of the first things to do on every sample is calculated the relative position of stuff
+                        # where does current_pos come from... don't we need circle_pos?
+                        relPos = [current_pos[0] - startPos[0], current_pos[1] - startPos[1]]
+                        relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
+                        
+                        orientation = -myRounder(math.degrees(cart2pol(relPos)[1]),45)
+                        
+                        # ori is in degrees, and like a clock: 0 is upward, positive is clockwise
+                        arrow.ori = orientation
+                        arrowFill.ori = orientation
+                        
+                        # previous section:
+                        #arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
+                        #arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
+                        
                 except:
                     pass
         ################################ SHOW OBJECTS ################################
@@ -477,15 +518,15 @@ def trial_runner(cfg={}):
                     if (pos_buffer == 0):
                         pos_buffer = pos_buffer + 1
                     if (show_home == True):
-                        startCircle.draw()
+                        startCircle.draw() # home position
                     if (show_target == True):
-                        endCircle.draw()
+                        endCircle.draw()   # target position
                     if (show_arrow == True):
                         print('drawing black and gray arrows on top of each other?')
                         arrow.draw()
-                        arrowFill.draw()
+                        arrowFill.draw()   
                     if (show_cursor == True):
-                        myCircle.draw()
+                        myCircle.draw()    # cursor?
 #                        testCircle.draw()
                 except:
                     pass
@@ -632,6 +673,9 @@ def trial_runner(cfg={}):
 #                    show_arrow = False
 #                    show_arrowFill = False
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, end_point) >= get_dist(startPos,endPos)/10):
+                    # where is the angle for the arrow calculated?
+                    # why isn't the arrow drawn now?
+                    # everything regarding the arrow could be done in this if statement, right?
                     show_arrow = True
                     show_arrowFill = True 
                     
