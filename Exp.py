@@ -272,7 +272,7 @@ def trial_runner(cfg={}):
             # I'm assuming this is not used...
             #print('running pause task as trial???')
             instruction = cfg['pause_instruction']
-            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg#                    print(cursor_angle)['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
             end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=cfg['flip_text'], color=( 1, 1, 1))
 #            pyautogui.moveTo(root.winfo_screenwidth() - 50, root.winfo_screenheight() - 50)
@@ -588,7 +588,7 @@ def trial_runner(cfg={}):
 #                        timer_timestamp = current_timestamp
 #                        timerSet = True
 #                    stop_time = current_timestamp - timer_timestamp
-                    
+                    #                    print(cursor_angle)
                     if (pixels_per_sample > 1 and timerSet == True):
                         timerSet = False
                         stop_time = 0
@@ -629,7 +629,7 @@ def trial_runner(cfg={}):
                         while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
                             myCircle.draw()
                             if (cfg['poll_type'] == 'psychopy'):
-                                timeArray.append(core.getTime() - myTime)
+                                timeA#                    print(cursor_angle)rray.append(core.getTime() - myTime)
                                 mouseposXArray.append(myMouse.getPos()[0])
                                 mouseposYArray.append(myMouse.getPos()[1] + cfg['active_height']/2)
                             elif (cfg['poll_type'] == 'x11'):
@@ -863,7 +863,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 myCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
             except:
                 myCircle = Circle(win=Win,
-                                     radius=cfg['circle_radius'],
+                                    #                    print(cursor_angle) radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
