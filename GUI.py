@@ -130,9 +130,9 @@ class MyFrame(wx.Frame):
         
         self.Rotation_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Rotation"))
 #        self.Rotation_angle_CB = wx.ComboBox(self, wx.ID_ANY, value="0", choices=self.rotation_angle_list, style=wx.CB_DROPDOWN)
-        self.Rotation_angle_slider = wx.Slider(self, wx.ID_ANY, minValue = -75, maxValue = 75, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.Rotation_angle_slider = wx.Slider(self, wx.ID_ANY, minValue = -60, maxValue = 60, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
         self.Rotation_angle_end_statictext = wx.StaticText(self, wx.ID_ANY, ("Final rotation"))
-        self.Rotation_angle_end_slider = wx.Slider(self, wx.ID_ANY, minValue = -75, maxValue = 75, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.Rotation_angle_end_slider = wx.Slider(self, wx.ID_ANY, minValue = -60, maxValue = 60, value=0, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
         self.rot_change_statictext = wx.RadioBox(self, wx.ID_ANY, ("Rotation Change"), choices=[("Abrupt"), ("Gradual")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
 #        self.rotation_angle_direction = wx.RadioBox(self, wx.ID_ANY, ("Rotaton Direction"), choices=[("Counter-clockwise"), ("Clockwise")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
