@@ -277,6 +277,7 @@ def trial_runner(cfg={}):
             myMouse = cfg['x11_mouse']
             ### Gets current CPU Time
             myTime = myMouse.Pos()[2]
+        dist_criterion = cfg['circle_radius']
         if (cfg['custom_stim_enable'] == False):
             ### Creates cursor circle Object
             myCircle = cfg['cursor_circle']
@@ -288,6 +289,7 @@ def trial_runner(cfg={}):
             print rng
             myCircle = rng[0]
             endCircle = rng[1]
+            dist_criterion = 2 * dist_criterion
         ### Creates a circle object to be used as starting point
         startCircle = cfg['start_circle']
         
@@ -448,27 +450,27 @@ def trial_runner(cfg={}):
         try:
             if (phase_1 == False):
                 if (cfg['trial_type'] == 'cursor'):
-                    if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
+                    if (get_dist(circle_pos, startPos) < dist_criterion and velocity < 35):
                         phase_1 = True
                         show_home = False
                         show_target = True
                         if (cfg['terminal_feedback'] == True):
                             show_cursor = False
                 elif (cfg['trial_type'] == 'no_cursor'):
-                    if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
+                    if (get_dist(circle_pos, startPos) < dist_criterion and velocity < 35):
                         phase_1 = True
                         show_target = True
                         show_home = False
                         show_cursor = False
                 elif (cfg['trial_type'] == 'error_clamp'):
-                    if (get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35):
+                    if (get_dist(circle_pos, startPos) < dist_criterion and velocity < 35):
                         phase_1 = True
                         show_target = True
                         show_home = False
     ################################ PHASE 2 #####################################
             if (phase_1 == True and phase_2 == False):
                 if (cfg['trial_type'] == 'cursor'):
-                    if (get_dist(circle_pos, endPos) < cfg['circle_radius'] and velocity < 35 and cfg['terminal_feedback'] == False):
+                    if (get_dist(circle_pos, endPos) < dist_criterion and velocity < 35 and cfg['terminal_feedback'] == False):
                         phase_2 = True
                         show_home = True
                         show_target = False
@@ -584,7 +586,7 @@ def trial_runner(cfg={}):
                     show_cursor = False
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
                     show_cursor = True
-                if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < cfg['circle_radius'] and velocity < 35 and cfg['terminal_feedback'] == False):
+                if (cfg['trial_type'] == 'cursor'  and get_dist(circle_pos, startPos) < dist_criterion and velocity < 35 and cfg['terminal_feedback'] == False):
                     timePos_dict['task_num'] = cfg['task_num']
                     timePos_dict['task_name'] = cfg['task_name']
                     timePos_dict['trial_num'] = cfg['trial_num']
