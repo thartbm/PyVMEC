@@ -270,9 +270,9 @@ def trial_runner(cfg={}):
         myWin=cfg['win'] # excellent, all the copies in running[] are not used? oh no... cfg is now running
         if (cfg['trial_type'] == 'pause'): # why does a TRIAL runner have code for a pause TASK?
             # I'm assuming this is not used...
-            print('running pause task as trial???')
+            #print('running pause task as trial???')
             instruction = cfg['pause_instruction']
-            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
+            counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg#                    print(cursor_angle)['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
             end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=cfg['flip_text'], color=( 1, 1, 1))
 #            pyautogui.moveTo(root.winfo_screenwidth() - 50, root.winfo_screenheight() - 50)
@@ -306,7 +306,7 @@ def trial_runner(cfg={}):
         end_Y = (cfg['starting_pos'][1] + ((cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))))) * cfg['flipscreen'] #- cfg['active_height']/2)*cfg['flipscreen']
         ### Creates Mouse object
         
-        print('creating mouse object for every task, and long after the workspace setup is done???')        
+        #print('creating mouse object for every task, and long after the workspace setup is done???')        
         
         if (cfg['poll_type'] == 'psychopy'):
             myMouse = cfg['mouse']
@@ -444,13 +444,11 @@ def trial_runner(cfg={}):
                     
                     home_dist = get_dist(mousePos, startPos)
                     target_dist = get_dist(mousePos, endPos)
-#                    print(home_dist)
+
                     cursor_angle = cfg['target_angle'] + cfg['current_rotation_angle']
-#                    print(cfg['current_rotation_angle'])
                     #if (target_dist > cfg['target_distance']) :
                     #  cursor_angle = cursor_angle + 180
                     
-#                    print(cursor_angle)
                     rotated_X_clamped = (math.cos(math.radians(cursor_angle)) * home_dist) + startPos[0]
                     rotated_Y_clamped = ((math.sin(math.radians(cursor_angle)) * home_dist) + startPos[1]) * cfg['flipscreen']
                     
@@ -474,7 +472,7 @@ def trial_runner(cfg={}):
 #                        active_Y = vector_proj[1]
 #                    circle_pos_clamped = [vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2]
                     circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
-#                    print(circle_pos_clamped)
+
             except:
                 pass
     ########################### SET CURSOR POSITIONS #############################
@@ -522,7 +520,7 @@ def trial_runner(cfg={}):
                     if (show_target == True):
                         endCircle.draw()   # target position
                     if (show_arrow == True):
-                        print('drawing black and gray arrows on top of each other?')
+                        #print('drawing black and gray arrows on top of each other?')
                         arrow.draw()
                         arrowFill.draw()   
                     if (show_cursor == True):
@@ -616,7 +614,7 @@ def trial_runner(cfg={}):
                             show_target = False
                     elif cfg['terminal_feedback'] == False and abs(cfg['current_rotation_angle']) > 0:
                         if (get_dist(circle_pos, startPos) >= get_dist(startPos, endPos) and velocity < 35):
-                            print('putting end_pos at circle_pos, instead of just beyond the target?') # why is the terminal multiplier not used? that is the only thing it should be used for...
+                            #print('putting end_pos at circle_pos, instead of just beyond the target?') # why is the terminal multiplier not used? that is the only thing it should be used for...
                             end_point = circle_pos
                             phase_2 = True
                             show_home = True
@@ -640,7 +638,7 @@ def trial_runner(cfg={}):
                                 mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
                             cursorposXArray.append(rotated_X)
                             cursorposYArray.append(rotated_Y + cfg['active_height']/2)
-                            print('one flip statement')
+                            #print('one flip statement')
                             myWin.flip()
                         
     ############################ DATA COLLECTION #################################
@@ -659,7 +657,7 @@ def trial_runner(cfg={}):
                     mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
                     cursorposXArray.append(circle_pos[0])
                     cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
-            print('another flip statement')
+            #print('another flip statement')
             myWin.flip()
     ################################ PHASE 3 #####################################
 
@@ -714,7 +712,7 @@ def trial_runner(cfg={}):
                         timePos_dict['targetangle_deg'] = cfg['target_angle']
                         timePos_dict['rotation_angle'] = rot_dir*cfg['current_rotation_angle']
                         timePos_dict['homex_px'] = startPos[0]
-                        print('start and end position should already be relative to home position, and stay that way?')
+                        #print('start and end position should already be relative to home position, and stay that way?')
                         timePos_dict['homey_px'] = startPos[1] #+ cfg['active_height']/2
                         timePos_dict['targetx_px'] = endPos[0]
                         timePos_dict['targety_px'] = endPos[1] #+ cfg['active_height']/2
@@ -779,7 +777,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
     # it would also make sense to put this in a function, so that it's a separate unit
     # I'd also put the creation of image stim objects for the icons in a separate function as well
     try:
-        print('creating two arrows?')
+        #print('creating two arrows?')
         # is this black arrow used?
         arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
         arrowFill = ShapeStim(win=Win,
@@ -846,7 +844,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 custom_stim_holder.append([custom_cursor, custom_target])
         # the following bits of code should never be used anymore... but the experiment doesn't work if I comment them out...
         # from here ... (to: 'to here')
-        print('using obsolete custom cursor/target/home settings?')
+        #print('using obsolete custom cursor/target/home settings?')
         if settings['custom_cursor_enable'] == False: # we only use 'custom_stim_enable'
             myCircle = Circle(win=Win,
                                      radius=cfg['circle_radius'],
@@ -957,14 +955,14 @@ def run_experiment_2(fulls, participant, experiment = {}):
         running[i]['test_circle'] = testCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
-        print('always using psychopy mouse object?')
+        #print('always using psychopy mouse object?')
         running[i]['mouse'] = Mouse # this should come from the cfg object, and not be created many times over, also: it will now always be the psychopy mouse object, never the X11 one...
-        print('making another copy of the Window object?')
+        #print('making another copy of the Window object?')
         running[i]['win'] = Win # copying the window object this way may be the cause of window-closing problems... even if there is just 1 task, you might end up having 2 window objects
         running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
         running[i]['arrowFill_stim'] = arrowFill
-        print('storing task_num even when creating a config for separate tasks?')
+        #print('storing task_num even when creating a config for separate tasks?')
         running[i]['task_num'] = i + 1
         running[i]['max_distance'] = cfg['active_height']     # why calculate these two at all?
         running[i]['min_distance'] = cfg['active_height']/2   # it will always be 1 normalized screen unit * the target distance set by the experimenter
@@ -981,7 +979,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
         
         
         #### FIRST SEED FOR TARGET ANGLES ####
-        print('seeding random number generator?')
+        #print('seeding random number generator?')
         setParticipantSeed(participant_seed + str(i)) # this should not be done every task, just once per experiment...
         
         fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
