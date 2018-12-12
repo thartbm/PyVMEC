@@ -48,14 +48,30 @@ def addWorkSpaceLimits(screen, cfg = {}):
         trimmed_width = trimmed_height*2
     else:
         trimmed_height = trimmed_width/2
+        
     cfg['active_width'] = trimmed_width
     cfg['active_height'] = trimmed_height
     cfg['circle_radius'] = trimmed_height*0.025
     cfg['icon_diameter'] = trimmed_height*0.075
+    
+    # where is the home position calculated?
+    cfg['home_pos'] = [0, -0.5 * trimmed_height]
+    
+    # active height is 1 normalized screen unit: this is what should be stored in the cfg
+    # we don't need the active width all that much... it's just 2 normalized screen units
+    # circle_radius and icon diameter are maybe not workspace limits
+    
     cfg['screen_dimensions'] = [screen_width, screen_height]
     cfg['winType'] = 'pyglet'
+    
+    
     return cfg
 
+# this try/except:
+# 1: has to add the psychopy mouse object in the except statement
+# 2: should be in a function to add a mouse object to the overall cfg
+# 3: be called once, with no testing of which mouse object to use at any later point
+ 
 try:
     class myMouse:
       Xlib = CDLL("libX11.so.6")
@@ -76,6 +92,10 @@ try:
 except:
     print ('not using xLib')
     pass
+  
+  
+  
+  
 def moveMouse(x,y):
     myMouse.setPos([x,y])
     myWin.winHandle._mouse_x = x  # hack to change pyglet window
@@ -140,18 +160,21 @@ def rotation_num(rotation_type, function):
             return 'abrupt'
         if (rotation_type == 1):
             return 'gradual'
+
+# this doesn't need to be a function as this code should be called only once: at the start of the experiment        
 def setParticipantSeed(participant):
-    
     seed(sum([ord(c) for c in participant]))
+    
 
 def shuffleTargets4task(targets, blocks):
     taskTargets = []
-    
     for block in range(blocks):
       shuffle(targets)
       taskTargets = taskTargets + targets  
     return(taskTargets)
     
+
+# do we use this?    
 def rotation_direction_num(rotation_direction, function):
     if (function == True):
         if (rotation_direction == 'Counter-clockwise'):
@@ -163,6 +186,7 @@ def rotation_direction_num(rotation_direction, function):
             return 'Counter-clockwise'
         if (rotation_direction == 1):
             return 'Clockwise'
+
 
 
 def cart2pol(coord=[]):
@@ -214,6 +238,7 @@ def angle_split(min_angle, max_angle, num_splits):
 
 #################### PAUSE TASK ####################################
 def pause_experiment(cfg={}):
+    print('running pause task as task')
     myWin = cfg['win']
     instruction = cfg['pause_instruction']
     counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))
@@ -226,15 +251,19 @@ def pause_experiment(cfg={}):
         myWin.flip()
     if (cfg['pause_button_wait'] == True):
         instruction_text.draw()
-        counter_text.draw()
+        if (cfg['pausetime'] > 0):
+            counter_text.draw()
         end_text.draw()
         myWin.flip()
         event.waitKeys(keyList=['space'])
 
+
 def trial_runner(cfg={}):
     try:
-        myWin=cfg['win']
-        if (cfg['trial_type'] == 'pause'):
+        myWin=cfg['win'] # excellent, all the copies in running[] are not used?
+        if (cfg['trial_type'] == 'pause'): # why does a TRIAL runner have code for a pause TASK?
+            # I'm assuming this is not used...
+            print('running pause task as trial...')
             instruction = cfg['pause_instruction']
             counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
@@ -266,8 +295,8 @@ def trial_runner(cfg={}):
     #                        return None
             return None
 
-        end_X = cfg['target_distance'] * math.cos(math.radians(cfg['target_angle']))
-        end_Y = ((cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))) - cfg['active_height']/2)*cfg['flipscreen']
+        end_X = cfg['home_pos'][0] + (cfg['target_distance'] * math.cos(math.radians(cfg['target_angle'])))
+        end_Y = (cfg['home_pos'][1] + ((cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))))) * cfg['flipscreen'] #- cfg['active_height']/2)*cfg['flipscreen']
         ### Creates Mouse object
         if (cfg['poll_type'] == 'psychopy'):
             myMouse = cfg['mouse']
@@ -639,49 +668,66 @@ def generate_rotation_list(initial, final, trials):
 def run_experiment_2(fulls, participant, experiment = {}):
     end_exp = DataFrame({})
     task_save = DataFrame({})
-    running = deepcopy(experiment['experiment'])
-    settings = deepcopy(experiment['settings'])
+    running = deepcopy(experiment['experiment']) # why copy this? set up a window, a mouse object and add those, plus a task-index to your cfg, then simply loop through the tasks, and throw that to a run-task function?
+    settings = deepcopy(experiment['settings']) # same here...
 #    participant_state = deepcopy(experiment['participant'][participant]['state'])
     cfg = {}
     #### Generate seed ####
-    participant_seed = participant + settings['experiment_folder']
+    participant_seed = participant + settings['experiment_folder'] # where is this used? seeding the random-number generator *once* is sufficient, and cleaner
     
+    
+    # the next if/else and two try/except statements should be combined in one function: 'createWorkspace' or something...
     if experiment['settings']['flipscreen'] == True:
         view_scale = [1, -1]
     else:
         view_scale = [1, 1]
+        
     try:
         addWorkSpaceLimits(experiment['settings']['screen'], cfg)
     except:
         print "Exception adding workspace limits"
+        
     try:
         Win = Window(cfg['screen_dimensions'],
                      winType=cfg['winType'],
                      colorSpace='rgb',
                      fullscr=fulls,
-                     name='MousePosition',
+                     name='MousePosition', # why is it called that?
                      color=(-1, -1, -1),
                      units='pix',
                      screen=experiment['settings']['screen'],
                      viewScale=view_scale)
 #        Win._setCurrent()
+        
+        # I would have expected a line like this: 
+        # cfg['win'] = Window(...) with the cfg being the only location to have the Window object
+        
     except:
         print "Exception creating Window"
+    
+    
     ### Configure visual feedback settings here
+    # it would also make sense to put this in a function, so that it's a separate unit
+    # I'd also put the creation of image stim objects for the icons in a separate function as well
     try:
+        # is this black arrow used?
         arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
         arrowFill = ShapeStim(win=Win,
                                      vertices=arrowFillVert,
                                      fillColor=[-1,-1,-1],
                                      size=cfg['circle_radius']*0.6,
                                      lineColor=[-1,-1,-1])
+        # or this gray one? Can we remove one?
         arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
         arrow = ShapeStim(win=Win,
                                  vertices=arrowVert,
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
                                  lineColor=[0,0,0])
+        
+        # there is no 'else' following this... don't we need to do something else?   
         if settings['custom_stim_enable'] == True:
+            # shouldn't this be in a separate function?
             custom_stim_holder = []
             icon_directory = listdir(settings['custom_stim_file'])   
             icon_directory[:] = [png for png in icon_directory if ".png" in png]
@@ -701,6 +747,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
                     target_size = [z*cfg['icon_diameter']for z in target_AR]
                     custom_target.setSize(target_size)
                 except:
+                    # what I would do if either the target or cursor can't be handled is:
+                    # 1) remove that pair from the set of possible icon-stimuli
+                    # 2) after trying all pairs: print a warning to command line that 'some' icons could not be used, removing
+                    # 3) run the experiment with only the stimuli that worked
                     custom_target = Circle(win=Win,
                                      radius=cfg['circle_radius'],
                                      edges=32,
@@ -724,7 +774,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])                                
                 custom_stim_holder.append([custom_cursor, custom_target])
-        if settings['custom_cursor_enable'] == False:
+        # the following bits of code should never be used anymore... but the experiment doesn't work if I comment them out...
+        # from here ... (to: 'to here')
+        if settings['custom_cursor_enable'] == False: # we only use 'custom_stim_enable'
             myCircle = Circle(win=Win,
                                      radius=cfg['circle_radius'],
                                      edges=32,
@@ -747,14 +799,15 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                      units='pix',
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
-        if settings['custom_home_enable'] == False:
+        if settings['custom_home_enable'] == False: # we only use 'custom_stim_enable'
             startCircle = Circle(win=Win,
                                         radius=cfg['circle_radius'],
                                         lineWidth=2,
                                         edges=32,
                                         units='pix',
                                         fillColor=[-1, -1, -1],
-                                         lineColor=[0, 0, 0])
+                                        lineColor=[0, 0, 0],
+                                        pos=cfg['home_pos']) # done
         else:
             try:
                 startCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
@@ -765,8 +818,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                         edges=32,
                                         units='pix',
                                         fillColor=[-1, -1, -1],
-                                         lineColor=[0, 0, 0])
-        if settings['custom_target_enable'] == False:
+                                        lineColor=[0, 0, 0],
+                                        pos=cfg['home_pos']) # done
+        if settings['custom_target_enable'] == False: # we only use 'custom_stim_enable'
             endCircle = Circle(win=Win,
                                       radius=cfg['circle_radius'],
                                       lineWidth=2,
@@ -785,24 +839,36 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False)
-        screen_info_monitors = screeninfo.get_monitors()
-    except Exception as e:
+        Mouse = event.Mouse(win=Win, visible=False) # this mouse object should NEVER be used, we should add an object to the cfg before we even get here
+        screen_info_monitors = screeninfo.get_monitors() # this info should only be used when setting up the workspace... not here
+
+        # to here         
+        
+    except Exception as e: # end of "configuring all visual feedback"
         print e
         print str(e)
-    for i in range (0, len(running)):
+    
+    ################ loop through tasks
+    
+    for i in range (0, len(running)): # loop through all tasks and copy all setting to new objects? even for experiment-wide settins? why...
+        # instead of using 'running[i]['flip_text'] we could just use 'experiment['settings']['flipscreen']' right?
+        # and since 'running[i]['flipscreen'] is always 1, it seems not to be useful...
         if experiment['settings']['flipscreen'] == True:
             running[i]['flipscreen'] = 1
             running[i]['flip_text'] = True
         else:
             running[i]['flipscreen'] = 1
             running[i]['flip_text'] = False
+        
+        # this should not be done for every task, but ONCE for the whole experiment
         try:
             running[i]['x11_mouse'] = myMouse()
         except:
             running[i]['poll_type'] = 'psychopy'
+        
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
+        
         if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
             running[i]['screen_on'] = 1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
@@ -812,22 +878,25 @@ def run_experiment_2(fulls, participant, experiment = {}):
         else:
             running[i]['screen_on'] = 0
             running[i]['screen_dimensions'] = cfg['screen_dimensions']
+        
+        # all of this can be solved by using a cfg object that has a task-counter or task-index, that is equal to the i that you use here in this loop...
         running[i]['custom_stim_enable'] = settings['custom_stim_enable']
         running[i]['return_movement'] = experiment['settings']['return_movement']
         running[i]['cursor_circle'] = myCircle
         running[i]['test_circle'] = testCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
-        running[i]['mouse'] = Mouse
-        running[i]['win'] = Win
+        running[i]['mouse'] = Mouse # this should come from the cfg object, and not be created many times over, also: it will now always be the psychopy mouse object, never the X11 one...
+        running[i]['win'] = Win # copying the window object this way may be the cause of window-closing problems... even if there is just 1 task, you might end up having 2 window objects
         running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
         running[i]['arrowFill_stim'] = arrowFill
         running[i]['task_num'] = i + 1
-        running[i]['max_distance'] = cfg['active_height']
-        running[i]['min_distance'] = cfg['active_height']/2
-        running[i]['active_height'] = cfg['active_height']
-        running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
+        running[i]['max_distance'] = cfg['active_height']     # why calculate these two at all?
+        running[i]['min_distance'] = cfg['active_height']/2   # it will always be 1 normalized screen unit * the target distance set by the experimenter
+        running[i]['active_height'] = cfg['active_height']    # and this will also be given in the cfg as the normalized screen unit...
+        running[i]['starting_pos'] = cfg['home_pos'] #(0, (-cfg['active_height']/2)*running[i]['flipscreen'])
+        
         running[i]['current_rotation_angle'] = 0
         if running[i]['rotation_change_type'] == 'gradual':
             rotation = generate_rotation_list(running[i]['rotation_angle'], running[i]['final_rotation_angle'], running[i]['num_trials'])
@@ -835,8 +904,11 @@ def run_experiment_2(fulls, participant, experiment = {}):
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
             targetList = [running[i]['min_angle']]
+        
+        
         #### FIRST SEED FOR TARGET ANGLES ####
-        setParticipantSeed(participant_seed + str(i))
+        setParticipantSeed(participant_seed + str(i)) # this should not be done every task, just once per experiment...
+        
         fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
         if (running[i]['trial_type'] != 'pause'):
 #            if running[i]['num_targets'] > 1:
@@ -864,7 +936,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
 #                try:
-                exp = trial_runner(running[i])
+                exp = trial_runner(running[i]) # but this runs a whole task, not a single trial, right? is the function misnamed?
            
 #                except:
 #                    print "Exception in running trial_runner function"
@@ -887,6 +959,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
         elif (running[i]['trial_type'] == 'pause'):
             running[i]['time'] = core.getTime()
             exp = trial_runner(running[i])
+            # why not run a pause task function now?
+            
 #        if (running[i]['trial_type'] != 'pause'):
 #            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
         task_save = DataFrame({})
@@ -900,20 +974,22 @@ def get_participant_state(participant, experiment = {}):
 #    tasks = []
 #    num_pause = 0
 #    for task in tasks_uncut:
-#        if task['trial_type'] != 'pause':
+#        if task['trial_type'] != 'pause':running[i]['win'] = Win # copying the window object this way may be the cause of window-closing problems...
 #            tasks.append(task)
     for task_num, task in enumerate(tasks_uncut):
         if task['trial_type'] != 'pause':
-            for i in range(0, task['num_trials']):
-                f_path = path.join("data", experiment['settings']['experiment_folder'], participant, task['task_name'] + "_" + str(i) + ".csv")
+            for trialnum in range(0, task['num_trials']):
+                f_path = path.join("data", experiment['settings']['experiment_folder'], participant, task['task_name'] + "_" + str(trialnum) + ".csv")
                 file_check = path.exists(f_path)
                 if file_check:
                     continue                
                 else:
-                    return [task_num, i]
+                    return [task_num, trialnum]
         else:
             continue
     return [len(tasks_uncut), tasks_uncut[-1]['num_trials']]
+
+
 
 def concat_full(participant, experiment = {}):
     tasks_uncut = experiment['experiment']
