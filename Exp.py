@@ -270,26 +270,31 @@ def trial_runner(cfg={}):
         myWin=cfg['win'] # excellent, all the copies in running[] are not used? oh no... cfg is now running
         if (cfg['trial_type'] == 'pause'): # why does a TRIAL runner have code for a pause TASK?
             # I'm assuming this is not used...
-            #print('running pause task as trial???')
+            print('running pause task as trial???')
             instruction = cfg['pause_instruction']
             counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
             end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=cfg['flip_text'], color=( 1, 1, 1))
 #            pyautogui.moveTo(root.winfo_screenwidth() - 50, root.winfo_screenheight() - 50)
-            pyautogui.click()
+            pyautogui.click() # does this need some coordinates?
+            counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
+            print('set up pause task variables...')
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
-                if (cfg['pausetime'] != 0):
-                    counter_text.draw()
+                counter_text.draw()
                 myWin.flip()
+            print('pause time ran out...')
             if (cfg['pause_button_wait'] == True):
+                print('waiting for SPACE bar press...')
                 instruction_text.draw()
                 if (cfg['pausetime'] != 0):
                     counter_text.draw()
                 end_text.draw()
                 myWin.flip()
                 event.waitKeys(keyList=['space'])
+                print('space pressed...')
+            print('end pause...')
                 #### IF USING PYGAME ####
     #            pev.clear()
     #            while True:
