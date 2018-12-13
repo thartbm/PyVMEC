@@ -62,6 +62,7 @@ all_files = [ ("psychopy\\preferences", preference_files),
               ("psychopy\\misc", misc_files),
               ('lib2to3', lib23_files),
               ("pandas\\_lib", pandas_libs_files),
+              'VMEC.ico'
               ]
 
 #combine the files
