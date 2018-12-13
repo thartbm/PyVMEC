@@ -67,7 +67,7 @@ class MyFrame(wx.Frame):
         
         ################### General Configuration Settings ###################
         self.general_cfg = {}
-        self.FULLSCREEN = True
+        self.FULLSCREEN = False
         self.MAX_TRIALS = 150
         self.MIN_TRIALS = 1
         self.MIN_TRIAL_BOOL = False
@@ -593,7 +593,7 @@ class MyFrame(wx.Frame):
                 self.current_experiment = load(f)
                 del self.task_list[:]
             self.task_list_box.Set(["Empty"])
-            self.experiment_holder['settings']['fullscreen'] = True
+            self.experiment_holder['settings']['fullscreen'] = False
             self.experiment_holder['settings']['flipscreen'] = False
             self.experiment_holder['settings']['return_movement'] = False
             self.experiment_holder['settings']['custom_target_enable'] = False
