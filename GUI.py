@@ -21,10 +21,10 @@ root = tk.Tk()
 class MyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
-        try:
-            self.SetIcon(wx.Icon("PyVMEC-0.9.3" + path.sep + "VMEC.ico"))
-        except:
+        if path.exists('VMEC.ico'):
             self.SetIcon(wx.Icon("VMEC.ico"))
+        elif path.exists("PyVMEC-0.9.3" + path.sep + "VMEC.ico"):
+            self.SetIcon(wx.Icon("PyVMEC-0.9.3" + path.sep + "VMEC.ico"))
         ### Gather Experiment names
         self.experiment_folder = "experiments" + path.sep
         if not(path.exists(self.experiment_folder)):

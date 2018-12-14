@@ -386,9 +386,14 @@ def trial_runner(cfg={}):
         
         
     # is this while loop creating frames and storing samples until the trial is finished?
-    
+    # why is there a limit of 2 minutes here? what happens if someone does not get to the target in 2 minutes? do they go to the next trial... it seems better to me to exit the experiment
     while (core.getTime() - cfg['time']) < 120:
         try:
+            
+            # why is this try statement here? we're immediately moving on to the next one anyway...
+            
+            
+            
             ### ESCAPE ### USING PYGAME ####
     #        event = pev.wait()
     #        if event.type == KEYDOWN:
@@ -436,10 +441,6 @@ def trial_runner(cfg={}):
                     #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
                     #vector_proj = ndarray.tolist(vector_proj_array)
                     #rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - startPos[1]], startPos, cfg['current_rotation_angle'])
-                    
-                    ################################################
-                    ## ERROR CLAMPING IS NOT WORKING....
-                    ################################################
                     
                     home_dist = get_dist(mousePos, startPos)
                     target_dist = get_dist(mousePos, endPos)
@@ -495,7 +496,6 @@ def trial_runner(cfg={}):
                         
                         # everything should be calculated relative to the home position, so that one of the first things to do on every sample is calculated the relative position of stuff
                         # where does current_pos come from... don't we need circle_pos?
-                        relPos = [current_pos[0] - startPos[0], current_pos[1] - startPos[1]]
                         relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
                         
                         orientation = -myRounder(math.degrees(cart2pol(relPos)[1]),45)
@@ -552,6 +552,8 @@ def trial_runner(cfg={}):
                         phase_1 = True
                         show_target = True
                         show_home = False
+                        if (cfg['terminal_feedback'] == True):
+                            show_cursor = False
     ################################ PHASE 2 #####################################
             if (phase_1 == True and phase_2 == False):
                 if (cfg['trial_type'] == 'cursor'):
@@ -559,26 +561,41 @@ def trial_runner(cfg={}):
                         phase_2 = True
                         show_home = True
                         show_target = False
-                    if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
+                        
+                    # this does not work according to specifications...
+                    #if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
+                    if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
                         timer = core.getTime()
                         phase_2 = True
                         show_home = True
-                        show_target = False
-                        end_point = circle_pos
+                        show_target = False # why is the target switched of now? owww... because the terminal feedback is handled by it's own loop, not in the main loop... not good
+                        #show_target = True  # it should be switched of with the feedback
+                        # no, the feedback should be just beyond the target, according to the terminal_multiplier, and this should be shown whenever people reach as far as the target is...
+                        # end_point = circle_pos
+                        
+                        relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
+                        #print(relPos)
+                        #print(cart2pol(relPos))
+                        terminal_feedback_angle = math.degrees(cart2pol(relPos)[1])
+                        terminal_distance = cfg['target_distance'] * cfg['terminal_multiplier']
+                        terminal_X = (math.cos(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[0]
+                        terminal_Y = ((math.sin(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[1]) * cfg['flipscreen']
+                        myCircle.pos = [terminal_X, terminal_Y]
+                        # the rest of the experiment should continue working while displaying this...
+                        end_point = circle_pos # this is for determining where a reach ended, and how far people have moved from it (for showing arrow feedback)
                         while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
+                            endCircle.draw()
                             myCircle.draw()
+                            
                             if (cfg['poll_type'] == 'psychopy'):
                                 timeArray.append(core.getTime() - myTime)
                                 mouseposXArray.append(myMouse.getPos()[0])
-                                #mouseposYArray.append(myMouse.getPos()[1] + cfg['active_height']/2) # why is this calculated here and not at the start of every frame?
                                 mouseposYArray.append(myMouse.getPos()[1] - startPos[1])
                             elif (cfg['poll_type'] == 'x11'):
                                 timeArray.append(myMouse.Pos()[2] - myTime)
                                 mouseposXArray.append(myMouse.Pos()[0])
-                                #mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
                                 mouseposYArray.append(myMouse.Pos()[1] - startPos[1])
                             cursorposXArray.append(rotated_X)
-                            #cursorposYArray.append(rotated_Y + cfg['active_height']/2)
                             cursorposYArray.append(rotated_Y - startPos[1])
                             myWin.flip()
                 if (cfg['trial_type'] == 'no_cursor'):
@@ -619,11 +636,21 @@ def trial_runner(cfg={}):
                             show_home = True
                             show_cursor = False
                             show_target = False
-                    elif (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
+                    #elif (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
+                    # why is the logic for terminal feedback implemented twice?
+                    elif (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
                         timer = core.getTime()
                         phase_2 = True
                         show_home = True
                         show_target = False
+                        relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
+                        #print(relPos)
+                        #print(cart2pol(relPos))
+                        terminal_feedback_angle = math.degrees(cart2pol(relPos)[1])
+                        terminal_distance = cfg['target_distance'] * cfg['terminal_multiplier']
+                        terminal_X = (math.cos(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[0]
+                        terminal_Y = ((math.sin(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[1]) * cfg['flipscreen']
+                        myCircle.pos = [terminal_X, terminal_Y]
                         end_point = circle_pos
                         while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
                             myCircle.draw()
@@ -843,6 +870,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 custom_stim_holder.append([custom_cursor, custom_target])
         # the following bits of code should never be used anymore... but the experiment doesn't work if I comment them out...
         # from here ... (to: 'to here')
+        
         #print('using obsolete custom cursor/target/home settings?')
         if settings['custom_cursor_enable'] == False: # we only use 'custom_stim_enable'
             myCircle = Circle(win=Win,
@@ -979,7 +1007,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
         
         #### FIRST SEED FOR TARGET ANGLES ####
         #print('seeding random number generator?')
-        setParticipantSeed(participant_seed + str(i)) # this should not be done every task, just once per experiment...
+        setParticipantSeed(participant_seed + str(i)) # this should not be done every task or trial, just once per experiment/participant, otherwise stuff is not reproducible
         
         fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
         if (running[i]['trial_type'] != 'pause'):
@@ -995,6 +1023,8 @@ def run_experiment_2(fulls, participant, experiment = {}):
 #                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + running[i]['rotation_direction']
 #                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
 #                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
+                
+                # deciding the rotation angle this way sounds like a lot of work, in order to store it in a way that is hard to retrieve later on?
                 if (running[i]['rotation_change_type'] == 'gradual'):
                     running[i]['current_rotation_angle'] = rotation[trial_num]
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
@@ -1008,7 +1038,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
 #                try:
-                exp = trial_runner(running[i]) # but this runs a whole task, not a single trial, right? is the function misnamed?
+                exp = trial_runner(running[i]) # but this runs a whole task, not a single trial, right? since we are going from the experiment runner straight to task... is the function misnamed or is the code not organized?
            
 #                except:
 #                    print "Exception in running trial_runner function"
@@ -1017,7 +1047,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
 #                    experiment['participant'][participant]['angles'] = targetList
 #                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return DataFrame({})
-                else:           
+                else:
+                    # is this where the data is saved?
+                    # would make more sense to me to do that in the trial function, as it is the trial data that is being stored?
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     task_save = concat([task_save, df_exp])
@@ -1025,7 +1057,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
 #                    experiment['participant'][participant]['angles'] = targetList
 #                    experiment['participant'][participant]['state'] = [i, trial_num]
 #                    targetList.remove(chosen_target)
+                    
+                    
                     with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
+                        # the experiment settings are stored after every trial?
                         dump(experiment, f)
                         f.close()
         elif (running[i]['trial_type'] == 'pause'):

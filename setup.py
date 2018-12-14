@@ -105,7 +105,7 @@ setup(
             "excludes":["gevent._socket3"],
             "skip_archive": True,
             "optimize": 2,
-            "dist_dir": "PyVMEC-0.9.3"
+            "dist_dir": "PyVMEC"
             }
     },
     console=['PyVMEC.py'],
