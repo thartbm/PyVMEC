@@ -25,6 +25,7 @@ class MyFrame(wx.Frame):
             self.SetIcon(wx.Icon("VMEC.ico"))
         elif path.exists("PyVMEC-0.9.3" + path.sep + "VMEC.ico"):
             self.SetIcon(wx.Icon("PyVMEC-0.9.3" + path.sep + "VMEC.ico"))
+        
         ### Gather Experiment names
         self.experiment_folder = "experiments" + path.sep
         if not(path.exists(self.experiment_folder)):
@@ -37,18 +38,21 @@ class MyFrame(wx.Frame):
             self.experiment_list_trimmed.append(i.replace(".json", ""))
         if len(self.experiment_list_trimmed) == 0:
             self.experiment_list_trimmed = ["Empty"]
+        
         ### Tasks
         self.task_list = ['None']
         self.participant_list = []
         self.participant_list_trimmed = []
         self.key_list = ['terminal_multiplier', 'pause_button_wait', 'terminal_feedback', 'pausetime', 'pause_instruction', 'rotation_direction']
         self.def_list = [0, 1.025, False, False, 5, "", 1]
+        
         ### Current Experiment
         self.current_experiment = []
         self.current_experiment_name = ""
         self.highlit_experiment = ""
         self.experiment_holder = {'experiment': self.current_experiment, 'settings':{}}
         self.participant_markers = {0:[], 1:[], 2:[], 3:[]}
+        
         ### Current Task
         self.highlit_task = ""
         self.highlit_task_num = 0
@@ -64,6 +68,7 @@ class MyFrame(wx.Frame):
         self.rotation_angle_list = ["0" , "30", "45", "60", "75"]
         self.highlit_group = ""
         self.highlit_participant = ""
+        
         ######################## VALID TEXT STUFF ##############################
 #        self.valid_lag_text = ""    
         self.valid_pause_text = ""
@@ -77,6 +82,7 @@ class MyFrame(wx.Frame):
         self.MIN_TRIAL_BOOL = False
         self.DEFAULT_FRAME_SIZE = ((748, 649))
         self.PAUSE_FRAME_SIZE = ((566, 649))
+        
         ######################################################################
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
@@ -160,7 +166,7 @@ class MyFrame(wx.Frame):
 
         self.__set_properties()
         self.__do_layout()
-
+        
         self.Bind(wx.EVT_BUTTON, self.New_Press, self.New_Button)
         self.Bind(wx.EVT_BUTTON, self.Delete_Press, self.Delete_Button)
         self.Bind(wx.EVT_BUTTON, self.Load_Press, self.Load_Button)
@@ -212,7 +218,7 @@ class MyFrame(wx.Frame):
         # begin wxGlade: MyFrame.__set_properties
         self.SetTitle(("PyVMEC"))
 #        self.SetSize((798, 462)) ## Set size to this when Pause is selected
-        self.SetSize(self.DEFAULT_FRAME_SIZE)
+        #self.SetSize(self.DEFAULT_FRAME_SIZE)
         self.Experiment_statictext.SetMinSize((70, 17))
         self.staticline_1.SetMinSize((175, 22))
         self.exp_list_box.SetMinSize((175, 150))
@@ -269,100 +275,163 @@ class MyFrame(wx.Frame):
 
     def __do_layout(self):
 #        # begin wxGlade: MyFrame.__do_layout
-        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_11 = wx.BoxSizer(wx.VERTICAL)
-        sizer_7 = wx.BoxSizer(wx.VERTICAL)
-        sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_9 = wx.BoxSizer(wx.VERTICAL)
-        sizer_10 = wx.BoxSizer(wx.VERTICAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_2 = wx.BoxSizer(wx.VERTICAL)
-        sizer_12 = wx.BoxSizer(wx.VERTICAL)
-        sizer_13 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_task_arrows = wx.BoxSizer(wx.VERTICAL)
-        sizer_2.Add(self.Experiment_statictext, 0, wx.EXPAND, 0)
-        sizer_2.Add(self.staticline_1, 0, wx.BOTTOM, 5)
-        sizer_2.Add(self.experiment_settings_Button, 0, wx.RIGHT, 1)
-        sizer_2.Add(self.exp_list_box, 0, wx.RIGHT, 1)
-        sizer_5.Add(self.New_Button, 0, wx.ALL, 2)
-        sizer_5.Add(self.rename_experiment_button, 0, wx.ALL, 2)
-        sizer_5.Add(self.Delete_Button, 0, wx.ALL, 2)
-        sizer_2.Add(sizer_5, 0, 0, 0)
-        sizer_2.Add(self.duplicate_experiment_Button, 0, wx.ALL, 0)
-        sizer_13.Add(self.Load_Button, 0, wx.ALL, 2)
-        sizer_13.Add(self.Save_Button, 0, wx.ALL, 2)
-        sizer_12.Add(sizer_13, 1, wx.ALL, 1)
-        sizer_12.Add(self.Run_Button, 0, wx.ALL, 1)
-        sizer_2.Add(sizer_12, 1, 0, 0)
-#        sizer_2.Add(self.group_listbox_staticline, 0, wx.BOTTOM, 0)
-#        sizer_2.Add(self.group_listbox_statictext, 0, wx.EXPAND, 0)
-#        sizer_2.Add(self.group_listbox, 0, wx.RIGHT, 1)
-        sizer_2.Add(self.preprocess_Button, 0, wx.RIGHT, 1)     
-        sizer_1.Add(sizer_2, 1, 0, 0)
-        sizer_3.Add(self.Task_statictext, 0, wx.EXPAND, 0)
-        sizer_3.Add(self.static_line2, 0, wx.BOTTOM, 5)
-        sizer_3.Add(self.task_list_box, 0, wx.LEFT, 1)
-        sizer_4.Add(self.Plus_Button, 0, wx.ALL, 2)
-        sizer_4.Add(self.rename_task_button, 0, wx.ALL, 2)
-        sizer_4.Add(self.Minus_Button, 0, wx.ALL, 2)
-        sizer_3.Add(sizer_4, 1, 0, 0)
-        sizer_3.Add(self.duplicate_task_Button, 0, wx.ALL, 2)
-        sizer_3.Add(self.participants_staticline, 0, wx.BOTTOM, 5)
-        sizer_3.Add(self.participants_statictext, 0, wx.EXPAND, 0)
-        sizer_3.Add(self.participants_list_box, 0, wx.RIGHT, 1)
-        sizer_3.Add(self.continue_Button, 0, wx.RIGHT, 1)
-        sizer_3.Add(self.recombine_Button,0, wx.RIGHT, 1)
-        sizer_1.Add(sizer_3, 1, 0, 0)
-        sizer_task_arrows.Add(self.Move_Up_Button, 0, wx.TOP, 140)
-        sizer_task_arrows.Add(self.Move_Down_Button, 0, 0, 0)
-        sizer_1.Add(sizer_task_arrows, 1, 0, 0)
-        sizer_10.Add(self.radio_box_1, 0, 0, 0)
-        sizer_10.Add(self.static_line_3, 0, wx.BOTTOM, 2)
-        sizer_10.Add(self.min_angle_statictext, 0, 0, 0)
-        sizer_10.Add(self.min_angle_CB, 0, wx.EXPAND, 0)
-        sizer_10.Add(self.min_max_staticline, 0, wx.BOTTOM, 2)
-        sizer_10.Add(self.max_angle_statictext, 0, 0, 0)
-        sizer_10.Add(self.max_angle_CB, 0, wx.EXPAND, 0)
-        sizer_10.Add(self.max_arrow_staticline, 0, wx.BOTTOM, 2)
-        sizer_10.Add(self.target_distance_txt, 0, 0, 0)
-        sizer_10.Add(self.target_distance_slider, 0, wx.EXPAND, 0)
-        sizer_10.Add(self.target_distance_staticline, 0, wx.BOTTOM, 2)
-        sizer_10.Add(self.pause_static_text, 0, 0, 0)
-        sizer_10.Add(self.pause_txt, 0, 0, 0)
-        sizer_10.Add(self.PM_static_text, 0, 0, 0)
-        sizer_10.Add(self.pause_message_txt, 0, 0, 0)
-        sizer_10.Add(self.pause_check, 0, 0, 0)
-        sizer_8.Add(sizer_10, 1, 0, 0)
-        sizer_9.Add(self.num_target_statictext, 0, wx.LEFT, 2)
-        sizer_9.Add(self.num_targ_CB, 0, wx.LEFT, 2)
-        sizer_9.Add(self.num_targets_staticline, 0, wx.BOTTOM, 2)
-        sizer_9.Add(self.num_trials_statictext, 0, wx.LEFT, 2)
-        sizer_9.Add(self.num_trial_CB, 0, wx.LEFT, 2)
-        sizer_9.Add(self.num_trials_staticline, 0, wx.BOTTOM, 2)
-        sizer_9.Add(self.Rotation_angle_statictext, 0, wx.LEFT, 2)
-        sizer_9.Add(self.Rotation_angle_slider, 0, wx.EXPAND, 2)
-        sizer_9.Add(self.Rotation_angle_end_statictext, 0, wx.LEFT, 2)
-        sizer_9.Add(self.Rotation_angle_end_slider, 0, wx.EXPAND, 2)
         
-        sizer_9.Add(self.rotation_angle_staticline, 0, wx.BOTTOM, 2)
+        # 0, wx.EXPAND | wx.ALL, 5
+
+        ### FIRST COLUMN IN GUI
+        
+        # has load/save buttons for experiments
+        sizer_13 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_13.Add(self.Load_Button, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_13.Add(self.Save_Button, 0, wx.EXPAND | wx.ALL, 5)
+        
+        # has load/save buttons + the run button below it
+        sizer_12 = wx.BoxSizer(wx.VERTICAL)
+        sizer_12.Add(sizer_13, 0, wx.EXPAND | wx.ALL, 0)
+        sizer_12.Add(self.Run_Button, 0, wx.EXPAND | wx.ALL, 5)
+        
+        # has new / rename / delete buttons (for experiments?)
+        sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_5.Add(self.New_Button, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_5.Add(self.rename_experiment_button, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_5.Add(self.Delete_Button, 0, wx.EXPAND | wx.ALL, 5)
+        
+        # is this the sizer that has all the list of experiments?
+        sizer_2 = wx.BoxSizer(wx.VERTICAL)
+        
+        # add some pre-defined buttons / lists
+        sizer_2.Add(self.Experiment_statictext, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_2.Add(self.staticline_1, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_2.Add(self.experiment_settings_Button, 0, wx.EXPAND | wx.RIGHT, 5)
+        sizer_2.Add(self.exp_list_box, 0, wx.EXPAND | wx.RIGHT, 5)
+        
+        # add new / rename / delete and duplicate buttons
+        sizer_2.Add(sizer_5, 0, wx.EXPAND | wx.ALL, 0)
+        sizer_2.Add(self.duplicate_experiment_Button, 0, wx.EXPAND | wx.ALL, 5)
+        # add run sizer with run button
+        sizer_2.Add(sizer_12, 0, wx.EXPAND | wx.ALL, 0)
+        
+        
+        ### SECOND COLUMN IN GUI
+        
+        # is this the sizer with the task and participant list?
+        sizer_3 = wx.BoxSizer(wx.VERTICAL)
+        
+        sizer_3.Add(self.Task_statictext, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_3.Add(self.static_line2, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_3.Add(self.task_list_box, 0, wx.EXPAND | wx.LEFT, 5)
+        
+        # sizer for new / rename / delete task buttons
+        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_4.Add(self.Plus_Button, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_4.Add(self.rename_task_button, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_4.Add(self.Minus_Button, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_3.Add(sizer_4, 0, wx.EXPAND | wx.ALL, 0)
+        # also add duplicate button for tasks:
+        sizer_3.Add(self.duplicate_task_Button, 0, wx.EXPAND | wx.ALL, 5)        
+
+
+        # THIRD COLUMN for GUI:
+        
+        # sizer for task up/down arrows
+        sizer_task_arrows = wx.BoxSizer(wx.VERTICAL)
+        sizer_task_arrows.Add(self.Move_Up_Button, 0, 45 | wx.ALL, 5)
+        sizer_task_arrows.Add(self.Move_Down_Button, 0, 45 | wx.ALL, 5)
+        
+        
+        # FOURTH COLUMN for GUI:
+        # first column with task settings
+        sizer_10 = wx.BoxSizer(wx.VERTICAL)
+        sizer_10.Add(self.radio_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.static_line_3, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.min_angle_statictext, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.min_angle_CB, 0, wx.EXPAND, 0)
+        sizer_10.Add(self.min_max_staticline, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_10.Add(self.max_angle_statictext, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.max_angle_CB, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.max_arrow_staticline, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.target_distance_txt, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.target_distance_slider, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.target_distance_staticline, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.pause_static_text, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.pause_txt, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.PM_static_text, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.pause_message_txt, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_10.Add(self.pause_check, 0, wx.EXPAND | wx.ALL, 5)
+        
+        # FIFTH COLUMN in GUI?
+        sizer_9 = wx.BoxSizer(wx.VERTICAL)
+        sizer_9.Add(self.num_target_statictext, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.num_targ_CB, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.num_targets_staticline, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_9.Add(self.num_trials_statictext, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.num_trial_CB, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.num_trials_staticline, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_9.Add(self.Rotation_angle_statictext, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.Rotation_angle_slider, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_9.Add(self.Rotation_angle_end_statictext, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.Rotation_angle_end_slider, 0, wx.EXPAND | wx.ALL, 5)        
+        sizer_9.Add(self.rotation_angle_staticline, 0, wx.EXPAND | wx.ALL, 5)
 #        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
-        sizer_9.Add(self.rot_change_statictext, 0, wx.LEFT, 2)
-        sizer_9.Add(self.rotation_change_staticline, 0, wx.BOTTOM, 2)
+        sizer_9.Add(self.rot_change_statictext, 0, wx.EXPAND | wx.LEFT, 5)
+        sizer_9.Add(self.rotation_change_staticline, 0, wx.EXPAND | wx.BOTTOM, 5)
 #        sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
 #        sizer_9.Add(self.lag_txt, 0, wx.LEFT, 2)
-        sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.BOTTOM, 2)
-        sizer_9.Add(self.terminalfeedback_Radio, 0, wx.LEFT, 2)
-        sizer_8.Add(sizer_9, 1, 0, 0)
-        sizer_1.Add(sizer_8, 1, wx.LEFT, 10)
+        sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_9.Add(self.terminalfeedback_Radio, 0, wx.EXPAND | wx.LEFT, 5)
+        
+        
+        # combine both task setting columns into 1 sizer?
+        sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_8.Add(sizer_10, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_8.Add(sizer_9, 0, wx.EXPAND | wx.ALL, 5)
+        
+        
+        # lag settings (invisible for now):
+        sizer_7 = wx.BoxSizer(wx.VERTICAL)
 #        sizer_7.Add(self.lag_static_text, 0, 0, 0)
 #        sizer_7.Add(self.lag_txt, 0, 0, 0)
-        sizer_6.Add(sizer_7, 1, 0, 0)
+        
+        # sizer with nothing?
+        sizer_11 = wx.BoxSizer(wx.VERTICAL)
+        
+        sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_6.Add(sizer_7, 0, wx.EXPAND | wx.ALL, 0)
+        sizer_6.Add(sizer_11, 0, wx.EXPAND | wx.ALL, 0)
+        
+        
+        # new sizer for participant list and pre-processing button:
+        participant_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        participant_sizer.Add(self.participants_staticline, 0, wx.EXPAND | wx.BOTTOM, 5)
+        participant_sizer.Add(self.participants_statictext, 0, wx.EXPAND | wx.ALL, 5)
+        participant_sizer.Add(self.participants_list_box, 0, wx.EXPAND | wx.RIGHT, 5)
+        participant_sizer.Add(self.continue_Button, 0, wx.EXPAND | wx.RIGHT, 5)
+        participant_sizer.Add(self.recombine_Button, 0, wx.EXPAND | wx.RIGHT, 5)
+        
+        # maybe there should be a divider here, or some static text?
+        
+        # add pre-process button here too
+        participant_sizer.Add(self.preprocess_Button, 0, wx.EXPAND | wx.RIGHT, 5)
 
-        sizer_6.Add(sizer_11, 1, 0, 0)
-        sizer_1.Add(sizer_6, 1, 0, 0)
+        
+        # is this the main sizer, containing the 4 or 5 columns of the GUI?
+        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+        # add first column to main GUI (experiment buttons and list)
+        sizer_1.Add(sizer_2, 1, 0, 0)
+        # add second column to main GUI (task buttons and list.. and for now the participant list plus buttons)
+        sizer_1.Add(sizer_3, 1, 0, 0)
+        # add task re-orderinf buttons:
+        sizer_1.Add(sizer_task_arrows, 0, 0, 0)
+        # add both task settings columns?
+        sizer_1.Add(sizer_8, 2, wx.LEFT, 10)
+
+        sizer_1.Add(sizer_6, 1, 0, 0) # this can probably be left out...
+        
+        sizer_1.Add(participant_sizer, 1, 0, 0)
+        
+        sizer_1.Fit (self)
+        
         self.SetSizer(sizer_1)
         self.Layout()
         
@@ -413,7 +482,8 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Hide()
         self.pause_message_txt.Hide()
         self.pause_check.Hide()
-        self.SetSize(self.DEFAULT_FRAME_SIZE)
+        #self.SetSize(self.DEFAULT_FRAME_SIZE)
+        
     
     def pause_experiment_show(self):
         ### Right most widgets ###
@@ -450,7 +520,7 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Show()
         self.pause_message_txt.Show()
         self.pause_check.Show()
-        self.SetSize(self.PAUSE_FRAME_SIZE)  
+        #self.SetSize(self.PAUSE_FRAME_SIZE)  
         
         
     def list_box_dclick(self, event):
