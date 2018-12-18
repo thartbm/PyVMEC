@@ -10,7 +10,7 @@ A Python-based GUI to create and run visuo-motor experiments.
 
 ## Dependencies:
 
-`pip install -U numpy scipy pandas six psychopy==2.85.3 pyglet==1.3.0`
+`pip install -U numpy scipy pandas six psychopy==1.85.3 pyglet==1.3.0`
 
 `pip install json_tricks configobj screeninfo pyautogui`
 
