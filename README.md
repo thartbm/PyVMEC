@@ -8,6 +8,8 @@ A Python-based GUI to create and run visuo-motor experiments.
 (Download wxPython3.0-win64-3.0.2.0-py27.exe and run)
   For Linux: wxpython 3.0.2 available as default version through apt / synaptic package installer on Debian based distributions.
 
+(Possibly also needed: wxgtk3.0, wxtools, python-xlib)
+
 ## Dependencies:
 
 `pip install -U numpy scipy pandas six psychopy==1.85.3 pyglet==1.3.0`
