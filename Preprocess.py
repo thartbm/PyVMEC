@@ -273,7 +273,7 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
                 data_matrix[idx_1].append(dv_column[idx_1])
     ############ Standard Deviation & Average In Participants #################
     tmp_data = []
-    fields_block.extend(["Participants Average", "Participants Standard Deviation"])
+    fields_block.extend(["average", "sd"])
     for row in array(data_matrix):
         participant_average = nanmean(row[2:].astype(float))
         participant_std = nanstd(row[2:].astype(float), ddof=1)
