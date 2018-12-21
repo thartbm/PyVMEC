@@ -232,8 +232,8 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     tmp_data = []
     fields_trial.extend(["average", "sd"])
     for row in array(data_matrix):
-        participant_average = nanmean(row[3:].astype(float))
-        participant_std = nanstd(row[3:].astype(float), ddof=1)
+        participant_average = nanmean(row[4:].astype(float))
+        participant_std = nanstd(row[4:].astype(float), ddof=1)
         row = row.tolist()
         row.append('%.2f'%(float(participant_average)))
         row.append('%.2f'%(float(participant_std)))
@@ -272,11 +272,11 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
             for idx_1, row in enumerate(data_matrix):
                 data_matrix[idx_1].append(dv_column[idx_1])
     ############ Standard Deviation & Average In Participants #################
-    tmp_data = []
-    fields_block.extend(["average", "sd"])
+    tmp_data = [] # this will be outputted but in 'output_matrix'
+    fields_block.extend(["average", "sd"]) # this only adds column names to a list of strings
     for row in array(data_matrix):
-        participant_average = nanmean(row[2:].astype(float))
-        participant_std = nanstd(row[2:].astype(float), ddof=1)
+        participant_average = nanmean(row[3:].astype(float))
+        participant_std = nanstd(row[3:].astype(float), ddof=1)
         row = row.tolist()
         row.append('%.2f'%(float(participant_average)))
         row.append('%.2f'%(float(participant_std)))
@@ -335,13 +335,14 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
     tmp_data = []
     fields_target.extend(["average", "sd"])
     for row in array(data_matrix):
-        participant_average = nanmean(row[3:].astype(float))
-        participant_std = nanstd(row[3:].astype(float), ddof=1)
+        participant_average = nanmean(row[4:].astype(float))
+        participant_std = nanstd(row[4:].astype(float), ddof=1)
         row = row.tolist()
         row.append('%.2f'%(float(participant_average)))
         row.append('%.2f'%(float(participant_std)))
         tmp_data.append(row)
     output_matrix.append(deepcopy(tmp_data))
+    
     ##### OUTPUT MATRIX FORM ###############################################
     #[participants by trial, participants by block, participants by target]#
     ########################################################################self.participant_list
