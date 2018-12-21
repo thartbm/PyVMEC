@@ -79,7 +79,7 @@ setup(
     
     options = {
         "py2exe": {
-            "bundle_files": 1,
+            #"bundle_files": 1,
             "includes": ["pandas",
                          "pyautogui",
                          "psychopy",
