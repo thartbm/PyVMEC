@@ -113,10 +113,10 @@ setup(
     data_files = all_files,
 
 
-    windows = [{
-        "script":"PyVMEC.py",
-        "icon_resources": [(1, "VMEC.ico")],
-        }],
+  #  windows = [{
+  #      "script":"PyVMEC.py",
+  #      "icon_resources": [(1, "VMEC.ico")],
+  #      }],
 
        )
 
