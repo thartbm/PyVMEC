@@ -155,14 +155,7 @@ class MyFrame(wx.Frame):
         self.pause_check = wx.CheckBox(self, wx.ID_ANY, ("Space to continue"))
         self.target_distance_txt = wx.StaticText(self, wx.ID_ANY, ("Target Distance %"))
         self.target_distance_slider = wx.Slider(self, wx.ID_ANY, minValue = 50, maxValue = 100, value=100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
-        
-        # Hide pause stuff
-        self.pause_static_text.Hide()
-        self.pause_txt.Hide()
-        self.PM_static_text.Hide()
-        self.pause_message_txt.Hide()
-        self.pause_check.Hide()
-        
+                
 
         self.__set_properties()
         self.__do_layout()
@@ -216,63 +209,78 @@ class MyFrame(wx.Frame):
         
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
+        
         self.SetTitle(("PyVMEC"))
 #        self.SetSize((798, 462)) ## Set size to this when Pause is selected
         #self.SetSize(self.DEFAULT_FRAME_SIZE)
+        
+        # Experiment stuff
         self.Experiment_statictext.SetMinSize((70, 17))
-        self.staticline_1.SetMinSize((175, 22))
+        self.staticline_1.SetMinSize((175, 1))
         self.exp_list_box.SetMinSize((175, 250)) ################################
         self.exp_list_box.SetSelection(0)
-        self.participants_list_box.SetMinSize((175,350)) #################################
-        self.participants_list_box.SetSelection(0)
-        self.participants_staticline.SetMinSize((175, 10))
         self.Run_Button.SetMinSize((175, 29))
         self.duplicate_experiment_Button.SetMinSize((175, 29))
-        self.duplicate_task_Button.SetMinSize((175, 29))
-        self.continue_Button.SetMinSize((175, 29))
-        self.recombine_Button.SetMinSize((175, 29))
-        self.preprocess_Button.SetMinSize((175, 29))
-        self.experiment_settings_Button.SetMinSize((175, 29))
         self.Save_Button.SetMinSize((85, 29))
         self.rename_experiment_button.SetMinSize((55, 29))
-        self.rename_task_button.SetMinSize((55, 29))        
-        self.continue_Button.Disable()
-        self.recombine_Button.Disable()
-        self.Rotation_angle_end_slider.Disable()
-        self.Rotation_angle_end_statictext.Disable()
+        
         
         self.New_Button.SetMinSize((55, 29))
         self.Delete_Button.SetMinSize((55, 29))
         self.Load_Button.SetMinSize((85, 29))
-
-        self.Plus_Button.SetMinSize((55, 29))
-        self.Minus_Button.SetMinSize((55, 29))        
-#        self.group_listbox_staticline.SetMinSize((175, 22))
-        self.static_line2.SetMinSize((175, 22))
-        self.min_max_staticline.SetMinSize((175, 22))
-        self.static_line_3.SetMinSize((175, 22))
-        self.max_arrow_staticline.SetMinSize((175, 22))  
-        self.num_targets_staticline.SetMinSize((175, 22))
-        self.num_trials_staticline.SetMinSize((175, 22))
-        self.rotation_angle_staticline.SetMinSize((175, 22))
-        self.rotation_change_staticline.SetMinSize((175, 22))
-        self.terminalfeedback_Radio_staticline.SetMinSize((175, 22))
         
+        
+        # Participant stuff
+        self.participants_list_box.SetMinSize((175,350)) #################################
+        self.participants_list_box.SetSelection(0)
+        self.participants_staticline.SetMinSize((175, 1))
+        self.continue_Button.SetMinSize((175, 29))
+        self.recombine_Button.SetMinSize((175, 29))
+        self.recombine_Button.Disable()
+        self.preprocess_Button.SetMinSize((175, 29))
+        
+        # Task list stuff
         self.task_list_box.SetMinSize((175, 320))   ##############################################
         self.task_list_box.SetSelection(0)
+        self.duplicate_task_Button.SetMinSize((175, 29))
+        self.experiment_settings_Button.SetMinSize((175, 29))
+        self.rename_task_button.SetMinSize((55, 29))        
+        self.continue_Button.Disable()
+        self.Rotation_angle_end_slider.Disable()
+        self.Rotation_angle_end_statictext.Disable()
+        self.Plus_Button.SetMinSize((55, 29))
+        self.Minus_Button.SetMinSize((55, 29))        
+        
+        # Task properties panels stuff
+#        self.group_listbox_staticline.SetMinSize((175, 22))
+        self.static_line2.SetMinSize((175, 1))
+        self.min_max_staticline.SetMinSize((175, 1))
+        self.static_line_3.SetMinSize((175, 22))
+        self.max_arrow_staticline.SetMinSize((175, 1))  
+        self.num_targets_staticline.SetMinSize((175, 1))
+        self.num_trials_staticline.SetMinSize((175, 1))
+        self.rotation_angle_staticline.SetMinSize((175, 1))
+        self.rotation_change_staticline.SetMinSize((175, 1))
+        self.terminalfeedback_Radio_staticline.SetMinSize((175, 1))
+        
 #        self.group_listbox.SetMinSize((175,166))
         self.radio_box_1.SetSelection(0)
         self.Move_Up_Button.SetMinSize((30, 30))
         self.Move_Down_Button.SetMinSize((30, 30))
+        self.num_targ_CB.SetMinSize((175, 29))
         self.num_targ_CB.SetSelection(-1)
 #        self.num_trial_CB.SetSelection(-1)
 #        self.Rotation_angle_CB.SetSelection(-1)
         self.rot_change_statictext.SetSelection(0)
+        self.num_trial_CB.SetMinSize((175,29))        
+
         ### Pause stuff
         self.pause_txt.SetMinSize((175,29))
         self.pause_message_txt.SetMinSize((175,29))
         # end wxGlade
-
+                
+        
+        
     def __do_layout(self):
 #        # begin wxGlade: MyFrame.__do_layout
         
@@ -343,42 +351,57 @@ class MyFrame(wx.Frame):
         # first column with task settings
         sizer_10 = wx.BoxSizer(wx.VERTICAL)
         sizer_10.Add(self.radio_box_1, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.static_line_3, 0, wx.EXPAND | wx.ALL, 3)
+        sizer_10.Add(self.static_line_3, 0, wx.EXPAND | wx.ALL, 5)
+
+        sizer_10.Add(self.num_target_statictext, 0, wx.EXPAND | wx.LEFT, 3)
+        sizer_10.Add(self.num_targ_CB, 0, wx.EXPAND | wx.LEFT, 3)
+
         sizer_10.Add(self.min_angle_statictext, 0, wx.EXPAND | wx.ALL, 3)
         sizer_10.Add(self.min_angle_CB, 0, wx.EXPAND, 3)
-        sizer_10.Add(self.min_max_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
+        #sizer_10.Add(self.min_max_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
         sizer_10.Add(self.max_angle_statictext, 0, wx.EXPAND | wx.ALL, 3)
         sizer_10.Add(self.max_angle_CB, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.max_arrow_staticline, 0, wx.EXPAND | wx.ALL, 0)
+        #sizer_10.Add(self.max_arrow_staticline, 0, wx.EXPAND | wx.ALL, 0)
         sizer_10.Add(self.target_distance_txt, 0, wx.EXPAND | wx.ALL, 3)
         sizer_10.Add(self.target_distance_slider, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.target_distance_staticline, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.pause_static_text, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.pause_txt, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.PM_static_text, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.pause_message_txt, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_10.Add(self.pause_check, 0, wx.EXPAND | wx.ALL, 3)
+        #sizer_10.Add(self.target_distance_staticline, 0, wx.EXPAND | wx.ALL, 3)
+        
+        
+        # Add pause task stuff here?
+        #sizer_10.Add(self.pause_static_text, 0, 0, 0)
+        #sizer_10.Add(self.pause_txt, 0, 0, 0)
+        #sizer_10.Add(self.PM_static_text, 0, 0, 0)
+        #sizer_10.Add(self.pause_message_txt, 0, 0, 0)
+        #sizer_10.Add(self.pause_check, 0, 0, 0)
+        
         
         # FIFTH COLUMN in GUI?
         sizer_9 = wx.BoxSizer(wx.VERTICAL)
-        sizer_9.Add(self.num_target_statictext, 0, wx.EXPAND | wx.LEFT, 3)
-        sizer_9.Add(self.num_targ_CB, 0, wx.EXPAND | wx.LEFT, 3)
-        sizer_9.Add(self.num_targets_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
+        #sizer_9.Add(self.num_target_statictext, 0, wx.EXPAND | wx.LEFT, 3)
+        #sizer_9.Add(self.num_targ_CB, 0, wx.EXPAND | wx.LEFT, 3)
+        #sizer_9.Add(self.num_targets_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
         sizer_9.Add(self.num_trials_statictext, 0, wx.EXPAND | wx.LEFT, 3)
         sizer_9.Add(self.num_trial_CB, 0, wx.EXPAND | wx.LEFT, 3)
-        sizer_9.Add(self.num_trials_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
+        #sizer_9.Add(self.num_trials_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
         sizer_9.Add(self.Rotation_angle_statictext, 0, wx.EXPAND | wx.LEFT, 3)
         sizer_9.Add(self.Rotation_angle_slider, 0, wx.EXPAND | wx.ALL, 3)
         sizer_9.Add(self.Rotation_angle_end_statictext, 0, wx.EXPAND | wx.LEFT, 3)
         sizer_9.Add(self.Rotation_angle_end_slider, 0, wx.EXPAND | wx.ALL, 3)        
-        sizer_9.Add(self.rotation_angle_staticline, 0, wx.EXPAND | wx.ALL, 0)
+        #sizer_9.Add(self.rotation_angle_staticline, 0, wx.EXPAND | wx.ALL, 0)
 #        sizer_9.Add(self.rotation_angle_direction, 0, wx.LEFT, 2)
         sizer_9.Add(self.rot_change_statictext, 0, wx.EXPAND | wx.LEFT, 3)
-        sizer_9.Add(self.rotation_change_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
+        #sizer_9.Add(self.rotation_change_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
 #        sizer_9.Add(self.lag_static_text, 0, wx.LEFT, 2)
 #        sizer_9.Add(self.lag_txt, 0, wx.LEFT, 2)
-        sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
+        #sizer_9.Add(self.terminalfeedback_Radio_staticline, 0, wx.EXPAND | wx.BOTTOM, 0)
         sizer_9.Add(self.terminalfeedback_Radio, 0, wx.EXPAND | wx.LEFT, 3)
+        
+        # Add pause task stuff here?
+        sizer_9.Add(self.pause_static_text, 0, 0, 0)
+        sizer_9.Add(self.pause_txt, 0, 0, 0)
+        sizer_9.Add(self.PM_static_text, 0, 0, 0)
+        sizer_9.Add(self.pause_message_txt, 0, 0, 0)
+        sizer_9.Add(self.pause_check, 0, 0, 0)
         
         
         # combine both task setting columns into 1 sizer?
@@ -434,6 +457,14 @@ class MyFrame(wx.Frame):
         
         self.SetSizer(sizer_1)
         self.Layout()
+        
+        # Now hide the Puase stuff?
+        self.pause_static_text.Hide()
+        self.pause_txt.Hide()
+        self.PM_static_text.Hide()
+        self.pause_message_txt.Hide()
+        self.pause_check.Hide()
+        
         
     def regular_experiment_show(self):
         ### Right most widgets ###
@@ -1096,7 +1127,7 @@ class MyFrame(wx.Frame):
         event.Skip()
 
     def rot_angle_choose(self, event):  # wxGlade: MyFrame.<event_handler>
-        self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 5)
+        self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 1)
         self.Rotation_angle_slider.SetValue(self.rotation_angle_chosen)
         self.current_experiment[self.highlit_task_num]['rotation_angle'] = self.rotation_angle_chosen
         
@@ -1112,7 +1143,7 @@ class MyFrame(wx.Frame):
 #            self.current_experiment[self.highlit_task_num]['rotation_direction'] = 1
         event.Skip()
     def rot_angle_end_choose(self, event):
-        self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 5)
+        self.rotation_angle_chosen = exp.myRounder(event.GetInt(), 1)
         self.Rotation_angle_end_slider.SetValue(self.rotation_angle_chosen)
         self.current_experiment[self.highlit_task_num]['final_rotation_angle'] = self.rotation_angle_chosen      
         event.Skip()
