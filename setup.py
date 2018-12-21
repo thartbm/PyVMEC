@@ -79,6 +79,7 @@ setup(
     
     options = {
         "py2exe": {
+            "bundle_files": 1,
             "includes": ["pandas",
                          "pyautogui",
                          "psychopy",
@@ -110,6 +111,12 @@ setup(
     },
     console=['PyVMEC.py'],
     data_files = all_files,
+
+
+    windows = [{
+        "script":"PyVMEC.py",
+        "icon_resources": [(1, "VMEC.ico")],
+        }],
 
        )
 
