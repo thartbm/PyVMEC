@@ -110,6 +110,7 @@ def vector_rotate(node, center, angle):
     return [vector_X, vector_Y]
                 
 
+# what is this for???
 def task_namer(given_task, function):
     if (function == True):
         if (given_task == "cursor"):
@@ -305,7 +306,7 @@ def trial_runner(cfg={}):
         end_Y = (cfg['starting_pos'][1] + ((cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))))) * cfg['flipscreen'] #- cfg['active_height']/2)*cfg['flipscreen']
         ### Creates Mouse object
         
-        #print('creating mouse object for every task, and long after the workspace setup is done???')        
+        #print('creating mouse object for EVERY TRIAL (!), and long after the workspace setup is done???')        
         
         if (cfg['poll_type'] == 'psychopy'):
             myMouse = cfg['mouse']
@@ -316,6 +317,7 @@ def trial_runner(cfg={}):
             ### Gets current CPU Time
             myTime = myMouse.Pos()[2]
         
+        # set distance criterion for reaching target depending on if icons are used or not
         dist_criterion = cfg['circle_radius']
         if (cfg['custom_stim_enable'] == False):
             ### Creates cursor circle Object
@@ -334,7 +336,7 @@ def trial_runner(cfg={}):
         
         ### Define Parameters here
         startPos = cfg['starting_pos'] # start circle should be at starting pos, but this is never explicitly set nor implicitly assumed in this function (trial_runner which is a task_runner)
-        
+        print(startPos)
         # which if these two are we using?        
         arrow=cfg['arrow_stim']
         arrowFill=cfg['arrowFill_stim']
@@ -353,6 +355,8 @@ def trial_runner(cfg={}):
         timerSet = False
         stabilize = False
         screen_edge = (root.winfo_screenwidth()/2) - (cfg['screen_on']*cfg['screen_dimensions'][0])
+        # what is 'screen_egde' for?
+        
         ### These variables record timestamps and mouse positions (Used to calculate mouse velocity)
         prev_timestamp = 0
         prev_X = 0
@@ -424,8 +428,8 @@ def trial_runner(cfg={}):
                     velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
                     pixels_per_sample = velocity*change_in_time
                 
-                rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
-                
+                #rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
+                rotated_X, rotated_Y = vector_rotate(mousePos, startPos, cfg['current_rotation_angle'])
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
