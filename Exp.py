@@ -665,9 +665,9 @@ def trial_runner(cfg={}):
                             elif (cfg['poll_type'] == 'x11'):
                                 timeArray.append(myMouse.Pos()[2] - myTime)
                                 mouseposXArray.append(myMouse.Pos()[0])
-                                mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
+                                mouseposYArray.append(myMouse.Pos()[1] + startPos[1])
                             cursorposXArray.append(rotated_X)
-                            cursorposYArray.append(rotated_Y + cfg['active_height']/2)
+                            cursorposYArray.append(rotated_Y + startPos[1])
                             #print('one flip statement')
                             myWin.flip()
                         
@@ -684,9 +684,9 @@ def trial_runner(cfg={}):
                 if phase_1 == True:
                     timeArray.append(current_timestamp)
                     mouseposXArray.append(current_pos[0] - (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)))
-                    mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
+                    mouseposYArray.append(current_pos[1]*cfg['flipscreen'] + startPos[1])
                     cursorposXArray.append(circle_pos[0])
-                    cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + cfg['active_height']/2)
+                    cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] + startPos[1])
             #print('another flip statement')
             myWin.flip()
     ################################ PHASE 3 #####################################
