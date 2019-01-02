@@ -84,22 +84,53 @@ class MyFrame(wx.Frame):
         self.PAUSE_FRAME_SIZE = ((566, 649))
         
         ######################################################################
+        
+        # Experiment stuff (column 1)
         self.Experiment_statictext = wx.StaticText(self, wx.ID_ANY, ("Experiments"))
         self.staticline_1 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
+        self.experiment_settings_Button = wx.Button(self, wx.ID_ANY, "Experiment settings")
         self.exp_list_box = wx.ListBox(self, wx.ID_ANY, choices=self.experiment_list_trimmed)
         self.New_Button = wx.Button(self, wx.ID_ANY, ("New"))
         self.Delete_Button = wx.Button(self, wx.ID_ANY, ("Delete"))
         self.Load_Button = wx.Button(self, wx.ID_ANY, ("Load"))
         self.Save_Button = wx.Button(self, wx.ID_ANY, ("Save"))
         self.Run_Button = wx.Button(self, wx.ID_ANY, ("Run"))
-        self.continue_Button = wx.Button(self, wx.ID_ANY, ("Continue run"))
-        self.recombine_Button = wx.Button(self, wx.ID_ANY, ("Recombine data"))
-        self.Task_statictext = wx.StaticText(self, wx.ID_ANY, ("Tasks"))
-        self.experiment_settings_Button = wx.Button(self, wx.ID_ANY, "Experiment settings")
+        self.rename_experiment_button = wx.Button(self, wx.ID_ANY, ("Rename"))
+        self.duplicate_experiment_Button = wx.Button(self, wx.ID_ANY, ('Duplicate'))
         
-        self.participants_statictext = wx.StaticText(self, wx.ID_ANY, "Participants")
-        self.participants_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
-        self.participants_list_box = wx.ListBox(self, wx.ID_ANY, choices=["Empty"])
+        
+        
+        # Task stuff (column 2)
+        self.Task_statictext = wx.StaticText(self, wx.ID_ANY, ("Tasks"))
+        self.rename_task_button = wx.Button(self, wx.ID_ANY, ("Rename"))        
+        self.static_line2 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
+        self.task_list_box = wx.ListBox(self, wx.ID_ANY, choices=self.task_list)
+        self.Plus_Button = wx.Button(self, wx.ID_ANY, ("New"))
+        self.Minus_Button = wx.Button(self, wx.ID_ANY, ("Delete"))
+        self.duplicate_task_Button = wx.Button(self, wx.ID_ANY, ("Duplicate"))
+        
+        
+        # Task re-ordering (column 3)
+        self.Move_Up_Button = wx.Button(self, wx.ID_ANY, (u"\u25b2"))
+        self.Move_Down_Button = wx.Button(self, wx.ID_ANY, (u"\u25bc"))
+        
+        
+        # Task settings 1 (column 4)
+        self.radio_box_1 = wx.RadioBox(self, wx.ID_ANY, ("Task Type"), choices=[("Cursor"), ("No Cursor"), ("Error Clamp"), ("Pause")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+        
+        self.num_target_statictext = wx.StaticText(self, wx.ID_ANY, ("# Targets"))
+        self.num_targ_CB = wx.ComboBox(self, wx.ID_ANY, value="3", choices=self.num_target_list, style=wx.CB_DROPDOWN)
+        
+        self.min_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Minimum T-Angle"))        
+        self.min_angle_CB = wx.Slider(self, wx.ID_ANY, minValue = 40, maxValue = 140, value = 40, style=wx.SL_HORIZONTAL | wx.SL_LABELS)
+        
+        self.max_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Maximum T-Angle"))
+        self.max_angle_CB = wx.Slider(self, wx.ID_ANY, minValue = 40, maxValue = 140, value = 140, style=wx.SL_HORIZONTAL | wx.SL_LABELS)        
+        
+        self.target_distance_txt = wx.StaticText(self, wx.ID_ANY, ("Target Distance %"))
+        self.target_distance_slider = wx.Slider(self, wx.ID_ANY, minValue = 50, maxValue = 100, value=100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        
+        
         self.min_max_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
         self.max_arrow_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
         self.num_targets_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
@@ -110,30 +141,14 @@ class MyFrame(wx.Frame):
 #        self.group_listbox_statictext = wx.StaticText(self, wx.ID_ANY, "Group")
 #        self.group_listbox_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
 #        self.group_listbox = wx.ListBox(self, wx.ID_ANY, choices=["Empty"])
-        self.rename_experiment_button = wx.Button(self, wx.ID_ANY, ("Rename"))
-        self.rename_task_button = wx.Button(self, wx.ID_ANY, ("Rename"))
-        
-        self.static_line2 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
-        self.task_list_box = wx.ListBox(self, wx.ID_ANY, choices=self.task_list)
-        self.Plus_Button = wx.Button(self, wx.ID_ANY, ("New"))
-        self.Minus_Button = wx.Button(self, wx.ID_ANY, ("Delete"))
-        self.radio_box_1 = wx.RadioBox(self, wx.ID_ANY, ("Task Type"), choices=[("Cursor"), ("No Cursor"), ("Error Clamp"), ("Pause")], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+
         self.static_line_3 = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
+        
+        
+        # feedback things
         self.terminalfeedback_Radio_staticline = wx.StaticLine(self, wx.ID_ANY, style=wx.EXPAND)
-        self.min_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Minimum T-Angle"))        
-        self.min_angle_CB = wx.Slider(self, wx.ID_ANY, minValue = 40, maxValue = 140, value = 40, style=wx.SL_HORIZONTAL | wx.SL_LABELS)
-        
-        self.max_angle_statictext = wx.StaticText(self, wx.ID_ANY, ("Maximum T-Angle"))
-        self.max_angle_CB = wx.Slider(self, wx.ID_ANY, minValue = 40, maxValue = 140, value = 140, style=wx.SL_HORIZONTAL | wx.SL_LABELS)        
 #        self.max_angle_CB = wx.ComboBox(self, wx.ID_ANY, choices=[("Cursor"), ("No Cursor"), ("Error Clamp")], style=wx.CB_DROPDOWN)       
-        self.Move_Up_Button = wx.Button(self, wx.ID_ANY, (u"\u25b2"))
-        self.Move_Down_Button = wx.Button(self, wx.ID_ANY, (u"\u25bc"))
-        self.preprocess_Button = wx.Button(self, wx.ID_ANY, ("Pre-Process"))      
-        self.duplicate_experiment_Button = wx.Button(self, wx.ID_ANY, ('Duplicate'))
-        self.duplicate_task_Button = wx.Button(self, wx.ID_ANY, ("Duplicate"))
         
-        self.num_target_statictext = wx.StaticText(self, wx.ID_ANY, ("# Targets"))
-        self.num_targ_CB = wx.ComboBox(self, wx.ID_ANY, value="3", choices=self.num_target_list, style=wx.CB_DROPDOWN)
         
         self.num_trials_statictext = wx.StaticText(self, wx.ID_ANY, ("# Trials"))
         self.num_trial_CB = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=self.MIN_TRIALS, max=self.MAX_TRIALS, initial=1, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
@@ -148,15 +163,25 @@ class MyFrame(wx.Frame):
         self.terminalfeedback_Radio = wx.CheckBox(self, wx.ID_ANY, ("Terminal Feedback"))
 #        self.lag_static_text = wx.StaticText(self, wx.ID_ANY, (" Lag (ms)"))
 #        self.lag_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
+        
+        # pause things
         self.pause_static_text = wx.StaticText(self, wx.ID_ANY, ("Pause Time(s)"))
         self.pause_txt = wx.TextCtrl(self, wx.ID_ANY, ("0"))
         self.PM_static_text = wx.StaticText(self, wx.ID_ANY, (" Pause Message"))
         self.pause_message_txt = wx.TextCtrl(self, wx.ID_ANY, (""))
         self.pause_check = wx.CheckBox(self, wx.ID_ANY, ("Space to continue"))
-        self.target_distance_txt = wx.StaticText(self, wx.ID_ANY, ("Target Distance %"))
-        self.target_distance_slider = wx.Slider(self, wx.ID_ANY, minValue = 50, maxValue = 100, value=100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
-                
-
+        
+        
+        
+        # Participant stuff (column 6)
+        self.participants_statictext = wx.StaticText(self, wx.ID_ANY, "Participants")
+        self.participants_staticline = wx.StaticLine(self, wx.ID_ANY, style = wx.EXPAND)
+        self.participants_list_box = wx.ListBox(self, wx.ID_ANY, choices=["Empty"])
+        self.continue_Button = wx.Button(self, wx.ID_ANY, ("Continue run"))
+        self.recombine_Button = wx.Button(self, wx.ID_ANY, ("Recombine data"))
+        self.preprocess_Button = wx.Button(self, wx.ID_ANY, ("Pre-Process"))      
+        
+        
         self.__set_properties()
         self.__do_layout()
         
@@ -217,17 +242,28 @@ class MyFrame(wx.Frame):
         # Experiment stuff
         self.Experiment_statictext.SetMinSize((70, 17))
         self.staticline_1.SetMinSize((175, 1))
+        
+        self.experiment_settings_Button.SetMinSize((175, 29))
+        
         self.exp_list_box.SetMinSize((175, 250)) ################################
         self.exp_list_box.SetSelection(0)
-        self.Run_Button.SetMinSize((175, 29))
-        self.duplicate_experiment_Button.SetMinSize((175, 29))
-        self.Save_Button.SetMinSize((85, 29))
-        self.rename_experiment_button.SetMinSize((55, 29))
         
-        
+        # row one of buttons:
         self.New_Button.SetMinSize((55, 29))
+        self.rename_experiment_button.SetMinSize((55, 29))
         self.Delete_Button.SetMinSize((55, 29))
+        
+        # row two of buttons:
+        self.duplicate_experiment_Button.SetMinSize((175, 29))
+        
+        
+        # row tree:
         self.Load_Button.SetMinSize((85, 29))
+        self.Save_Button.SetMinSize((85, 29))
+        
+        # row four:
+        self.Run_Button.SetMinSize((175, 29))
+        
         
         
         # Participant stuff
@@ -235,21 +271,25 @@ class MyFrame(wx.Frame):
         self.participants_list_box.SetSelection(0)
         self.participants_staticline.SetMinSize((175, 1))
         self.continue_Button.SetMinSize((175, 29))
+        self.continue_Button.Disable()
         self.recombine_Button.SetMinSize((175, 29))
         self.recombine_Button.Disable()
         self.preprocess_Button.SetMinSize((175, 29))
         
+        
         # Task list stuff
         self.task_list_box.SetMinSize((175, 320))   ##############################################
         self.task_list_box.SetSelection(0)
-        self.duplicate_task_Button.SetMinSize((175, 29))
-        self.experiment_settings_Button.SetMinSize((175, 29))
-        self.rename_task_button.SetMinSize((55, 29))        
-        self.continue_Button.Disable()
-        self.Rotation_angle_end_slider.Disable()
-        self.Rotation_angle_end_statictext.Disable()
+
+        
+        # first button row:
         self.Plus_Button.SetMinSize((55, 29))
+        self.rename_task_button.SetMinSize((55, 29))
         self.Minus_Button.SetMinSize((55, 29))        
+        
+        # second row:
+        self.duplicate_task_Button.SetMinSize((175, 29))
+        
         
         # Task properties panels stuff
 #        self.group_listbox_staticline.SetMinSize((175, 22))
@@ -262,6 +302,9 @@ class MyFrame(wx.Frame):
         self.rotation_angle_staticline.SetMinSize((175, 1))
         self.rotation_change_staticline.SetMinSize((175, 1))
         self.terminalfeedback_Radio_staticline.SetMinSize((175, 1))
+
+        self.Rotation_angle_end_slider.Disable()
+        self.Rotation_angle_end_statictext.Disable()
         
 #        self.group_listbox.SetMinSize((175,166))
         self.radio_box_1.SetSelection(0)
@@ -299,10 +342,16 @@ class MyFrame(wx.Frame):
         sizer_12.Add(self.Run_Button, 0, wx.EXPAND | wx.ALL, 3)
         
         # has new / rename / delete buttons (for experiments?)
-        sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_5.Add(self.New_Button, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_5.Add(self.rename_experiment_button, 0, wx.EXPAND | wx.ALL, 3)
-        sizer_5.Add(self.Delete_Button, 0, wx.EXPAND | wx.ALL, 3)
+        sizer_5 = wx.BoxSizer(wx.VERTICAL)
+        
+        sizer_5a = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_5a.Add(self.New_Button, 0, wx.EXPAND | wx.ALL, 3)
+        sizer_5a.Add(self.rename_experiment_button, 0, wx.EXPAND | wx.ALL, 3)
+        sizer_5a.Add(self.Delete_Button, 0, wx.EXPAND | wx.ALL, 3)
+        
+        
+        sizer_5.Add(sizer_5a, 0, 0, 0)
+        sizer_5.Add(self.duplicate_experiment_Button, 0, wx.EXPAND | wx.ALL, 3)
         
         # is this the sizer that has all the list of experiments?
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
@@ -315,7 +364,7 @@ class MyFrame(wx.Frame):
         
         # add new / rename / delete and duplicate buttons
         sizer_2.Add(sizer_5, 0, wx.EXPAND | wx.ALL, 0)
-        sizer_2.Add(self.duplicate_experiment_Button, 0, wx.EXPAND | wx.ALL, 3)
+        
         # add run sizer with run button
         sizer_2.Add(sizer_12, 0, wx.EXPAND | wx.ALL, 0)
         
