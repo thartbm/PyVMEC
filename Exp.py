@@ -513,7 +513,7 @@ def trial_runner(cfg={}):
                         #arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
                         
                 except:
-                    pass
+                    pass # huh? we should do *something* when catching an error... why else do we have try/excepts?
         ################################ SHOW OBJECTS ################################
                 try:
                     if (pos_buffer == 0):
@@ -530,7 +530,7 @@ def trial_runner(cfg={}):
                         myCircle.draw()    # cursor?
 #                        testCircle.draw()
                 except:
-                    pass
+                    pass # don't just pass this...
             except:
                 pass
         except:
@@ -566,7 +566,7 @@ def trial_runner(cfg={}):
                         show_home = True
                         show_target = False
                         
-                    # this does not work according to specifications...
+                    
                     #if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
                     if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
                         timer = core.getTime()
@@ -583,9 +583,9 @@ def trial_runner(cfg={}):
                         terminal_feedback_angle = math.degrees(cart2pol(relPos)[1])
                         terminal_distance = cfg['target_distance'] * cfg['terminal_multiplier']
                         terminal_X = (math.cos(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[0]
-                        terminal_Y = ((math.sin(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[1]) * cfg['flipscreen']
+                        terminal_Y = ((math.sin(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[1]) * cfg['flipscreen'] # cfg['flipscreen'] is actually running[i]['flipscreen'], and *always* 1
                         myCircle.pos = [terminal_X, terminal_Y]
-                        # the rest of the experiment should continue working while displaying this...
+                        # the rest of the experiment should continue working while displaying this... that is... why do we go into another while loop?
                         end_point = circle_pos # this is for determining where a reach ended, and how far people have moved from it (for showing arrow feedback)
                         while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
                             endCircle.draw()
@@ -659,15 +659,15 @@ def trial_runner(cfg={}):
                         while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
                             myCircle.draw()
                             if (cfg['poll_type'] == 'psychopy'):
-                                timeA#                    print(cursor_angle)rray.append(core.getTime() - myTime)
+                                timeArray.append(core.getTime() - myTime)
                                 mouseposXArray.append(myMouse.getPos()[0])
-                                mouseposYArray.append(myMouse.getPos()[1] + cfg['active_height']/2)
+                                mouseposYArray.append(myMouse.getPos()[1] + startPos[1])
                             elif (cfg['poll_type'] == 'x11'):
                                 timeArray.append(myMouse.Pos()[2] - myTime)
                                 mouseposXArray.append(myMouse.Pos()[0])
-                                mouseposYArray.append(myMouse.Pos()[1] + cfg['active_height']/2)
+                                mouseposYArray.append(myMouse.Pos()[1] + startPos[1])
                             cursorposXArray.append(rotated_X)
-                            cursorposYArray.append(rotated_Y + cfg['active_height']/2)
+                            cursorposYArray.append(rotated_Y + startPos[1])
                             #print('one flip statement') #### ??????????
                             myWin.flip()
                         
@@ -687,7 +687,7 @@ def trial_runner(cfg={}):
                     mouseposYArray.append(current_pos[1]*cfg['flipscreen'] - startPos[1])
                     cursorposXArray.append(circle_pos[0])
                     cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] - startPos[1])
-            #print('another flip statement')
+            #print('another flip statement?')
             myWin.flip()
     ################################ PHASE 3 #####################################
 
@@ -735,6 +735,7 @@ def trial_runner(cfg={}):
                 elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
                     show_cursor = True
                     if (get_dist(circle_pos, startPos) < cfg['circle_radius']):
+                        # back at the home, record data, and return it? why not just save it here instead of throwing around all that data from one function to another?
                         timePos_dict['task_num'] = cfg['task_num']
                         timePos_dict['task_name'] = cfg['task_name']
                         timePos_dict['trial_num'] = cfg['trial_num']
@@ -745,7 +746,7 @@ def trial_runner(cfg={}):
                         #print('start and end position should already be relative to home position, and stay that way?')
                         timePos_dict['homey_px'] = startPos[1] #+ cfg['active_height']/2
                         timePos_dict['targetx_px'] = endPos[0]
-                        timePos_dict['targety_px'] = endPos[1] #+ cfg['active_height']/2
+                        timePos_dict['targety_px'] = endPos[1] - startPos[1] #+ cfg['active_height']/2
                         timePos_dict['time_s'] = timeArray
                         timePos_dict['mousex_px'] = mouseposXArray
                         timePos_dict['mousey_px'] = mouseposYArray
@@ -756,11 +757,12 @@ def trial_runner(cfg={}):
                
                         return timePos_dict
         except:
-            pass
+            pass # what went wrong if an exception occurred? why are we catching it? what should we do as backup?
 
 def generate_rotation_list(initial, final, trials):
     rotation_list = ndarray.tolist((((final-initial)/trials)*arange(trials)) + initial)
     return rotation_list
+
 ############################# RUN EXPERIMENT V2 ###############################
 def run_experiment_2(fulls, participant, experiment = {}):
     end_exp = DataFrame({})
