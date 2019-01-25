@@ -8,7 +8,7 @@ import pyautogui
 #import pygame as pg
 #from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
 #from pygame import event as pev
-from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean, arange
+from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean, arange, pi, dot
 import csv
 import math
 from pandas import concat, DataFrame
@@ -425,21 +425,39 @@ def trial_runner(cfg={}):
         ########################## SPECIAL CURSOR CONFIGURATIONS #####################
                 if (prev_timestamp != 0):
                     change_in_time = current_timestamp - prev_timestamp
-                    velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time
-                    pixels_per_sample = velocity*change_in_time
+                    velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time # this is not velocity, but distance
+                    pixels_per_sample = velocity*change_in_time # this is velocity
                 
+                # Julius' previous version (doesn't use start position, but a fixed screen position)
                 #rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
-                rotated_X, rotated_Y = vector_rotate(mousePos, startPos, cfg['current_rotation_angle'])
+                
+                # Marius' previous version (does use start position, but doesn't work on flipped screens)
+                #rotated_X, rotated_Y = vector_rotate(mousePos, startPos, cfg['current_rotation_angle'])
+                
+                # trying to implement properly with rotation matrix
+                # (although the matrix should be calculated once for a trial, not on every frame...)
+                
+                #print(pi)
+                theta = (cfg['current_rotation_angle']/180.)*pi
+                #print(theta)
+                R = array([[cos(theta),-1*sin(theta)],[sin(theta),cos(theta)]])
+                #print(R)
+                rotpos = dot(R,array([mousePos[0]-startPos[0],mousePos[1]-startPos[1]]))
+                rotated_X = rotpos[0]+startPos[0]
+                rotated_Y = rotpos[1]+startPos[1]
+                
+                #print(rotated_X, rotated_Y)
+
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
                     else:
-                        circle_pos = [rotated_X, rotated_Y]
+                        circle_pos = [rotated_X, rotated_Y] # we don't have to if-else this, we can just use the rotated position all the time, right?
                 elif (cfg['trial_type'] == 'no_cursor'):
                     if (cfg['current_rotation_angle'] == 0):
                         circle_pos = mousePos
                     else:
-                        circle_pos = [rotated_X, rotated_Y]
+                        circle_pos = [rotated_X, rotated_Y] # SAME HERE?
                 elif (cfg['trial_type'] == 'error_clamp'):
                     circle_pos = mousePos
                     #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
