@@ -23,24 +23,31 @@ try:
     from ctypes import *
 except:
     pass
+
 from time import time
 
 
 root = Tk()
 def addWorkSpaceLimits(screen, cfg = {}):
     s = screeninfo.get_monitors()
-    if (len(s) == 1 and screen == 0):
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-    elif(len(s) > 1 and screen == 0):
-        screen_width = int(str(s[0]).strip('monitor(').partition('x')[0])
-        screen_height = int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])
-        cfg['main_screen_dimensions'] = [int(str(s[1]).strip('monitor(').partition('x')[0]), int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])]
-
-    else:
-        screen_width = int(str(s[1]).strip('monitor(').partition('x')[0])
-        screen_height = int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])
-        cfg['main_screen_dimensions'] = [int(str(s[0]).strip('monitor(').partition('x')[0]), int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])]
+    
+    # why all this complicated code?
+    #if (len(s) == 1 and screen == 0):
+    #    screen_width = root.winfo_screenwidth()
+    #    screen_height = root.winfo_screenheight()
+    #elif(len(s) > 1 and screen == 0):
+    #    screen_width = int(str(s[0]).strip('monitor(').partition('x')[0])
+    #    screen_height = int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])
+    #    cfg['main_screen_dimensions'] = [int(str(s[1]).strip('monitor(').partition('x')[0]), int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])]
+    #else:
+    #    screen_width = int(str(s[1]).strip('monitor(').partition('x')[0])
+    #    screen_height = int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])
+    #    cfg['main_screen_dimensions'] = [int(str(s[0]).strip('monitor(').partition('x')[0]), int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])]
+    
+    screen_width = s[screen].width
+    screen_height = s[screen].height
+    cfg['main_screen_dimensions'] = [screen_width, screen_height]
+    cfg['main_screen_offset'] = [s[screen].x, s[screen].y]
 
     trimmed_width = int((float(2)/float(3))*float(screen_width))
     trimmed_height = int((float(2)/float(3))*float(screen_height))
@@ -71,27 +78,45 @@ def addWorkSpaceLimits(screen, cfg = {}):
 # 1: has to add the psychopy mouse object in the except statement
 # 2: should be in a function to add a mouse object to the overall cfg
 # 3: be called once, with no testing of which mouse object to use at any later point
- 
-try:
-    class myMouse:
-      Xlib = CDLL("libX11.so.6")
-      display = Xlib.XOpenDisplay(None)
-      if display == 0: sys.exit(2)
-      w = Xlib.XRootWindow(display, c_int(0))
-      (root_id, child_id) = (c_uint32(), c_uint32())
-      (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
-      mask = c_uint()
 
-      width = root.winfo_screenwidth()
-      height = root.winfo_screenheight()
+# there is no window object yet? how does this make sense?
 
-      def Pos(self):
-        ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
-        if ret == 0: sys.exit(1)
-        return [self.root_x.value - (self.width/2), -1 * (self.root_y.value - (self.height/2)), time()] # c_int can't be used by regular Python to do math, but the values of c_ints are ints - also, we return the current time
-except:
-    print ('not using xLib')
-    pass
+#cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
+# 
+#try:
+#    class myMouse:
+#        Xlib = CDLL("libX11.so.6")
+#        display = Xlib.XOpenDisplay(None)
+#        if display == 0: sys.exit(2)
+#        w = Xlib.XRootWindow(display, c_int(0))
+#        (root_id, child_id) = (c_uint32(), c_uint32())
+#        (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
+#        mask = c_uint()
+#        
+#        width = cfg['main_screen_dimensions'][0]
+#        height = cfg['main_screen_dimensions'][1]
+#        
+#        x_offset = cfg['main_screen_offset'][0]
+#        y_offset = cfg['main_screen_offset'][1]
+#        
+#        def Pos(self):
+#            ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
+#            if ret == 0: sys.exit(1)
+#            return [self.root_x.value - (self.width/2) - x_offset, -1 * (self.root_y.value - (self.height/2) - y_offset), time()] # c_int can't be used for regular Python math, their values are ints - and we return the current time
+#except:
+#    # create an identically named object with identical behavior based on PsychoPy?
+#    print ('not using xLib')
+#    
+# 	 	class myMouse:
+#  	  	  
+# 		    def Pos(self):
+# 		    	#print('PsychoPy mouse')
+# 		     	[X,Y] = cfg['psyMouse'].getPos()
+# 		     	return [X,Y,time()]
+#      	  
+#cfg['mouse'] = myMouse()
+
+
   
   
   
@@ -188,7 +213,8 @@ def rotation_direction_num(rotation_direction, function):
         if (rotation_direction == 1):
             return 'Clockwise'
 
-
+# I could be wrong, but it seems to me that all of the following stuff can be done without (big) libraries/modules
+# so we can reduce the annoyance of the many files that need to be copied every time someone uses this in class...
 
 def cart2pol(coord=[]):
     rho = sqrt(coord[0]**2 + coord[1]**2)
@@ -245,28 +271,29 @@ def angle_split(min_angle, max_angle, num_splits):
 
 
 # great function, but it's not used...
-def pause_experiment(cfg={}):
-    print('running pause task as task')
-    myWin = cfg['win']
-    instruction = cfg['pause_instruction']
-    counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))
-    instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
-    end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
-    while ((core.getTime() - cfg['time']) < cfg['pausetime']):
-        counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
-        instruction_text.draw()
-        counter_text.draw()
-        myWin.flip()
-    if (cfg['pause_button_wait'] == True):
-        instruction_text.draw()
-        if (cfg['pausetime'] > 0):
-            counter_text.draw()
-        end_text.draw()
-        myWin.flip()
-        event.waitKeys(keyList=['space'])
+#def pause_experiment(cfg={}):
+#    print('running pause task as task')
+#    myWin = cfg['win']
+#    instruction = cfg['pause_instruction']
+#    counter_text = TextStim(myWin, text=str(cfg['pausetime']), pos=(0, 40), color=( 1, 1, 1))
+#    instruction_text = TextStim(myWin, text=instruction, pos=(0,0), color=( 1, 1, 1))
+#    end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40), color=( 1, 1, 1))
+#    while ((core.getTime() - cfg['time']) < cfg['pausetime']):
+#        counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
+#        instruction_text.draw()
+#        counter_text.draw()
+#        myWin.flip()
+#    if (cfg['pause_button_wait'] == True):
+#        instruction_text.draw()
+#        if (cfg['pausetime'] > 0):
+#            counter_text.draw()
+#        end_text.draw()
+#        myWin.flip()
+#        event.waitKeys(keyList=['space'])
 
 
 def trial_runner(cfg={}):
+
     try:
         myWin=cfg['win'] # excellent, all the copies in running[] are not used? oh no... cfg is now running
         if (cfg['trial_type'] == 'pause'): # why does a TRIAL runner have code for a pause TASK?
@@ -307,15 +334,25 @@ def trial_runner(cfg={}):
         ### Creates Mouse object
         
         #print('creating mouse object for EVERY TRIAL (!), and long after the workspace setup is done???')        
+        # oh wait... it seems that the trial_runner doesn't run a trial, but a whole task
+        # still
+
+        #if (cfg['poll_type'] == 'psychopy'):
+        #    myMouse = cfg['mouse']
+        #    ### Gets current CPU Time
+        #    myTime = cfg['time']
+        #elif (cfg['poll_type'] == 'x11'):
+        #    myMouse = cfg['x11_mouse']
+        #    ### Gets current CPU Time.... 
+        #    myTime = myMouse.Pos()[2]
         
-        if (cfg['poll_type'] == 'psychopy'):
-            myMouse = cfg['mouse']
-            ### Gets current CPU Time
-            myTime = cfg['time']
-        elif (cfg['poll_type'] == 'x11'):
-            myMouse = cfg['x11_mouse']
-            ### Gets current CPU Time
-            myTime = myMouse.Pos()[2]
+        # WHY?! why are we getting time samples asynchronously from the mouse samples? it makes no sense...
+        # only do this when also getting the mouse position at the same time... this completely undoes the only advantage of the X11 system: more accurately timed samples
+
+        # myMouse should not be used:
+        # cfg['mouse'] should be used....
+        
+        pos = cfg['mouse'].Pos() # now, position and time are sampled at the same time...
         
         # set distance criterion for reaching target depending on if icons are used or not
         dist_criterion = cfg['circle_radius']
@@ -336,7 +373,8 @@ def trial_runner(cfg={}):
         
         ### Define Parameters here
         startPos = cfg['starting_pos'] # start circle should be at starting pos, but this is never explicitly set nor implicitly assumed in this function (trial_runner which is a task_runner)
-        print(startPos)
+        #print('start pos:')
+        #print(startPos)
         # which if these two are we using?        
         arrow=cfg['arrow_stim']
         arrowFill=cfg['arrowFill_stim']
@@ -381,8 +419,9 @@ def trial_runner(cfg={}):
         arrowFill.setPos(startPos)
         ### Rotation direction
     except Exception as e:
-        print "error in Block 1"
+        print "error in Block 1" # what is block 1?
         print e
+    
     if cfg['rotation_angle_direction'] == 'Counter-clockwise': # shouldn't we just take the sign of the rotation?
         rot_dir = 1
     elif cfg['rotation_angle_direction'] == 'Clockwise':
@@ -390,7 +429,8 @@ def trial_runner(cfg={}):
         
         
     # is this while loop creating frames and storing samples until the trial is finished?
-    # why is there a limit of 2 minutes here? what happens if someone does not get to the target in 2 minutes? do they go to the next trial... it seems better to me to exit the experiment
+    # why is there a limit of 2 minutes here? what happens if someone does not get to the target in 2 minutes? do they go to the next trial... it seems better to me to exit the experiment without saving data, so we can 'continue run' and don't waste lots of disk space
+    #print('starting sample/frame loop')
     while (core.getTime() - cfg['time']) < 120:
         try:
             
@@ -410,18 +450,27 @@ def trial_runner(cfg={}):
                     myWin.close()
                     return 'escaped'
                 ### mouse Position
+                #print('getting mouse position:')
                     
-                    
-                #print('deciding on mouse object again?')
-                if (cfg['poll_type'] == 'psychopy'):
-                    mousePos = [myMouse.getPos()[0], myMouse.getPos()[1]*cfg['flipscreen']]
-                    current_pos = mousePos
-                    current_timestamp = core.getTime() - myTime
-                elif (cfg['poll_type'] == 'x11'):
-                    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']]
-                    current_pos = mousePos
-                    current_timestamp = myMouse.Pos()[2] - myTime
+                ##print('deciding on mouse object again?')
+                #if (cfg['poll_type'] == 'psychopy'):
+                #    mousePos = [myMouse.getPos()[0], myMouse.getPos()[1]*cfg['flipscreen']]
+                #    current_pos = mousePos
+                #    current_timestamp = core.getTime() - myTime
+                #elif (cfg['poll_type'] == 'x11'):
+                #    # whyyy?
+                #    # the mouse object is called 3 separate times to get the X coordinate, the Y coordinate and the time?
+                #    # one call is better!
+                #    # and it ensures that the time sample is better matched to the position coordinates...
+                #    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']] # screen flipping should be done in the mouse object?
+                #    current_pos = mousePos
+                #    current_timestamp = myMouse.Pos()[2] - myTime
                 
+                mousePos = cfg['mouse'].Pos()
+                
+                current_pos = [mousePos[0], mousePos[1]]
+                current_timestamp = mousePos[2]
+                #print(mousePos)
         ########################## SPECIAL CURSOR CONFIGURATIONS #####################
                 if (prev_timestamp != 0):
                     change_in_time = current_timestamp - prev_timestamp
@@ -447,25 +496,25 @@ def trial_runner(cfg={}):
                 rotated_Y = rotpos[1]+startPos[1]
                 
                 #print(rotated_X, rotated_Y)
-
+                
                 if (cfg['trial_type'] == 'cursor'):
                     if (cfg['current_rotation_angle'] == 0):
-                        circle_pos = mousePos
+                        circle_pos = current_pos
                     else:
                         circle_pos = [rotated_X, rotated_Y] # we don't have to if-else this, we can just use the rotated position all the time, right?
                 elif (cfg['trial_type'] == 'no_cursor'):
                     if (cfg['current_rotation_angle'] == 0):
-                        circle_pos = mousePos
+                        circle_pos = current_pos
                     else:
                         circle_pos = [rotated_X, rotated_Y] # SAME HERE?
                 elif (cfg['trial_type'] == 'error_clamp'):
-                    circle_pos = mousePos
+                    circle_pos = current_pos
                     #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
                     #vector_proj = ndarray.tolist(vector_proj_array)
                     #rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - startPos[1]], startPos, cfg['current_rotation_angle'])
                     
-                    home_dist = get_dist(mousePos, startPos)
-                    target_dist = get_dist(mousePos, endPos)
+                    home_dist = get_dist(current_pos, startPos)
+                    target_dist = get_dist(current_pos, endPos)
 
                     cursor_angle = cfg['target_angle'] + cfg['current_rotation_angle']
                     #if (target_dist > cfg['target_distance']) :
@@ -493,9 +542,16 @@ def trial_runner(cfg={}):
 #                        active_X = vector_proj[0]
 #                        active_Y = vector_proj[1]
 #                    circle_pos_clamped = [vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2]
+                    # whyyy?
+                    # we are calculating this position when we don't even know if it's needed?
+                    # only do this for clamped (&& rotation !=0) trials?
                     circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
+                #print('mouse position:')
+                #print(mousePos)    
 
-            except:
+            except e:
+                print('error in main mouse/cursor position block:')
+                print(e)
                 pass
     ########################### SET CURSOR POSITIONS #############################
             try:
@@ -509,7 +565,9 @@ def trial_runner(cfg={}):
                         stabilize = True
                     if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
                         circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
-                    if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge): # does this put the cursor in the lower corner at the start of the experiment?
+                    if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
+                        # what is this for?
+                        # does this put the cursor in the lower corner at the start of the experiment? whyyyy?
                         circle_pos[0] = (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
@@ -548,11 +606,11 @@ def trial_runner(cfg={}):
                         myCircle.draw()    # cursor?
 #                        testCircle.draw()
                 except:
-                    pass # don't just pass this...
+                    pass # don't just pass this... what has failed?
             except:
-                pass
+                pass # what has failed?
         except:
-            pass
+            pass # what has failed?
 ################################ PHASE 1 #####################################
         try:
             if (phase_1 == False):
@@ -818,9 +876,48 @@ def run_experiment_2(fulls, participant, experiment = {}):
         
         # I would have expected a line like this: 
         # cfg['win'] = Window(...) with the cfg being the only location to have the Window object
-        
+        # is this Window object created for nothing? It doesn't seem to be stored anywhere? Delete?
+        cfg['win'] = Win
     except:
         print "Exception creating Window"
+    
+
+    # now set up the mouse object?
+    
+    cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
+    
+    try:
+        class myMouse:
+            Xlib = CDLL("libX11.so.6")
+            display = Xlib.XOpenDisplay(None)
+            if display == 0: sys.exit(2)
+            w = Xlib.XRootWindow(display, c_int(0))
+            (root_id, child_id) = (c_uint32(), c_uint32())
+            (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
+            mask = c_uint()
+            
+            width = cfg['main_screen_dimensions'][0]
+            height = cfg['main_screen_dimensions'][1]
+            
+            x_offset = cfg['main_screen_offset'][0]
+            y_offset = cfg['main_screen_offset'][1]
+            
+            def Pos(self):
+                ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
+                if ret == 0: sys.exit(1)
+                return [self.root_x.value - (self.width/2) - self.x_offset, -1 * (self.root_y.value - (self.height/2) - self.y_offset), time()] # c_int can't be used for regular Python math, their values are ints - and we return the current time
+    except:
+        # create an identically named object with identical behavior based on PsychoPy?
+        print ('not using xLib')
+        
+        class myMouse:
+            
+            def Pos(self):
+                #print('PsychoPy mouse')
+                [X,Y] = cfg['psyMouse'].getPos()
+                return [X,Y,time()]
+      	  
+    cfg['mouse'] = myMouse()
     
     
     ### Configure visual feedback settings here
@@ -959,7 +1056,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False) # this mouse object should NEVER be used, we should add an object to the cfg before we even get here
+        #Mouse = event.Mouse(win=Win, visible=False) # this mouse object should NEVER be used, we should add an object to the cfg before we even get here
         screen_info_monitors = screeninfo.get_monitors() # this info should only be used when setting up the workspace... not here
 
         # to here         
@@ -970,7 +1067,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
     
     ################ loop through tasks
     
-    for i in range (0, len(running)): # loop through all tasks and copy all setting to new objects? even for experiment-wide settins? why...
+    for i in range (0, len(running)): # loop through all tasks and copy all setting to new objects? even for experiment-wide settings? why...
         # instead of using 'running[i]['flip_text'] we could just use 'experiment['settings']['flipscreen']' right?
         # and since 'running[i]['flipscreen'] is always 1, it seems not to be useful...
         if experiment['settings']['flipscreen'] == True:
@@ -981,14 +1078,17 @@ def run_experiment_2(fulls, participant, experiment = {}):
             running[i]['flip_text'] = False
         
         # this should not be done for every task, but ONCE for the whole experiment
-        try:
-            running[i]['x11_mouse'] = myMouse()
-        except:
-            running[i]['poll_type'] = 'psychopy'
+        #try:
+        #    running[i]['x11_mouse'] = myMouse()
+        #except:
+        #    running[i]['poll_type'] = 'psychopy' # this is always set to psychopy!
+        running[i]['mouse'] = cfg['mouse']
         
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
         
+        
+        # whyyyy?
         if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
             running[i]['screen_on'] = 1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
@@ -1007,9 +1107,12 @@ def run_experiment_2(fulls, participant, experiment = {}):
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
         #print('always using psychopy mouse object?')
-        running[i]['mouse'] = Mouse # this should come from the cfg object, and not be created many times over, also: it will now always be the psychopy mouse object, never the X11 one...
+        #running[i]['mouse'] = Mouse # this should come from the cfg object, and not be created many times over, also: it will now always be the psychopy mouse object, never the X11 one...
+        # also, it's already been set (maybe by Marius)
         #print('making another copy of the Window object?')
-        running[i]['win'] = Win # copying the window object this way may be the cause of window-closing problems... even if there is just 1 task, you might end up having 2 window objects
+        running[i]['win'] = cfg['win'] # copying the window object this way may be the cause of window-closing problems... even if there is just 1 task, you might end up having 2 window objects
+        # all those non-reference copies of the Window object should be destroyed explicitly... can be solved by not creating the "running" dictionary, but just passing "cfg" along, as instructed/expected
+        # saves memory and code as well
         running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
         running[i]['arrowFill_stim'] = arrowFill
@@ -1181,8 +1284,51 @@ def continue_experiment(fulls, participant, experiment = {}):
                      units='pix',
                      screen=experiment['settings']['screen'],
                      viewScale=view_scale)
+        cfg['win'] = Win
     except:
         print "Exception creating Window"
+    
+    
+    # add mouse object... why is the whole setup of the environment not simply the same, regardless of whether this is a new or continued run?
+    
+        
+    cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
+    
+    try:
+        class myMouse:
+            Xlib = CDLL("libX11.so.6")
+            display = Xlib.XOpenDisplay(None)
+            if display == 0: sys.exit(2)
+            w = Xlib.XRootWindow(display, c_int(0))
+            (root_id, child_id) = (c_uint32(), c_uint32())
+            (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
+            mask = c_uint()
+            
+            width = cfg['main_screen_dimensions'][0]
+            height = cfg['main_screen_dimensions'][1]
+            
+            x_offset = cfg['main_screen_offset'][0]
+            y_offset = cfg['main_screen_offset'][1]
+            
+            def Pos(self):
+                ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
+                if ret == 0: sys.exit(1)
+                return [self.root_x.value - (self.width/2) - self.x_offset, -1 * (self.root_y.value - (self.height/2) - self.y_offset), time()] # c_int can't be used for regular Python math, their values are ints - and we return the current time
+    except:
+        # create an identically named object with identical behavior based on PsychoPy?
+        print ('not using xLib')
+        
+        class myMouse:
+            
+            def Pos(self):
+                #print('PsychoPy mouse')
+                [X,Y] = cfg['psyMouse'].getPos()
+                return [X,Y,time()]
+      	  
+    cfg['mouse'] = myMouse()
+    
+    
+    
     ### Configure visual feedback settings here
     try:
         arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
@@ -1318,10 +1464,10 @@ def continue_experiment(fulls, participant, experiment = {}):
         else:
             running[i]['flipscreen'] = 1
             running[i]['flip_text'] = False
-        try:
-            running[i]['x11_mouse'] = myMouse()
-        except:
-            running[i]['poll_type'] = 'psychopy'
+        #try:
+        #    running[i]['x11_mouse'] = myMouse()
+        #except:
+        #    running[i]['poll_type'] = 'psychopy'
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
         if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
@@ -1340,7 +1486,7 @@ def continue_experiment(fulls, participant, experiment = {}):
         running[i]['test_circle'] = testCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
-        running[i]['mouse'] = Mouse
+        running[i]['mouse'] = cfg['mouse'] # DO WE HAVE THIS RIGHT HERE? now we do...
         running[i]['win'] = Win
         running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
