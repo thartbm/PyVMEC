@@ -559,16 +559,21 @@ def trial_runner(cfg={}):
                     if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == False and stabilize == True):
                         circle_pos = circle_pos_clamped
                     if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == True and stabilize == True):
-                        circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                        # wut?
+                        # if you are not on the zeroeth screen, we subtract half the window width?
+                        # that does not correct for the size in the vitual desktop... and this should be done in the X11 mouse object (but not the PsychoPy mouse object, as PsychoPy does it for you)
+                        # circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                        circle_pos = [circle_pos[0], circle_pos[1]] # circle pos = circle pos?
                     elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
                         circle_pos = startPos
                         stabilize = True
                     if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
-                        circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                        #circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                        circle_pos = [circle_pos[0], circle_pos[1]]
                     if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
                         # what is this for?
                         # does this put the cursor in the lower corner at the start of the experiment? whyyyy?
-                        circle_pos[0] = (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
+                        circle_pos[0] = circle_pos[0] # (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
                     myCircle.setPos(circle_pos)
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
@@ -759,7 +764,7 @@ def trial_runner(cfg={}):
             else:
                 if phase_1 == True:
                     timeArray.append(current_timestamp)
-                    mouseposXArray.append(current_pos[0] - (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)))
+                    mouseposXArray.append(current_pos[0] #- (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)))
                     mouseposYArray.append(current_pos[1]*cfg['flipscreen'] - startPos[1])
                     cursorposXArray.append(circle_pos[0])
                     cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] - startPos[1])
@@ -1089,6 +1094,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
         
         
         # whyyyy?
+        # this info seems to be useless for any purpose?
         if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
             running[i]['screen_on'] = 1
             running[i]['screen_dimensions'] = cfg['main_screen_dimensions']
