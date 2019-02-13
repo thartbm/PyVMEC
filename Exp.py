@@ -841,7 +841,7 @@ def trial_runner(cfg={}):
             pass # what went wrong if an exception occurred? why are we catching it? what should we do as backup?
 
 def generate_rotation_list(initial, final, trials):
-    rotation_list = ndarray.tolist((((final-initial)/trials)*arange(trials)) + initial)
+    rotation_list = ndarray.tolist(((((1.0*final)-(1.0*initial))/trials)*arange(trials)) + initial)
     return rotation_list
 
 ############################# RUN EXPERIMENT V2 ###############################
