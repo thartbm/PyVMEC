@@ -575,6 +575,7 @@ def trial_runner(cfg={}):
                         # does this put the cursor in the lower corner at the start of the experiment? whyyyy?
                         circle_pos[0] = circle_pos[0] # (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
                     myCircle.setPos(circle_pos)
+                    # should we not set the cursor position for the 
 #                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
            ########################### SPECIAL ARROW CONDITIONS #########################
                     if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')):
@@ -617,6 +618,7 @@ def trial_runner(cfg={}):
         except:
             pass # what has failed?
 ################################ PHASE 1 #####################################
+        # phase 1 is getting to the home position (usually over very soon)
         try:
             if (phase_1 == False):
                 if (cfg['trial_type'] == 'cursor'):
@@ -640,6 +642,7 @@ def trial_runner(cfg={}):
                         if (cfg['terminal_feedback'] == True):
                             show_cursor = False
     ################################ PHASE 2 #####################################
+        # phase 2 is getting to the target
             if (phase_1 == True and phase_2 == False):
                 if (cfg['trial_type'] == 'cursor'):
                     if (get_dist(circle_pos, endPos) < dist_criterion and velocity < 35 and cfg['terminal_feedback'] == False):
@@ -650,7 +653,8 @@ def trial_runner(cfg={}):
                     
                     #if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
                     if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
-                        timer = core.getTime()
+                        #timer = core.getTime() # this time is not what we need...
+                        terminal_start_time = time()
                         phase_2 = True
                         show_home = True
                         show_target = False # why is the target switched of now? owww... because the terminal feedback is handled by it's own loop, not in the main loop... not good
@@ -668,21 +672,42 @@ def trial_runner(cfg={}):
                         myCircle.pos = [terminal_X, terminal_Y]
                         # the rest of the experiment should continue working while displaying this... that is... why do we go into another while loop?
                         end_point = circle_pos # this is for determining where a reach ended, and how far people have moved from it (for showing arrow feedback)
-                        while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
+                        
+                        #print('time:')
+                        #print(current_timestamp)
+                        #print(terminal_start_time)
+                        #print(current_timestamp - terminal_start_time)
+                        
+                        show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
+                        #print(show_terminal)
+                        
+                        while (show_terminal):
+                            
+                            # show feedback:                            
                             endCircle.draw()
                             myCircle.draw()
+                            myWin.flip()
+                            #print('flipped window, still in terminal feedback loop')
+                            # collect data:
                             
-                            if (cfg['poll_type'] == 'psychopy'):
-                                timeArray.append(core.getTime() - myTime)
-                                mouseposXArray.append(myMouse.getPos()[0])
-                                mouseposYArray.append(myMouse.getPos()[1] - startPos[1])
-                            elif (cfg['poll_type'] == 'x11'):
-                                timeArray.append(myMouse.Pos()[2] - myTime)
-                                mouseposXArray.append(myMouse.Pos()[0])
-                                mouseposYArray.append(myMouse.Pos()[1] - startPos[1])
+                            mousePos = cfg['mouse'].Pos()
+                            current_pos = [mousePos[0], mousePos[1]]
+                            current_timestamp = mousePos[2]
+                            #print('got mouse position and time, still in terminal feedback loop')
+                            timeArray.append(current_timestamp) # what is myTime?
+                            mouseposXArray.append(current_pos[0])
+                            mouseposYArray.append(current_pos[1] - startPos[1])
                             cursorposXArray.append(rotated_X)
                             cursorposYArray.append(rotated_Y - startPos[1])
-                            myWin.flip()
+                            #print('stored data in vectors, still in terminal feedback loop')
+                            
+                            show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
+                            
+                            #print(show_terminal)
+                        
+                        #print('show terminal loop ended...')
+                        #print((current_timestamp - terminal_start_time) < cfg['terminal_feedback_time'])
+                        
                 if (cfg['trial_type'] == 'no_cursor'):
                     ##### STOP WATCH ####
 #                    if (pixels_per_sample <= 1 and timerSet == False):
@@ -737,20 +762,58 @@ def trial_runner(cfg={}):
                         terminal_Y = ((math.sin(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[1]) * cfg['flipscreen']
                         myCircle.pos = [terminal_X, terminal_Y]
                         end_point = circle_pos
-                        while ((core.getTime() - timer) < cfg['terminal_feedback_time']):
+
+
+                        
+                        #print('time:')
+                        #print(current_timestamp)
+                        #print(terminal_start_time)
+                        #print(current_timestamp - terminal_start_time)
+                        
+                        show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
+                        #print(show_terminal)
+                        
+                        while (show_terminal):
+                            
+                            # show feedback:                            
+                            endCircle.draw()
                             myCircle.draw()
-                            if (cfg['poll_type'] == 'psychopy'):
-                                timeArray.append(core.getTime() - myTime)
-                                mouseposXArray.append(myMouse.getPos()[0])
-                                mouseposYArray.append(myMouse.getPos()[1] + startPos[1])
-                            elif (cfg['poll_type'] == 'x11'):
-                                timeArray.append(myMouse.Pos()[2] - myTime)
-                                mouseposXArray.append(myMouse.Pos()[0])
-                                mouseposYArray.append(myMouse.Pos()[1] + startPos[1])
-                            cursorposXArray.append(rotated_X)
-                            cursorposYArray.append(rotated_Y + startPos[1])
-                            #print('one flip statement') #### ??????????
                             myWin.flip()
+                            #print('flipped window, still in terminal feedback loop')
+                            # collect data:
+                            
+                            mousePos = cfg['mouse'].Pos()
+                            current_pos = [mousePos[0], mousePos[1]]
+                            current_timestamp = mousePos[2]
+                            #print('got mouse position and time, still in terminal feedback loop')
+                            timeArray.append(current_timestamp) # what is myTime?
+                            mouseposXArray.append(current_pos[0])
+                            mouseposYArray.append(current_pos[1] - startPos[1])
+                            cursorposXArray.append(rotated_X)
+                            cursorposYArray.append(rotated_Y - startPos[1])
+                            #print('stored data in vectors, still in terminal feedback loop')
+                            
+                            show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
+                            
+                            #print(show_terminal)
+                        
+                        #print('show terminal loop ended...')
+                        #print((current_timestamp - terminal_start_time) < cfg['terminal_feedback_time'])
+
+                        #while ((core.getTime() - timer) > cfg['terminal_feedback_time']):
+                        #    myCircle.draw()
+                        #    if (cfg['poll_type'] == 'psychopy'):
+                        #        timeArray.append(core.getTime() - myTime)
+                        #        mouseposXArray.append(myMouse.getPos()[0])
+                        #        mouseposYArray.append(myMouse.getPos()[1] + startPos[1])
+                        #    elif (cfg['poll_type'] == 'x11'):
+                        #        timeArray.append(myMouse.Pos()[2] - myTime)
+                        #        mouseposXArray.append(myMouse.Pos()[0])
+                        #        mouseposYArray.append(myMouse.Pos()[1] + startPos[1])
+                        #    cursorposXArray.append(rotated_X)
+                        #    cursorposYArray.append(rotated_Y + startPos[1])
+                        #    #print('one flip statement') #### ??????????
+                        #    myWin.flip()
                         
     ############################ DATA COLLECTION #################################
             prev_timestamp = current_timestamp
@@ -771,7 +834,7 @@ def trial_runner(cfg={}):
             #print('another flip statement?')
             myWin.flip()
     ################################ PHASE 3 #####################################
-
+        # phase 3 is getting back to the home position
             if (phase_1 == True and phase_2 == True):
 
 #                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
@@ -816,7 +879,7 @@ def trial_runner(cfg={}):
                 elif ((cfg['trial_type'] == 'no_cursor' or cfg['trial_type'] == 'error_clamp' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True)) and get_dist(circle_pos, startPos) <= 3*get_dist(startPos, endPos)/20):
                     show_cursor = True
                     if (get_dist(circle_pos, startPos) < cfg['circle_radius']):
-                        # back at the home, record data, and return it? why not just save it here instead of throwing around all that data from one function to another?
+                        # back at the home? no not yet... record data, and return it? why not just save it here instead of throwing around all that data from one function to another?
                         timePos_dict['task_num'] = cfg['task_num']
                         timePos_dict['task_name'] = cfg['task_name']
                         timePos_dict['trial_num'] = cfg['trial_num']
