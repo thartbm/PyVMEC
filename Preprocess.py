@@ -6,13 +6,81 @@ import Exp as exp
 from math import degrees
 from os import path
 from json import load
-from numpy import array, float, mean, unique, delete, std, nan, ma, nanmean, nanstd, warnings
+from numpy import array, float, mean, unique, delete, std, nan, ma, nanmean, nanstd, warnings, pi, dot, NaN, where, cos, sin, sqrt, arctan2
 from copy import deepcopy
+from pandas import read_csv
 #with open ("/home/julius/Desktop/PyVMEC/experiments/preprocessing.json", "rb") as f:
 #    exp_test = load(f)
 #plist = ['me-mi', 'JULIUS_1', 'marius_a', 'm2', 'JULIUS_2', 'FOUR me']
 #tlist = ['aligned','rotated','reversal','errorclamps']
 #cfg_test = {"dependent_variable": "cursor error", "trial":True, "block":True, "target":True, "output_style":"single file", "outliers": True, "outlier_scale": 2}
+
+def rotateTrajectory(X,Y,angle_deg):
+    
+    # create rotation matrix to rotate the X,Y coordinates
+    th = (angle_deg/180.) * pi
+    R  = array([[cos(th),-sin(th)],[sin(th),cos(th)]])
+    
+    # put coordinates in a matrix as well
+    coords = array([X,Y])
+    
+    # rotate the coordinates
+    Rcoords = dot(R,coords)
+    
+    # return the rotated reach
+    return Rcoords
+
+
+def getTrialReachAngleAt(trialdf,dv):
+    
+    # location (string) determines where the angle of thereach is determines, it is one of:
+    # maxvel: maximum velocity (default)
+    # endpoint: end of the reach
+    # cmX: the last sample before this distance from home, where X is replaced by a numeral
+    # ptX: percentage distance to target, where X is a numeral (0-100)
+    
+    # return a matrix of two numbers:
+    # reachangle = matrix(data=NA,nrow=1,ncol=2)
+    
+    angle = trialdf['targetangle_deg'][0]
+    if (dv == 'cursor error'):
+        X = trialdf['cursorx_px'] #- trialdf['homex_px'][0]
+        Y = trialdf['cursory_px'] #- trialdf['homey_px'][0]
+    
+    if (dv == 'reach deviation'):
+        X = trialdf['mousex_px'] #- trialdf['homex_px'][0]
+        Y = trialdf['mousey_px'] #- trialdf['homey_px'][0]
+    
+    #print([trialdf['homex_px'][0], trialdf['homey_px'][0]]) # home position is NOT STORED correctly... for no-cursor and error-clamp trials
+    #dist = sqrt(X**2 + Y**2)
+    #print(dist)
+    # rotate the trajectory
+    # (this avoids problems in the output of atan2 for large angles)
+    trajectory = rotateTrajectory(X,Y,-1*angle)
+    X = trajectory[0,:]
+    Y = trajectory[1,:]
+    
+    # cutoff at 1/3 from home to target in whatever unit is used
+    distance = sqrt(trialdf['targetx_px'][0]**2 + trialdf['targety_px'][0]**2)/3.
+    print(distance)
+    #print([arctan2(trialdf['targety_px'][0], trialdf['targetx_px'][0])/pi*180, angle])
+    
+    # get the distance from home:
+    dist = sqrt(X**2 + Y**2)
+    print(dist)
+    ## if there are no selected samples above 3 cm: return NAs
+    #if (length(where(dist > distance)) == 0):
+    #    return NaN
+    #print(where(dist > distance)[0][0])
+    # find the first sample, where dist > X
+    rown = where(dist > distance)[0][0]
+    print([rown,X[rown],Y[rown],(arctan2(Y[rown],X[rown])/pi)*180])
+    # calculate the angle at that point for the rotated trajectory
+    # this is the angular deviation we are looking for
+    return (arctan2(Y[rown],X[rown])/pi)*180
+
+
+
 def blocksizer(num_targets):
     if num_targets == 1:
         return 3
@@ -20,6 +88,8 @@ def blocksizer(num_targets):
         return 4
     else:
         return num_targets
+
+
 def num_blocks(blocksize, task, exp = {}):
     experiment = exp['experiment']
     for i in range(0, len(experiment)):
@@ -27,6 +97,7 @@ def num_blocks(blocksize, task, exp = {}):
             num_trials = experiment[i]['num_trials']
             break
     return num_trials/blocksize
+
 def task_to_numtarg(task, exp = {}):
     experiment = exp['experiment']
     for i in range(0, len(experiment)):
@@ -51,6 +122,7 @@ def data_name_list(participant_list = [], task_list = [], experiment = {}):
             data_list_participant.append(data_list_task)
         data_list.append(data_list_participant)
     return data_list
+
 def check_data_exists(data_list = []):
     for participant in data_list:
         for task in participant:
@@ -78,27 +150,27 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
     
     output_fields = ['task', 'trial','rotation_angle_deg', 'target_angle_deg']
     output_rows = []
-    for i in range (0, len(data_dir)):   
-        output_fields.append(participant_list[i])
+    for i in range (0, len(data_dir)):   # does this loop over participants?
+        output_fields.append(participant_list[i]) # seems like it does
         pc = 0
-        for j in range (0, len(data_dir[i])):           
+        for j in range (0, len(data_dir[i])): # does this loop over files in the data directory?          
             for k in range (0, len(data_dir[i][j])):
 #                fields = []
                 rows = []
                 input_row = []
                 with open(data_dir[i][j][k], "rb") as csvfile:
-                    csv_reader = csv.reader(csvfile)
+                    csv_reader = csv.reader(csvfile) # why not read in the COMPLETE file as a pandas data frame?
 #                    fields = csv_reader.next()
 #                    print ("\nField names are:" + ','.join(field for field in fields))
                     for row in csv_reader:
                         rows.append(row)
                 for row in rows[1:]:
                     if i == 0:
-                        if float(exp.get_dist([0,0], [float(row[15:16][0]), float(row[16:17][0])]))/float(exp.get_dist([0,0], [float(row[11:12][0]), float(row[12:13][0])])) >= float(1)/float(3):
-                            input_row.append(row[1:2][0])
-                            input_row.append(row[3:4][0])
-                            input_row.append(row[5:6][0])
-                            input_row.append(row[6:7][0])
+                        if float(exp.get_dist([0,0], [float(row[15:16][0]), float(row[16:17][0])]))/float(exp.get_dist([0,0], [float(row[11:12][0]), float(row[12:13][0])])) >= float(1)/float(3): # why use column indices instead of column names? names are more robust to future situations where we add or re-order columns
+                            input_row.append(row[1:2][0]) # task?
+                            input_row.append(row[3:4][0]) # trial?
+                            input_row.append(row[5:6][0]) # rotation_angle_deg?
+                            input_row.append(row[6:7][0]) # target_angle_deg?
                             cursor_deviation = degrees(exp.cart2pol([float(row[15:16][0]), float(row[16:17][0])])[1]) - float(row[6:7][0])
                             input_row.append(cursor_deviation)
                             break
@@ -110,27 +182,40 @@ def data_process(participant_list = [], data_dir = [], cfg = {}):
                             break
                 if i == 0:
                     output_rows.append(input_row)
-    return [output_fields, output_rows]
+    return [output_fields, output_rows] # why not return a data frame where this is integrated?
 #test_directory_list = data_name_list(plist, tlist, exp_test)
 #print test_directory_list
 
 
+# so the pre-processing functionality can't run on it's own... I thought the GUI for that would be included here too
+# but this function is getting it's input from somewhere else
+
+# I'd expected this function to only need the experiment name... but the user can select participants and tasks so that makes no sense
+
 def process_participants(participant_list = [], task_list = [], experiment = {}, cfg = {}):
     warnings.filterwarnings('ignore')
     directory_matrix = data_name_list(participant_list, task_list, experiment)
+    #print(directory_matrix)
 #    check_data_exists(directory_matrix)
+
+    # don't we only allow participants that have complete data?
+    # how does the participant list in the pre-processing GUI get populated?
     data_check = check_for_incomplete_data(directory_matrix)
     if data_check == True:
         pass
     else:
         return data_check
+    
+    # this should all be one data frame? and not a bunch of nested lists...
     participant_matrix = []
     output_matrix = []
     field_matrix = []
     fields_trial = ['task', 'task_type', 'trial','rotation_angle_deg']
+    # we create the block and target data frames from the original... if requested
+    # I really don't understand why this has to be so complicated
     fields_block = ['task','task_type', 'block',]
     fields_target = ['task','task_type', 'target']
-    dependent_variable = 0
+    dependent_variable = 0 # is this used?
     ############ CREATE PARTICIPANT MATRIX ###############
     for participant in (directory_matrix):
         dv_participant = []
@@ -139,26 +224,31 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
             for trial in task:
                 rows = []
                 dv_trial = []
-                with open(trial, "rb") as csvfile:
-                    csv_reader = csv.reader(csvfile)
-                    for row in csv_reader:
-                        rows.append(row)
-                del(rows[0])
-                for idx in rows:
-                    if idx[5] == "":
-                        idx[5] = "0"
-                    if exp.get_dist([0,0], [float(idx[15]), float(idx[16])])/exp.get_dist([0,0],[float(idx[10]), float(idx[11])]) >= (float(1)/float(3)):
-                        cursor_error = degrees(exp.cart2pol([float(idx[15]), float(idx[16])])[1]) - float(idx[6])
-                        reach_deviation = degrees(exp.cart2pol([float(idx[13]), float(idx[14])])[1]) - float(idx[6])
-                        if cfg['dependent_variable'] == 'cursor error':
-                            dependent_variable = cursor_error
-                        elif cfg['dependent_variable'] == 'reach deviation':
-                            dependent_variable = reach_deviation
-                        dv_trial.extend([idx[1], idx[3], idx[5], idx[6], '%.2f'%(float(dependent_variable)), idx[2]])
-                        break
+                # trial is now actually the relative path to the file...
+                trialdf = read_csv(trial)
+                
+                #with open(trial, "rb") as csvfile:
+                #    csv_reader = csv.reader(csvfile)
+                #    for row in csv_reader:
+                #        rows.append(row)
+                #del(rows[0]) # why not use the column header?
+                #for idx in rows:
+                #    if idx[5] == "":
+                #        idx[5] = "0"
+                #    if exp.get_dist([0,0], [float(idx[15]), float(idx[16])])/exp.get_dist([0,0],[float(idx[10]), float(idx[11])]) >= (float(1)/float(3)): # this is calculated for every row? 
+                                                                                                                                                          # is this guaranteed to always work?
+                #        if cfg['dependent_variable'] == 'cursor error':
+                #            dependent_variable = degrees(exp.cart2pol([float(idx[15]), float(idx[16])])[1]) - float(idx[6]) # can this get us weird values?
+                #        elif cfg['dependent_variable'] == 'reach deviation':
+                #            dependent_variable = degrees(exp.cart2pol([float(idx[13]), float(idx[14])])[1]) - float(idx[6])
+                #        print(dependent_variable)
+                dependent_variable = getTrialReachAngleAt(trialdf,cfg['dependent_variable'])
+                dv_trial.extend([trialdf['task_name'][0], trialdf['trial_num'][0], trialdf['rotation_angle'][0], trialdf['targetangle_deg'][0], '%.2f'%(float(dependent_variable)), trialdf['trial_type'][0]])
                 dv_task.append(dv_trial)
             dv_participant.extend(dv_task)
         participant_matrix.append(deepcopy(dv_participant))
+    
+    #print(participant_matrix)
     ############ PARTICIPANT MATRIX CREATED ################
     
     ############ REMOVE OUTLIERS###################

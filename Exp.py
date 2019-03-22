@@ -234,8 +234,9 @@ def get_dist(select_pos, target_pos):
 def get_vect(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return vector
+    # replace with target_pos - select_pos ? # hmmm... doesn't work in Python
 
-def get_uvect(vector):
+def get_uvect(vector): # what is sthis for?
     uvect = vector/linalg.norm(vector)
     return uvect
     
@@ -477,7 +478,7 @@ def trial_runner(cfg={}):
                     velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time # this is not velocity, but distance
                     pixels_per_sample = velocity*change_in_time # this is velocity
                 
-                # Julius' previous version (doesn't use start position, but a fixed screen position)
+                # Julius' previous version (doesn't use start position, but position, cold calculated on every sample)
                 #rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
                 
                 # Marius' previous version (does use start position, but doesn't work on flipped screens)
@@ -888,9 +889,9 @@ def trial_runner(cfg={}):
                         timePos_dict['rotation_angle'] = rot_dir*cfg['current_rotation_angle']
                         timePos_dict['homex_px'] = startPos[0]
                         #print('start and end position should already be relative to home position, and stay that way?')
-                        timePos_dict['homey_px'] = startPos[1] #+ cfg['active_height']/2
+                        timePos_dict['homey_px'] = startPos[1]*cfg['flipscreen'] - startPos[1] #+ cfg['active_height']/2
                         timePos_dict['targetx_px'] = endPos[0]
-                        timePos_dict['targety_px'] = endPos[1] - startPos[1] #+ cfg['active_height']/2
+                        timePos_dict['targety_px'] = endPos[1]*cfg['flipscreen'] - startPos[1] #+ cfg['active_height']/2
                         timePos_dict['time_s'] = timeArray
                         timePos_dict['mousex_px'] = mouseposXArray
                         timePos_dict['mousey_px'] = mouseposYArray
