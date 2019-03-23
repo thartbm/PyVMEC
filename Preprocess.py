@@ -261,21 +261,29 @@ def process_participants(participant_list = [], task_list = [], experiment = {},
             for row in participant:
                 if cfg['dependent_variable'] == 'cursor error':
                     if int(row[2]) >= 0:
-                        if (float(row[4]) > ((cfg['window_limit']/2) + float(row[2]))) | (float(row[4]) < ((-cfg['window_limit']/2))):
-#                            print "upper bound: " + str((cfg['window_limit']/2) + float(row[2])), "lower bound: " + str((-cfg['window_limit']/2)), "dep_var: " + row[4]
+                        if (float(row[4]) > ((cfg['window_limit']) + float(row[2]))) | (float(row[4]) < ((-cfg['window_limit']))):  
+#                            print "upper bound: " + str((cfg['window_limit']) + float(row[2]))
+#                            print "lower bound: " + str((-cfg['window_limit']))
+#                            print "dep_var: " + row[4]
                             row[4] = nan
                     elif int(row[2]) < 0:
-                        if (float(row[4]) > ((cfg['window_limit']/2))) | (float(row[4]) < ((-cfg['window_limit']/2) + float(row[2]))):
-#                            print "upper bound: " + str(((cfg['window_limit']/2))), "lower bound: " + str(((-cfg['window_limit']/2) + float(row[2]))), "dep_var: " + row[4]
+                        if (float(row[4]) > ((cfg['window_limit']))) | (float(row[4]) < ((-cfg['window_limit']) + float(row[2]))):
+#                            print "upper bound: " + str(((cfg['window_limit']/2)))
+#                            print "lower bound: " + str(((-cfg['window_limit']/2) + float(row[2])))
+#                            print  "dep_var: " + row[4]
                             row[4] = nan
                 elif cfg['dependent_variable'] == 'reach deviation':
                     if int(row[2]) >= 0:
-                        if (float(row[4]) > ((cfg['window_limit']/2) )) | (float(row[4]) < ((-cfg['window_limit']/2) - float(row[2]))):
-#                            print "upper bound: " + str(((cfg['window_limit']/2))), "lower bound: " + str(((-cfg['window_limit']/2) - float(row[2]))), "dep_var: " + row[4]
+                        if (float(row[4]) > ((cfg['window_limit']) )) | (float(row[4]) < ((-cfg['window_limit']) - float(row[2]))):
+#                            print "upper bound: " + str(((cfg['window_limit']/2)))
+#                            print "lower bound: " + str(((-cfg['window_limit']/2) - float(row[2])))
+#                            print "dep_var: " + row[4]
                             row[4] = nan
                     elif int(row[2]) < 0:
-                        if (float(row[4]) > ((cfg['window_limit']/2) - float(row[2]))) | (float(row[4]) < ((-cfg['window_limit']/2))):
-#                            print "upper bound: " + str(((cfg['window_limit']/2) - float(row[2]))), "lower bound: " + str(((-cfg['window_limit']/2))), "dep_var: " + row[4]
+                        if (float(row[4]) > ((cfg['window_limit']) - float(row[2]))) | (float(row[4]) < ((-cfg['window_limit']))):
+#                            print "upper bound: " + str(((cfg['window_limit']/2) - float(row[2])))
+#                            print "lower bound: " + str(((-cfg['window_limit']/2)))
+#                            print "dep_var: " + row[4]
                             row[4] = nan
                 participant_rows_tmp.append(row)
             participant_matrix_tmp_win.append(participant_rows_tmp)
