@@ -62,19 +62,19 @@ def getTrialReachAngleAt(trialdf,dv):
     
     # cutoff at 1/3 from home to target in whatever unit is used
     distance = sqrt(trialdf['targetx_px'][0]**2 + trialdf['targety_px'][0]**2)/3.
-    print(distance)
+    #print(distance)
     #print([arctan2(trialdf['targety_px'][0], trialdf['targetx_px'][0])/pi*180, angle])
     
     # get the distance from home:
     dist = sqrt(X**2 + Y**2)
-    print(dist)
+    #print(dist)
     ## if there are no selected samples above 3 cm: return NAs
     #if (length(where(dist > distance)) == 0):
     #    return NaN
     #print(where(dist > distance)[0][0])
     # find the first sample, where dist > X
     rown = where(dist > distance)[0][0]
-    print([rown,X[rown],Y[rown],(arctan2(Y[rown],X[rown])/pi)*180])
+    #print([rown,X[rown],Y[rown],(arctan2(Y[rown],X[rown])/pi)*180])
     # calculate the angle at that point for the rotated trajectory
     # this is the angular deviation we are looking for
     return (arctan2(Y[rown],X[rown])/pi)*180
