@@ -4,4 +4,3 @@ try:
     GUI.start()
 except Exception as e:
     print(e)
-    
