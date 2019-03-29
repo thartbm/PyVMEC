@@ -73,11 +73,14 @@ def getTrialReachAngleAt(trialdf,dv):
     #    return NaN
     #print(where(dist > distance)[0][0])
     # find the first sample, where dist > X
-    rown = where(dist > distance)[0][0]
-    #print([rown,X[rown],Y[rown],(arctan2(Y[rown],X[rown])/pi)*180])
-    # calculate the angle at that point for the rotated trajectory
-    # this is the angular deviation we are looking for
-    return (arctan2(Y[rown],X[rown])/pi)*180
+    try:
+      rown = where(dist > distance)[0][0]
+      #print([rown,X[rown],Y[rown],(arctan2(Y[rown],X[rown])/pi)*180])
+      # calculate the angle at that point for the rotated trajectory
+      # this is the angular deviation we are looking for
+      return (arctan2(Y[rown],X[rown])/pi)*180
+    except:
+      return nan
 
 
 
