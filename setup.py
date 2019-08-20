@@ -62,6 +62,7 @@ all_files = [ ("psychopy\\preferences", preference_files),
               ("psychopy\\misc", misc_files),
               ('lib2to3', lib23_files),
               ("pandas\\_lib", pandas_libs_files),
+              'VMEC.ico'
               ]
 
 #combine the files
@@ -78,7 +79,9 @@ setup(
     
     options = {
         "py2exe": {
+            #"bundle_files": 1,
             "includes": ["pandas",
+                         "pyautogui",
                          "psychopy",
                          "psychopy.visual.shape",
                          "psychopy.visual.circle",
@@ -102,11 +105,18 @@ setup(
             "dll_excludes":["MSVCP90.dll"],
             "excludes":["gevent._socket3"],
             "skip_archive": True,
-            "optimize": 2
+            "optimize": 2,
+            "dist_dir": "PyVMEC"
             }
     },
     console=['PyVMEC.py'],
     data_files = all_files,
+
+
+  #  windows = [{
+  #      "script":"PyVMEC.py",
+  #      "icon_resources": [(1, "VMEC.ico")],
+  #      }],
 
        )
 
