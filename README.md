@@ -14,7 +14,7 @@ A Python-based GUI to create and run visuo-motor experiments.
 
 `pip install -U numpy scipy pandas six psychopy==1.85.3 pyglet==1.3.0`
 
-`pip install json_tricks configobj screeninfo pyautogui`
+`pip install json_tricks configobj screeninfo==0.3.1 pyautogui`
 
 ## Troubleshooting:
 
