@@ -1581,9 +1581,7 @@ class MyFrame(wx.Frame):
 ############################### SETTINGS Panel ##############################
 
 class SettingsFrame(wx.Frame):
-    print 'creating settings frame instance...'
     def __init__(self, *args, **kwds):
-        print 'init settings frame...'
         wx.Frame.__init__(self, *args, **kwds)
         ### Empty image preset ###
         self.empty_image = wx.EmptyImage(35,35)
@@ -1643,13 +1641,10 @@ class SettingsFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)
         self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
 
-        print 'going to set properties...'
         self.__set_properties()
-        print 'going to do layout...'
         self.__do_layout()
 
     def __set_properties(self):
-        print 'going to set settings frame properties...'
         self.SetTitle("Settings")
         self.SetSize((200,350))
         self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
@@ -1708,7 +1703,6 @@ class SettingsFrame(wx.Frame):
             self.custom_cursor_file.Enable()
             self.custom_cursor_preview.Enable()
     def __do_layout(self):
-        print 'doing layout...'
         horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
         vertical_1 = wx.BoxSizer(wx.VERTICAL)
         vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
@@ -1746,10 +1740,10 @@ class SettingsFrame(wx.Frame):
     def flipscreen_toggle_press(self, event):
         self.flipscreen_state = event.IsChecked()
         event.Skip()
-    def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
-        self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
-        self.experiment_holder['settings']['viewscale'] = self.viewscale_state
-        event.Skip()
+    #def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
+    #    self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
+    #    self.experiment_holder['settings']['viewscale'] = self.viewscale_state
+    #    event.Skip()
 
     def collect_return_movement_toggle_press(self, event):
         self.collect_return_movement_state = event.IsChecked()
@@ -1873,12 +1867,12 @@ class SettingsFrameV2(wx.Frame):
 
     def __set_properties(self):
         self.SetTitle("Settings")
-        self.SetSize((200,350))
+        self.SetSize((200,400))
         self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
         self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
         self.waitblanking_toggle.SetValue(self.Parent.experiment_holder['settings']['waitblanking'])
-        self.viewscaleX_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][0]*100.)
-        self.viewscaleY_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][1]*100.)
+        self.viewscaleX_slider.SetValue(int(self.Parent.experiment_holder['settings']['viewscale'][0]*100))
+        self.viewscaleY_slider.SetValue(int(self.Parent.experiment_holder['settings']['viewscale'][1]*100))
         self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
         self.enable_custom_stim.SetValue(self.Parent.experiment_holder['settings']['custom_stim_enable'])
         self.custom_stim_file.SetPath(self.Parent.experiment_holder['settings']['custom_stim_file'])
@@ -1893,8 +1887,8 @@ class SettingsFrameV2(wx.Frame):
         vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.waitblanking_toggle, 0, wx.TOP, 2)
-        vertical_1.Add(self.viewscaleX_slider, 0, wx.TOP, 2)
-        vertical_1.Add(self.viewscaleY_slider, 0, wx.TOP, 2)
+        vertical_1.Add(self.viewscaleX_slider, 0, wx.EXPAND, 2)
+        vertical_1.Add(self.viewscaleY_slider, 0, wx.EXPAND, 2)
         vertical_1.Add(self.screen_choose, 0, wx.TOP, 2)
         vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.enable_custom_stim, 0, wx.TOP, 2)
@@ -1917,8 +1911,8 @@ class SettingsFrameV2(wx.Frame):
         event.Skip()
 
     def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
-        self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
-        self.experiment_holder['settings']['viewscale'] = self.viewscale_state
+        self.viewscale_state = [self.viewscaleX_slider.GetValue()/100., self.viewscaleY_slider.GetValue()/100.]
+        #self.experiment_holder['settings']['viewscale'] = self.viewscale_state
         event.Skip()
 
     def collect_return_movement_toggle_press(self, event):

@@ -950,8 +950,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
     except:
         print "Exception creating Window"
 
-    print 'created window'
-
     # now set up the mouse object?
 
     cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
@@ -995,8 +993,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
             return [X,Y,time()]
 
     cfg['mouse'] = myMouse()
-
-    print 'added mouse object'
 
     ### Configure visual feedback settings here
     # it would also make sense to put this in a function, so that it's a separate unit
@@ -1144,7 +1140,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
         print e
         print str(e)
 
-    print 'created stimulus objects'
     ################ loop through tasks
 
     for i in range (0, len(running)): # loop through all tasks and copy all setting to new objects? even for experiment-wide settings? why...
