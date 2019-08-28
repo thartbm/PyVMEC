@@ -844,6 +844,7 @@ class MyFrame(wx.Frame):
             self.task_list_box.Set(["Empty"])
             self.experiment_holder['settings']['fullscreen'] = False
             self.experiment_holder['settings']['flipscreen'] = False
+            self.experiment_holder['settings']['viewscale'] = [1.00,1.00]
             self.experiment_holder['settings']['waitblanking'] = True
             self.experiment_holder['settings']['return_movement'] = False
             self.experiment_holder['settings']['custom_target_enable'] = False
@@ -1580,7 +1581,9 @@ class MyFrame(wx.Frame):
 ############################### SETTINGS Panel ##############################
 
 class SettingsFrame(wx.Frame):
+    print 'creating settings frame instance...'
     def __init__(self, *args, **kwds):
+        print 'init settings frame...'
         wx.Frame.__init__(self, *args, **kwds)
         ### Empty image preset ###
         self.empty_image = wx.EmptyImage(35,35)
@@ -1588,6 +1591,7 @@ class SettingsFrame(wx.Frame):
         self.fullscreen_state = self.Parent.experiment_holder['settings']['fullscreen']
         self.flipscreen_state = self.Parent.experiment_holder['settings']['flipscreen']
         self.waitblanking_state = self.Parent.experiment_holder['settings']['waitblanking']
+        self.viewscale_state = self.Parent.experiment_holder['settings']['viewscale']
         self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
         self.enable_custom_target_state = self.Parent.experiment_holder['settings']['custom_target_enable']
         self.custom_target_file_state = self.Parent.experiment_holder['settings']['custom_target_file']
@@ -1600,7 +1604,12 @@ class SettingsFrame(wx.Frame):
         ###############
         self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
         self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
-        self.waitblanking_toggle = wx.CheckBox(self, wx.ID_ANY, "wait for vertical blanking")
+        self.waitblanking_toggle = wx.CheckBox(self, wx.ID_ANY, "wait for blanking")
+
+        # ADD TWO sliders... or should it be textboxes?
+        self.viewscaleX_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.viewscaleY_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+
         self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
         self.enable_custom_target = wx.CheckBox(self, wx.ID_ANY, "Enable custom target")
         self.custom_target_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
@@ -1619,6 +1628,10 @@ class SettingsFrame(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.fullscreen_toggle_press, self.fullscreen_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.flipscreen_toggle_press, self.flipscreen_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.waitblanking_toggle_press, self.waitblanking_toggle)
+
+        self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleX_slider)
+        self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleY_slider)
+
         self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.enable_custom_target_press, self.enable_custom_target)
         self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_target_file_choose, self.custom_target_file)
@@ -1630,15 +1643,20 @@ class SettingsFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)
         self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
 
+        print 'going to set properties...'
         self.__set_properties()
+        print 'going to do layout...'
         self.__do_layout()
 
     def __set_properties(self):
+        print 'going to set settings frame properties...'
         self.SetTitle("Settings")
         self.SetSize((200,350))
         self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
         self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
         self.waitblanking_toggle.SetValue(self.Parent.experiment_holder['settings']['waitblanking'])
+        self.viewscaleX_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][0]*100)
+        self.viewscaleY_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][1]*100)
         self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
         self.enable_custom_target.SetValue(self.Parent.experiment_holder['settings']['custom_target_enable'])
         self.enable_custom_home.SetValue(self.Parent.experiment_holder['settings']['custom_home_enable'])
@@ -1690,10 +1708,14 @@ class SettingsFrame(wx.Frame):
             self.custom_cursor_file.Enable()
             self.custom_cursor_preview.Enable()
     def __do_layout(self):
+        print 'doing layout...'
         horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
         vertical_1 = wx.BoxSizer(wx.VERTICAL)
         vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.waitblanking_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.viewscaleX_slider, 0, wx.EXPAND | wx.ALL, 2)
+        vertical_1.Add(self.viewscaleY_slider, 0, wx.EXPAND | wx.ALL, 2)
         vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.enable_custom_target, 0, wx.TOP, 2)
         horizontal_1 = wx.BoxSizer(wx.HORIZONTAL)
@@ -1723,6 +1745,10 @@ class SettingsFrame(wx.Frame):
         event.Skip()
     def flipscreen_toggle_press(self, event):
         self.flipscreen_state = event.IsChecked()
+        event.Skip()
+    def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
+        self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
+        self.experiment_holder['settings']['viewscale'] = self.viewscale_state
         event.Skip()
 
     def collect_return_movement_toggle_press(self, event):
@@ -1784,6 +1810,7 @@ class SettingsFrame(wx.Frame):
         self.Parent.experiment_holder['settings']['fullscreen'] = self.fullscreen_state
         self.Parent.experiment_holder['settings']['flipscreen'] = self.flipscreen_state
         self.Parent.experiment_holder['settings']['waitblanking'] = self.waitblanking_state
+        self.Parent.experiment_holder['settings']['viewscale'] = self.viewscale_state
         self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state
         self.Parent.experiment_holder['settings']['custom_target_enable'] = self.enable_custom_target_state
         self.Parent.experiment_holder['settings']['custom_target_file'] = self.custom_target_file_state
@@ -1808,6 +1835,7 @@ class SettingsFrameV2(wx.Frame):
         self.fullscreen_state = self.Parent.experiment_holder['settings']['fullscreen']
         self.flipscreen_state = self.Parent.experiment_holder['settings']['flipscreen']
         self.waitblanking_state = self.Parent.experiment_holder['settings']['waitblanking']
+        self.viewscale_state = self.Parent.experiment_holder['settings']['viewscale']
         self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
         self.enable_custom_stim_state = self.Parent.experiment_holder['settings']['custom_stim_enable']
         self.custom_stim_file_state = self.Parent.experiment_holder['settings']['custom_stim_file']
@@ -1815,7 +1843,9 @@ class SettingsFrameV2(wx.Frame):
        ###############
         self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
         self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
-        self.waitblanking_toggle = wx.CheckBox(self, wx.ID_ANY, "wait for vertical blanking")
+        self.waitblanking_toggle = wx.CheckBox(self, wx.ID_ANY, "wait for blanking")
+        self.viewscaleX_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = self.viewscale_state[0]*100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.viewscaleY_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = self.viewscale_state[1]*100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
         self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
         self.enable_custom_stim = wx.CheckBox(self, wx.ID_ANY, "Enable custom stimuli")
         self.custom_stim_file = wx.DirPickerCtrl(self, wx.ID_ANY, path="", style=wx.DIRP_USE_TEXTCTRL)
@@ -1826,6 +1856,10 @@ class SettingsFrameV2(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.fullscreen_toggle_press, self.fullscreen_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.flipscreen_toggle_press, self.flipscreen_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.waitblanking_toggle_press, self.waitblanking_toggle)
+
+        self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleX_slider)
+        self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleY_slider)
+
         self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
         self.Bind(wx.EVT_CHECKBOX, self.enable_custom_stim_press, self.enable_custom_stim)
         self.Bind(wx.EVT_DIRPICKER_CHANGED, self.custom_stim_file_choose, self.custom_stim_file)
@@ -1843,6 +1877,8 @@ class SettingsFrameV2(wx.Frame):
         self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
         self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
         self.waitblanking_toggle.SetValue(self.Parent.experiment_holder['settings']['waitblanking'])
+        self.viewscaleX_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][0]*100.)
+        self.viewscaleY_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][1]*100.)
         self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
         self.enable_custom_stim.SetValue(self.Parent.experiment_holder['settings']['custom_stim_enable'])
         self.custom_stim_file.SetPath(self.Parent.experiment_holder['settings']['custom_stim_file'])
@@ -1857,6 +1893,8 @@ class SettingsFrameV2(wx.Frame):
         vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.waitblanking_toggle, 0, wx.TOP, 2)
+        vertical_1.Add(self.viewscaleX_slider, 0, wx.TOP, 2)
+        vertical_1.Add(self.viewscaleY_slider, 0, wx.TOP, 2)
         vertical_1.Add(self.screen_choose, 0, wx.TOP, 2)
         vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
         vertical_1.Add(self.enable_custom_stim, 0, wx.TOP, 2)
@@ -1876,6 +1914,11 @@ class SettingsFrameV2(wx.Frame):
         event.Skip()
     def waitblanking_toggle_press(self, event):
         self.waitblanking_state = event.IsChecked()
+        event.Skip()
+
+    def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
+        self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
+        self.experiment_holder['settings']['viewscale'] = self.viewscale_state
         event.Skip()
 
     def collect_return_movement_toggle_press(self, event):
@@ -1902,6 +1945,7 @@ class SettingsFrameV2(wx.Frame):
         self.Parent.experiment_holder['settings']['fullscreen'] = self.fullscreen_state
         self.Parent.experiment_holder['settings']['flipscreen'] = self.flipscreen_state
         self.Parent.experiment_holder['settings']['waitblanking'] = self.waitblanking_state
+        self.Parent.experiment_holder['settings']['viewscale'] = self.viewscale_state
         self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state
         self.Parent.experiment_holder['settings']['custom_stim_enable'] = self.enable_custom_stim_state
         self.Parent.experiment_holder['settings']['custom_stim_file'] = self.custom_stim_file_state
