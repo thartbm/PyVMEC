@@ -1871,7 +1871,7 @@ class SettingsFrameV2(wx.Frame):
 
     def __set_properties(self):
         self.SetTitle("Settings")
-        self.SetSize((200,400))
+        self.SetSize((300,450))
         self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
         self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
         self.waitblanking_toggle.SetValue(self.Parent.experiment_holder['settings']['waitblanking'])
