@@ -920,12 +920,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
     #print experiment['settings']['waitblanking']
     #print 'this should reflect the setting of the wait-blanking option...'
 
-
+    view_scale = experiment['settings']['viewscale']
     # the next if/else and two try/except statements should be combined in one function: 'createWorkspace' or something...
     if experiment['settings']['flipscreen'] == True:
-        view_scale = [1, -1]
-    else:
-        view_scale = [1, 1]
+        view_scale = [a*b for a,b in zip(view_scale,[1, -1])]
 
     try:
         addWorkSpaceLimits(experiment['settings']['screen'], cfg)
@@ -981,7 +979,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
     # except:
     #     # create an identically named object with identical behavior based on PsychoPy?
     #     print ('not using xLib')
-        # 
+        #
         # class myMouse:
         #
         #     def Pos(self):
@@ -1349,10 +1347,10 @@ def continue_experiment(fulls, participant, experiment = {}):
     cfg = {}
     participant_seed = participant + settings['experiment_folder']
     continued = 1
+    view_scale = experiment['settings']['viewscale']
+    # the next if/else and two try/except statements should be combined in one function: 'createWorkspace' or something...
     if experiment['settings']['flipscreen'] == True:
-        view_scale = [1, -1]
-    else:
-        view_scale = [1, 1]
+        view_scale = [a*b for a,b in zip(view_scale,[1, -1])]
     try:
         addWorkSpaceLimits(experiment['settings']['screen'], cfg)
     except:
