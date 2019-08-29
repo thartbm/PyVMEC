@@ -1,8 +1,5 @@
 # this file has functions that create, populate and update the GUI
 import wx
-from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
-from psychopy import event, core
-from psychopy.visual import shape
 from gettext import install
 from math import ceil
 from os import path, makedirs, remove, listdir, rename
@@ -10,7 +7,6 @@ from shutil import copyfile
 from json import load, dump
 from copy import deepcopy
 from numpy import array
-#import path
 import Tkinter as tk
 import Exp as exp
 import traceback
@@ -795,7 +791,7 @@ class MyFrame(wx.Frame):
 
             # Scoring System
             self.score_check.SetValue(self.current_experiment[self.highlit_task_num]['use_score'])
-
+            self.score_settings_button.Enable(self.current_experiment[self.highlit_task_num]['use_score'])
 
             if (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'gradual'):
 #                self.MIN_TRIAL_BOOL = True
@@ -1068,6 +1064,28 @@ class MyFrame(wx.Frame):
 
             # Scoring System
             self.current_experiment[self.highlit_task_num]['use_score'] = False
+
+            # Zero out reward at the start of each task
+            self.current_experiment[self.highlit_task_num]['score_zero_reward'] = False
+
+            # Scoring for each accuracy, their cursor and target colours, and cutoff angles
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['points'] = 3
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['points'] = 1
+            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['points'] = 0
+
+            # Cutoff angles for high and medium accuracy. Anything > med accuracy defaults to low points
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['cutoff'] = 5
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['cutoff'] = 10
+
+            # Colours for the cursor for each accuracy
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['cursor_colour'] = {0, 0, 0}
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['cursor_color'] = {0, 0, 0}
+            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['cursor_color'] = {0, 0, 0}
+
+            # Colours for the target for each accuracy
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['target_color'] = {0, 0, 0}
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['target_color'] = {0, 0, 0}
+            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['target_color'] = {0, 0, 0}
 
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
 #                dump(self.experiment_holder, f)
@@ -2309,11 +2327,94 @@ class ScoreFrame(wx.Frame):
         self.SetTitle("Scoring System Settings")
         self.SetSize((735,250))
 
+        # Set reward to zero at start of task
+        self.zero_reward_start = wx.CheckBox(self, wx.ID_ANY, "Set reward to 0 at the start of a task")
+
+        # Accuracy Related Variables
+        self.high_acc_text = wx.StaticText(self, wx.ID_ANY, "High Accuracy")
+        self.med_acc_text = wx.StaticText(self, wx.ID_ANY, "Medium Accuracy")
+        self.low_acc_text = wx.StaticText(self, wx.ID_ANY, "Low Accuracy")
+
+        # Cursuor and Target Colours
+        self.high_acc_cursor_clr_btn = wx.Button(self, wx.ID_ANY, "Cursor Color")
+        self.med_acc_cursor_clr_btn = wx.Button(self, wx.ID_ANY, "Cursor Color")
+        self.low_acc_cursor_clr_btn = wx.Button(self, wx.ID_ANY, "Cursor Color")
+
+        self.high_acc_target_clr_btn = wx.Button(self, wx.ID_ANY, "Target Color")
+        self.med_acc_target_clr_btn = wx.Button(self, wx.ID_ANY, "Target Color")
+        self.low_acc_target_clr_btn = wx.Button(self, wx.ID_ANY, "Target Color")
+
+        # Points
+        self.high_acc_points = wx.TextCtrl(self, wx.ID_ANY, "3")
+        self.med_acc_points = wx.TextCtrl(self, wx.ID_ANY, "2")
+        self.low_acc_points = wx.TextCtrl(self, wx.ID_ANY, "1")
+
+        # Radio
+        self.change_colors_radio = wx.RadioBox(self, wx.ID_ANY, "Change Colors When:",
+                                               choices=["Halfway point is reached",
+                                                        "At the end of the reach"],
+                                               majorDimension=1,
+                                               style=wx.RA_SPECIFY_COLS
+                                               )
+
+        self.confirm_button = wx.Button(self, wx.ID_ANY, "Confirm")
+        self.cancel_Button = wx.Button(self, wx.ID_ANY, "Cancel")
+
+        self.__set_properties__()
+        self.__do_layout()
+
     def __set_properties__(self):
-        print("implement me")
+        self.change_colors_radio.SetSelection(1)
 
     def __do_layout(self):
-        print("implement me")
+
+        acc_col = wx.BoxSizer(wx.VERTICAL)
+
+        high_acc_row = wx.BoxSizer(wx.HORIZONTAL)
+        high_acc_row.Add(self.high_acc_text, 1)
+        high_acc_row.Add(self.high_acc_points, 1)
+        high_acc_row.Add(self.high_acc_cursor_clr_btn, 1)
+        high_acc_row.Add(self.high_acc_target_clr_btn, 1)
+
+        med_acc_row = wx.BoxSizer(wx.HORIZONTAL)
+        med_acc_row.Add(self.med_acc_text, 1)
+        med_acc_row.Add(self.med_acc_points, 1)
+        med_acc_row.Add(self.med_acc_cursor_clr_btn, 1)
+        med_acc_row.Add(self.med_acc_target_clr_btn, 1)
+
+        low_acc_row = wx.BoxSizer(wx.HORIZONTAL)
+        low_acc_row.Add(self.low_acc_text, 1)
+        low_acc_row.Add(self.low_acc_points, 1)
+        low_acc_row.Add(self.low_acc_cursor_clr_btn, 1)
+        low_acc_row.Add(self.low_acc_target_clr_btn, 1)
+
+        acc_col.Add(high_acc_row, 0, wx.CENTER, 20)
+        acc_col.Add(med_acc_row, 0, wx.CENTER, 20)
+        acc_col.Add(low_acc_row, 0, wx.CENTER, 20)
+
+        extra_options_col = wx.BoxSizer(wx.VERTICAL)
+        extra_options_col.Add(self.change_colors_radio, 0, wx.TOP, 2)
+        extra_options_col.Add(self.zero_reward_start, 0, wx.BOTTOM, 2)
+
+        btn_row = wx.BoxSizer(wx.HORIZONTAL)
+        btn_row.Add(self.confirm_button, 0, wx.ALL | wx.EXPAND, 20)
+        btn_row.Add(self.cancel_Button, 0, wx.ALL | wx.EXPAND, 20)
+
+        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        mainSizer.Add(acc_col)
+        mainSizer.Add(extra_options_col)
+        mainSizer.Add(btn_row)
+
+        self.SetSizer(mainSizer)
+        mainSizer.Fit(self)
+        self.Layout()
+        self.Center()
+
+
+
+
+
 
 # end of class MyFrame
 class MyApp(wx.App):
