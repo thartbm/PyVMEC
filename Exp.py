@@ -396,13 +396,12 @@ def trial_runner(cfg={}):
     elif cfg['rotation_angle_direction'] == 'Clockwise':
         rot_dir = -1
 
-
     # is this while loop creating frames and storing samples until the trial is finished?
     # why is there a limit of 2 minutes here? what happens if someone does not get to the target in 2 minutes? do they go to the next trial... it seems better to me to exit the experiment without saving data, so we can 'continue run' and don't waste lots of disk space
     #print('starting sample/frame loop')
     while (core.getTime() - cfg['time']) < 120:
-        # Exit Experiment Prematurely
         try:
+            # Pressing escape will exit the experiment
             if event.getKeys(keyList=['escape']):
                 myWin.close()
                 return 'escaped'
