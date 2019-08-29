@@ -1,13 +1,8 @@
 # with functions that run a trial sequence as passed to it, and stores the data appropriately
 from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
 from psychopy import event, core
-from psychopy.visual import shape
 from os import path, listdir
 from json import dump
-import pyautogui
-import pygame
-#from pygame import QUIT, quit, KEYDOWN, K_SPACE, K_ESCAPE
-#from pygame import event as pev
 from numpy import sqrt, arctan2, cos, sin, linalg, dot, ndarray, array, diff, mean, arange, pi, dot
 import csv
 import math
@@ -26,7 +21,8 @@ except:
 from time import time
 
 root = Tk()
-def addWorkSpaceLimits(screen, cfg = {}):
+def addWorkSpaceLimits(screen):
+    cfg = {}
     s = screeninfo.get_monitors()
 
     # why all this complicated code?
@@ -71,6 +67,24 @@ def addWorkSpaceLimits(screen, cfg = {}):
 
 
     return cfg
+
+# Configures the window for the experiment
+def configureWindow(cfg, experiment):
+    try:
+        cfg['win'] = Window(cfg['screen_dimensions'],
+                     winType=cfg['winType'],
+                     colorSpace='rgb',
+                     fullscr=experiment['settings']['fullscreen'],
+                     name='MousePosition', # why is it called that?
+                     color=(-1, -1, -1),
+                     units='pix',
+                     screen=experiment['settings']['screen'],
+                     viewScale=experiment['settings']['viewscale'],
+                     waitBlanking=experiment['settings']['waitblanking'])
+    except:
+        print "Exception creating Window"
+
+    return
 
 # this try/except:
 # 1: has to add the psychopy mouse object in the except statement
@@ -132,30 +146,8 @@ def vector_rotate(node, center, angle):
     vector_Y = center[1] + (node[0] - center[0])*math.sin(math.radians(angle)) + (node[1] - center[1])*math.cos(math.radians(angle))
     return [vector_X, vector_Y]
 
-
-# what is this for???
-def task_namer(given_task, function):
-    if (function == True):
-        if (given_task == "cursor"):
-            return "Cursor"
-        if (given_task == "no_cursor"):
-            return "No Cursor"
-        if (given_task == "pause"):
-            return "Pause Task"
-        if (given_task == "error_clamp"):
-            return "Error Clamp"
-    elif (function == False):
-        if (given_task == "Cursor"):
-            return "cursor"
-        if (given_task == "No Cursor"):
-            return "no_cursor"
-        if (given_task == "Pause Task"):
-            return "pause"
-        if (given_task == "Error Clamp"):
-            return "error_clamp"
-
 def task_num(given_task, function):
-    if (function == True):
+    if function:
         if (given_task == "cursor"):
             return 0
         if (given_task == "no_cursor"):
@@ -164,7 +156,7 @@ def task_num(given_task, function):
             return 2
         if (given_task == "pause"):
             return 3
-    elif (function == False):
+    else:
         if (given_task == 0):
             return "cursor"
         if (given_task == 1):
@@ -174,12 +166,12 @@ def task_num(given_task, function):
         if (given_task == 3):
             return "pause"
 def rotation_num(rotation_type, function):
-    if (function == True):
+    if function:
         if (rotation_type == 'abrupt'):
             return 0
         elif (rotation_type == 'gradual'):
             return 1
-    if (function == False):
+    else:
         if (rotation_type == 0):
             return 'abrupt'
         if (rotation_type == 1):
@@ -189,27 +181,12 @@ def rotation_num(rotation_type, function):
 def setParticipantSeed(participant):
     seed(sum([ord(c) for c in participant]))
 
-
 def shuffleTargets4task(targets, blocks):
     taskTargets = []
     for block in range(blocks):
       shuffle(targets)
       taskTargets = taskTargets + targets
     return(taskTargets)
-
-
-# do we use this?
-def rotation_direction_num(rotation_direction, function):
-    if (function == True):
-        if (rotation_direction == 'Counter-clockwise'):
-            return 0
-        elif (rotation_direction == 'Clockwise'):
-            return 1
-    if (function == False):
-        if (rotation_direction == 0):
-            return 'Counter-clockwise'
-        if (rotation_direction == 1):
-            return 'Clockwise'
 
 # I could be wrong, but it seems to me that all of the following stuff can be done without (big) libraries/modules
 # so we can reduce the annoyance of the many files that need to be copied every time someone uses this in class...
@@ -351,8 +328,6 @@ def trial_runner(cfg={}):
         # myMouse should not be used:
         # cfg['mouse'] should be used....
 
-        pos = cfg['mouse'].Pos() # now, position and time are sampled at the same time...
-
         # set distance criterion for reaching target depending on if icons are used or not
         dist_criterion = cfg['circle_radius']
         if (cfg['custom_stim_enable'] == False):
@@ -372,8 +347,6 @@ def trial_runner(cfg={}):
 
         ### Define Parameters here
         startPos = cfg['starting_pos'] # start circle should be at starting pos, but this is never explicitly set nor implicitly assumed in this function (trial_runner which is a task_runner)
-        #print('start pos:')
-        #print(startPos)
         # which if these two are we using?
         arrow=cfg['arrow_stim']
         arrowFill=cfg['arrowFill_stim']
@@ -387,7 +360,6 @@ def trial_runner(cfg={}):
         show_home = True
         show_cursor = True
         show_arrow = False
-        show_arrowFill = False
         nc_check_1 = False
         timerSet = False
         stabilize = False
@@ -398,8 +370,6 @@ def trial_runner(cfg={}):
         prev_timestamp = 0
         prev_X = 0
         prev_Y = 0
-        prev_X_cursor = 0
-        prev_Y_cursor = 0
         velocity = 0
         pixels_per_sample = 0
         pos_buffer = 0
@@ -431,98 +401,80 @@ def trial_runner(cfg={}):
     # why is there a limit of 2 minutes here? what happens if someone does not get to the target in 2 minutes? do they go to the next trial... it seems better to me to exit the experiment without saving data, so we can 'continue run' and don't waste lots of disk space
     #print('starting sample/frame loop')
     while (core.getTime() - cfg['time']) < 120:
+        # Exit Experiment Prematurely
         try:
+            if event.getKeys(keyList=['escape']):
+                myWin.close()
+                return 'escaped'
+            ### mouse Position
+            #print('getting mouse position:')
 
-            # why is this try statement here? we're immediately moving on to the next one anyway...
+            ##print('deciding on mouse object again?')
+            #if (cfg['poll_type'] == 'psychopy'):
+            #    mousePos = [myMouse.getPos()[0], myMouse.getPos()[1]*cfg['flipscreen']]
+            #    current_pos = mousePos
+            #    current_timestamp = core.getTime() - myTime
+            #elif (cfg['poll_type'] == 'x11'):
+            #    # whyyy?
+            #    # the mouse object is called 3 separate times to get the X coordinate, the Y coordinate and the time?
+            #    # one call is better!
+            #    # and it ensures that the time sample is better matched to the position coordinates...
+            #    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']] # screen flipping should be done in the mouse object?
+            #    current_pos = mousePos
+            #    current_timestamp = myMouse.Pos()[2] - myTime
 
+            mousePos = cfg['mouse'].Pos()
 
+            current_pos = [mousePos[0], mousePos[1]]
+            current_timestamp = mousePos[2]
+            #### SPECIAL CURSOR CONFIGURATIONS ####
+            if (prev_timestamp != 0):
+                change_in_time = current_timestamp - prev_timestamp
+                velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time # this is not velocity, but distance
+                pixels_per_sample = velocity*change_in_time # this is velocity
 
-            ### ESCAPE ### USING PYGAME ####
-    #        event = pev.wait()
-    #        if event.type == KEYDOWN:
-    #            if event.key == K_ESCAPE:
-    #                myWin.close()
-    #                return 'escaped'
-            ### ESCAPE ### USING PYGLET ####
-            try:
-                if event.getKeys(keyList=['escape']):
-                    myWin.close()
-                    return 'escaped'
-                ### mouse Position
-                #print('getting mouse position:')
+            # Julius' previous version (doesn't use start position, but position, cold calculated on every sample)
+            #rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
 
-                ##print('deciding on mouse object again?')
-                #if (cfg['poll_type'] == 'psychopy'):
-                #    mousePos = [myMouse.getPos()[0], myMouse.getPos()[1]*cfg['flipscreen']]
-                #    current_pos = mousePos
-                #    current_timestamp = core.getTime() - myTime
-                #elif (cfg['poll_type'] == 'x11'):
-                #    # whyyy?
-                #    # the mouse object is called 3 separate times to get the X coordinate, the Y coordinate and the time?
-                #    # one call is better!
-                #    # and it ensures that the time sample is better matched to the position coordinates...
-                #    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']] # screen flipping should be done in the mouse object?
-                #    current_pos = mousePos
-                #    current_timestamp = myMouse.Pos()[2] - myTime
+            # Marius' previous version (does use start position, but doesn't work on flipped screens)
+            #rotated_X, rotated_Y = vector_rotate(mousePos, startPos, cfg['current_rotation_angle'])
 
-                mousePos = cfg['mouse'].Pos()
+            # trying to implement properly with rotation matrix
+            # (although the matrix should be calculated once for a trial, not on every frame...)
 
-                current_pos = [mousePos[0], mousePos[1]]
-                current_timestamp = mousePos[2]
-                #print(mousePos)
-        ########################## SPECIAL CURSOR CONFIGURATIONS #####################
-                if (prev_timestamp != 0):
-                    change_in_time = current_timestamp - prev_timestamp
-                    velocity = (linalg.norm([current_pos[0] - prev_X, current_pos[1] - prev_Y]))/change_in_time # this is not velocity, but distance
-                    pixels_per_sample = velocity*change_in_time # this is velocity
+            theta = (cfg['current_rotation_angle']/180.)*pi
+            R = array([[cos(theta),-1*sin(theta)],[sin(theta),cos(theta)]])
+            rotpos = dot(R,array([mousePos[0]-startPos[0],mousePos[1]-startPos[1]]))
+            rotated_X = rotpos[0]+startPos[0]
+            rotated_Y = rotpos[1]+startPos[1]
 
-                # Julius' previous version (doesn't use start position, but position, cold calculated on every sample)
-                #rotated_X, rotated_Y = vector_rotate(mousePos, [0 + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), -cfg['active_height']/2], cfg['current_rotation_angle'])
-
-                # Marius' previous version (does use start position, but doesn't work on flipped screens)
-                #rotated_X, rotated_Y = vector_rotate(mousePos, startPos, cfg['current_rotation_angle'])
-
-                # trying to implement properly with rotation matrix
-                # (although the matrix should be calculated once for a trial, not on every frame...)
-
-                #print(pi)
-                theta = (cfg['current_rotation_angle']/180.)*pi
-                #print(theta)
-                R = array([[cos(theta),-1*sin(theta)],[sin(theta),cos(theta)]])
-                #print(R)
-                rotpos = dot(R,array([mousePos[0]-startPos[0],mousePos[1]-startPos[1]]))
-                rotated_X = rotpos[0]+startPos[0]
-                rotated_Y = rotpos[1]+startPos[1]
-
-                #print(rotated_X, rotated_Y)
-
-                if (cfg['trial_type'] == 'cursor'):
-                    if (cfg['current_rotation_angle'] == 0):
-                        circle_pos = current_pos
-                    else:
-                        circle_pos = [rotated_X, rotated_Y] # we don't have to if-else this, we can just use the rotated position all the time, right?
-                elif (cfg['trial_type'] == 'no_cursor'):
-                    if (cfg['current_rotation_angle'] == 0):
-                        circle_pos = current_pos
-                    else:
-                        circle_pos = [rotated_X, rotated_Y] # SAME HERE?
-                elif (cfg['trial_type'] == 'error_clamp'):
+            if (cfg['trial_type'] == 'cursor'):
+                if (cfg['current_rotation_angle'] == 0):
                     circle_pos = current_pos
-                    #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
-                    #vector_proj = ndarray.tolist(vector_proj_array)
-                    #rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - startPos[1]], startPos, cfg['current_rotation_angle'])
+                else:
+                    circle_pos = [rotated_X, rotated_Y] # we don't have to if-else this, we can just use the rotated position all the time, right?
+            elif (cfg['trial_type'] == 'no_cursor'):
+                if (cfg['current_rotation_angle'] == 0):
+                    circle_pos = current_pos
+                else:
+                    circle_pos = [rotated_X, rotated_Y] # SAME HERE?
+            elif (cfg['trial_type'] == 'error_clamp'):
+                circle_pos = current_pos
+                #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
+                #vector_proj = ndarray.tolist(vector_proj_array)
+                #rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - startPos[1]], startPos, cfg['current_rotation_angle'])
 
-                    home_dist = get_dist(current_pos, startPos)
-                    target_dist = get_dist(current_pos, endPos)
+                home_dist = get_dist(current_pos, startPos)
+                target_dist = get_dist(current_pos, endPos)
 
-                    cursor_angle = cfg['target_angle'] + cfg['current_rotation_angle']
-                    #if (target_dist > cfg['target_distance']) :
-                    #  cursor_angle = cursor_angle + 180
+                cursor_angle = cfg['target_angle'] + cfg['current_rotation_angle']
+                #if (target_dist > cfg['target_distance']) :
+                #  cursor_angle = cursor_angle + 180
 
-                    rotated_X_clamped = (math.cos(math.radians(cursor_angle)) * home_dist) + startPos[0]
-                    rotated_Y_clamped = ((math.sin(math.radians(cursor_angle)) * home_dist) + startPos[1]) * cfg['flipscreen']
+                rotated_X_clamped = (math.cos(math.radians(cursor_angle)) * home_dist) + startPos[0]
+                rotated_Y_clamped = ((math.sin(math.radians(cursor_angle)) * home_dist) + startPos[1]) * cfg['flipscreen']
 
-                    # we still have to multiply by flipscreen?
+                # we still have to multiply by flipscreen?
 
 
 #                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
@@ -541,20 +493,17 @@ def trial_runner(cfg={}):
 #                        active_X = vector_proj[0]
 #                        active_Y = vector_proj[1]
 #                    circle_pos_clamped = [vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2]
-                    # whyyy?
-                    # we are calculating this position when we don't even know if it's needed?
-                    # only do this for clamped (&& rotation !=0) trials?
-                    circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
-                #print('mouse position:')
-                #print(mousePos)
+                # whyyy?
+                # we are calculating this position when we don't even know if it's needed?
+                # only do this for clamped (&& rotation !=0) trials?
+                circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
+        except e:
+            print('error in main mouse/cursor position block:')
+            print(e)
+            pass
 
-            except e:
-                print('error in main mouse/cursor position block:')
-                print(e)
-                pass
-    ########################### SET CURSOR POSITIONS #############################
-            try:
-                try:
+        # SET CURSOR POSITIONS
+        try:
                     if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == False and stabilize == True):
                         circle_pos = circle_pos_clamped
                     if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == True and stabilize == True):
@@ -592,31 +541,31 @@ def trial_runner(cfg={}):
                         # previous section:
                         #arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
                         #arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
+        except e:
+            print('Cursor Position Error:')
+            print(e)
+            pass
 
-                except:
-                    pass # huh? we should do *something* when catching an error... why else do we have try/excepts?
-        ################################ SHOW OBJECTS ################################
-                try:
-                    if (pos_buffer == 0):
-                        pos_buffer = pos_buffer + 1
-                    if (show_home == True):
-                        startCircle.draw() # home position
-                    if (show_target == True):
-                        endCircle.draw()   # target position
-                    if (show_arrow == True):
-                        #print('drawing black and gray arrows on top of each other?')
-                        arrow.draw()
-                        arrowFill.draw()
-                    if (show_cursor == True):
-                        myCircle.draw()    # cursor?
-#                        testCircle.draw()
-                except:
-                    pass # don't just pass this... what has failed?
-            except:
-                pass # what has failed?
-        except:
-            pass # what has failed?
-################################ PHASE 1 #####################################
+        # SHOW OBJECTS
+        try:
+            if (pos_buffer == 0):
+                pos_buffer = pos_buffer + 1
+            if (show_home == True):
+                startCircle.draw() # home position
+            if (show_target == True):
+                endCircle.draw()   # target position
+            if (show_arrow == True):
+                #print('drawing black and gray arrows on top of each other?')
+                arrow.draw()
+                arrowFill.draw()
+            if (show_cursor == True):
+                myCircle.draw()    # cursor?
+        except e:
+            print('Failed to show object: ')
+            print(e)
+            pass
+
+        # PHASE 1
         # phase 1 is getting to the home position (usually over very soon)
         try:
             if (phase_1 == False):
@@ -899,15 +848,17 @@ def trial_runner(cfg={}):
                         timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
                         return timePos_dict
-        except:
-            pass # what went wrong if an exception occurred? why are we catching it? what should we do as backup?
+        except e:
+            print('Phase 1 Error: ')
+            print(e)
+            pass
 
 def generate_rotation_list(initial, final, trials):
     rotation_list = ndarray.tolist(((((1.0*final)-(1.0*initial))/trials)*arange(trials)) + initial)
     return rotation_list
 
 ############################# RUN EXPERIMENT V2 ###############################
-def run_experiment_2(fulls, participant, experiment = {}):
+def run_experiment(participant, experiment = {}):
     end_exp = DataFrame({})
     task_save = DataFrame({})
     running = deepcopy(experiment['experiment']) # why copy this? set up a window, a mouse object and add those, plus a task-index to your cfg, then simply loop through the tasks, and throw that to a run-task function?
@@ -917,38 +868,17 @@ def run_experiment_2(fulls, participant, experiment = {}):
     #### Generate seed ####
     participant_seed = participant + settings['experiment_folder'] # where is this used? seeding the random-number generator *once* is sufficient, and cleaner
 
-    #print experiment['settings']['waitblanking']
-    #print 'this should reflect the setting of the wait-blanking option...'
-
     view_scale = experiment['settings']['viewscale']
     # the next if/else and two try/except statements should be combined in one function: 'createWorkspace' or something...
-    if experiment['settings']['flipscreen'] == True:
-        view_scale = [a*b for a,b in zip(view_scale,[1, -1])]
+    if experiment['settings']['flipscreen']:
+        experiment['settings']['viewscale'] = [a*b for a,b in zip(view_scale,[1, -1])]
 
     try:
-        addWorkSpaceLimits(experiment['settings']['screen'], cfg)
+        cfg = addWorkSpaceLimits(experiment['settings']['screen'])
     except:
         print "Exception adding workspace limits"
 
-    try:
-        Win = Window(cfg['screen_dimensions'],
-                     winType=cfg['winType'],
-                     colorSpace='rgb',
-                     fullscr=fulls,
-                     name='MousePosition', # why is it called that?
-                     color=(-1, -1, -1),
-                     units='pix',
-                     screen=experiment['settings']['screen'],
-                     viewScale=view_scale,
-                     waitBlanking=experiment['settings']['waitblanking'])
-#        Win._setCurrent()
-
-        # I would have expected a line like this:
-        # cfg['win'] = Window(...) with the cfg being the only location to have the Window object
-        # is this Window object created for nothing? It doesn't seem to be stored anywhere? Delete?
-        cfg['win'] = Win
-    except:
-        print "Exception creating Window"
+    configureWindow(cfg, experiment)
 
     # now set up the mouse object?
 
@@ -985,7 +915,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
         #         [X,Y] = cfg['psyMouse'].getPos()
         #         return [X,Y,time()]
 
-
     class myMouse:
         def Pos(self):
             #print('PsychoPy mouse')
@@ -998,17 +927,16 @@ def run_experiment_2(fulls, participant, experiment = {}):
     # it would also make sense to put this in a function, so that it's a separate unit
     # I'd also put the creation of image stim objects for the icons in a separate function as well
     try:
-        #print('creating two arrows?')
         # is this black arrow used?
         arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
-        arrowFill = ShapeStim(win=Win,
+        arrowFill = ShapeStim(win=cfg['win'],
                                      vertices=arrowFillVert,
                                      fillColor=[-1,-1,-1],
                                      size=cfg['circle_radius']*0.6,
                                      lineColor=[-1,-1,-1])
         # or this gray one? Can we remove one?
         arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
-        arrow = ShapeStim(win=Win,
+        arrow = ShapeStim(win=cfg['win'],
                                  vertices=arrowVert,
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
@@ -1027,7 +955,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
             indexes = list(set(indexes))
             for i in indexes:
                 try:
-                    custom_target = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                    custom_target = ImageStim(win=cfg['win'], units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
                     target_x, target_y = list(custom_target.size)
                     if target_x <= target_y:
                         target_AR = [float(target_x)/float(target_x), float(target_y)/float(target_x)]
@@ -1040,14 +968,14 @@ def run_experiment_2(fulls, participant, experiment = {}):
                     # 1) remove that pair from the set of possible icon-stimuli
                     # 2) after trying all pairs: print a warning to command line that 'some' icons could not be used, removing
                     # 3) run the experiment with only the stimuli that worked
-                    custom_target = Circle(win=Win,
+                    custom_target = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
                 try:
-                    custom_cursor = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
+                    custom_cursor = ImageStim(win=cfg['win'], units='pix', image=(path.join(settings['custom_stim_file'], 'cursor_' + str(i) + '.png')))
                     cursor_x, cursor_y = list(custom_cursor.size)
                     if cursor_x < cursor_y:
                         cursor_AR = [float(cursor_x)/float(cursor_x), float(cursor_y)/float(cursor_x)]
@@ -1056,7 +984,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                     cursor_size = [z*cfg['icon_diameter'] for z in cursor_AR]
                     custom_cursor.setSize(cursor_size)
                 except:
-                    custom_cursor = Circle(win=Win,
+                    custom_cursor = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
@@ -1068,13 +996,13 @@ def run_experiment_2(fulls, participant, experiment = {}):
 
         #print('using obsolete custom cursor/target/home settings?')
         if settings['custom_cursor_enable'] == False: # we only use 'custom_stim_enable'
-            myCircle = Circle(win=Win,
+            myCircle = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
-            testCircle = Circle(win=Win,
+            testCircle = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
@@ -1082,16 +1010,16 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                      lineColor=[0, 0, 0])
         else:
             try:
-                myCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
+                myCircle = ImageStim(win=cfg['win'], units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
             except:
-                myCircle = Circle(win=Win,
+                myCircle = Circle(win=cfg['win'],
                                     #                    print(cursor_angle) radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
         if settings['custom_home_enable'] == False: # we only use 'custom_stim_enable'
-            startCircle = Circle(win=Win,
+            startCircle = Circle(win=cfg['win'],
                                         radius=cfg['circle_radius'],
                                         lineWidth=2,
                                         edges=32,
@@ -1101,9 +1029,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                         pos=cfg['home_pos']) # done
         else:
             try:
-                startCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
+                startCircle = ImageStim(win=cfg['win'], units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
             except:
-                startCircle = Circle(win=Win,
+                startCircle = Circle(win=cfg['win'],
                                         radius=cfg['circle_radius'],
                                         lineWidth=2,
                                         edges=32,
@@ -1112,7 +1040,7 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                         lineColor=[0, 0, 0],
                                         pos=cfg['home_pos']) # done
         if settings['custom_target_enable'] == False: # we only use 'custom_stim_enable'
-            endCircle = Circle(win=Win,
+            endCircle = Circle(win=cfg['win'],
                                       radius=cfg['circle_radius'],
                                       lineWidth=2,
                                       edges=32,
@@ -1121,9 +1049,9 @@ def run_experiment_2(fulls, participant, experiment = {}):
                                       lineColor=[0, 0, 0])
         else:
             try:
-                endCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
+                endCircle = ImageStim(win=cfg['win'], units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
             except:
-                endCircle = Circle(win=Win,
+                endCircle = Circle(win=cfg['win'],
                                       radius=cfg['circle_radius'],
                                       lineWidth=2,
                                       edges=32,
@@ -1136,11 +1064,10 @@ def run_experiment_2(fulls, participant, experiment = {}):
         # to here
 
     except Exception as e: # end of "configuring all visual feedback"
-
         print e
         print str(e)
 
-    ################ loop through tasks
+    # loop through tasks
 
     for i in range (0, len(running)): # loop through all tasks and copy all setting to new objects? even for experiment-wide settings? why...
         # instead of using 'running[i]['flip_text'] we could just use 'experiment['settings']['flipscreen']' right?
@@ -1277,8 +1204,6 @@ def run_experiment_2(fulls, participant, experiment = {}):
     running[i]['win'].close()
     return end_exp
 
-
-
 def get_participant_state(participant, experiment = {}):
     tasks_uncut = experiment['experiment']
 #    tasks = []
@@ -1298,8 +1223,6 @@ def get_participant_state(participant, experiment = {}):
         else:
             continue
     return [len(tasks_uncut), tasks_uncut[-1]['num_trials']]
-
-
 
 def concat_full(participant, experiment = {}):
     tasks_uncut = experiment['experiment']
@@ -1331,10 +1254,8 @@ def concat_full(participant, experiment = {}):
         csvwriter.writerow(fields)
         csvwriter.writerows(full_data)
 
-
-def continue_experiment(fulls, participant, experiment = {}):
+def continue_experiment(participant, experiment = {}):
     end_exp = DataFrame({})
-    task_save = DataFrame({})
     running = deepcopy(experiment['experiment'])
     settings = deepcopy(experiment['settings'])
     participant_state = get_participant_state(participant, experiment)
@@ -1346,28 +1267,15 @@ def continue_experiment(fulls, participant, experiment = {}):
     # the next if/else and two try/except statements should be combined in one function: 'createWorkspace' or something...
     if experiment['settings']['flipscreen'] == True:
         view_scale = [a*b for a,b in zip(view_scale,[1, -1])]
+
     try:
-        addWorkSpaceLimits(experiment['settings']['screen'], cfg)
+        cfg = addWorkSpaceLimits(experiment['settings']['screen'])
     except:
         print "Exception adding workspace limits"
-    try:
-        Win = Window(cfg['screen_dimensions'],
-                     winType=cfg['winType'],
-                     colorSpace='rgb',
-                     fullscr=fulls,
-                     name='MousePosition',
-                     color=(-1, -1, -1),
-                     units='pix',
-                     screen=experiment['settings']['screen'],
-                     viewScale=view_scale,
-                     waitBlanking=experiment['settings']['waitblanking'])
-        cfg['win'] = Win
-    except:
-        print "Exception creating Window"
 
+    configureWindow(cfg, experiment)
 
     # add mouse object... why is the whole setup of the environment not simply the same, regardless of whether this is a new or continued run?
-
 
     cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
 
@@ -1404,18 +1312,16 @@ def continue_experiment(fulls, participant, experiment = {}):
 
     cfg['mouse'] = myMouse()
 
-
-
-    ### Configure visual feedback settings here
+    # Configure visual feedback settings here
     try:
         arrowFillVert = [(-1 , 1), (-1, -1),(-0.5, 0)]
-        arrowFill = ShapeStim(win=Win,
+        arrowFill = ShapeStim(win=cfg['win'],
                                      vertices=arrowFillVert,
                                      fillColor=[-1,-1,-1],
                                      size=cfg['circle_radius']*0.6,
                                      lineColor=[-1,-1,-1])
         arrowVert = [(-1, 1),(-1,-1),(1.2,0)]
-        arrow = ShapeStim(win=Win,
+        arrow = ShapeStim(win=cfg['win'],
                                  vertices=arrowVert,
                                  fillColor=[0, 0, 0],
                                  size=cfg['circle_radius']*0.6,
@@ -1431,7 +1337,7 @@ def continue_experiment(fulls, participant, experiment = {}):
             indexes = list(set(indexes))
             for i in indexes:
                 try:
-                    custom_target = ImageStim(win=Win, units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
+                    custom_target = ImageStim(win=cfg['win'], units='pix', image=(path.join(settings['custom_stim_file'], 'target_' + str(i) + '.png')))
 
                     target_x, target_y = list(custom_target.size)
 
@@ -1442,7 +1348,7 @@ def continue_experiment(fulls, participant, experiment = {}):
                     target_size = [z*cfg['icon_diameter']for z in target_AR]
                     custom_target.setSize(target_size)
                 except:
-                    custom_target = Circle(win=Win,
+                    custom_target = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
@@ -1458,7 +1364,7 @@ def continue_experiment(fulls, participant, experiment = {}):
                     cursor_size = [z*cfg['icon_diameter'] for z in cursor_AR]
                     custom_cursor.setSize(cursor_size)
                 except:
-                    custom_cursor = Circle(win=Win,
+                    custom_cursor = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
@@ -1467,13 +1373,13 @@ def continue_experiment(fulls, participant, experiment = {}):
 
                 custom_stim_holder.append([custom_cursor, custom_target])
         if settings['custom_cursor_enable'] == False:
-            myCircle = Circle(win=Win,
+            myCircle = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
-            testCircle = Circle(win=Win,
+            testCircle = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
@@ -1481,16 +1387,16 @@ def continue_experiment(fulls, participant, experiment = {}):
                                      lineColor=[0, 0, 0])
         else:
             try:
-                myCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
+                myCircle = ImageStim(win=cfg['win'], units='pix', size=cfg['circle_radius']*2, image=settings['custom_cursor_file'])
             except:
-                myCircle = Circle(win=Win,
+                myCircle = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
                                      edges=32,
                                      units='pix',
                                      fillColor=[0, 0, 0],
                                      lineColor=[0, 0, 0])
         if settings['custom_home_enable'] == False:
-            startCircle = Circle(win=Win,
+            startCircle = Circle(win=cfg['win'],
                                         radius=cfg['circle_radius'],
                                         lineWidth=2,
                                         edges=32,
@@ -1499,9 +1405,9 @@ def continue_experiment(fulls, participant, experiment = {}):
                                          lineColor=[0, 0, 0])
         else:
             try:
-                startCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
+                startCircle = ImageStim(win=cfg['win'], units='pix', size=cfg['circle_radius']*2, image=settings['custom_home_file'])
             except:
-                startCircle = Circle(win=Win,
+                startCircle = Circle(win=cfg['win'],
                                         radius=cfg['circle_radius'],
                                         lineWidth=2,
                                         edges=32,
@@ -1509,7 +1415,7 @@ def continue_experiment(fulls, participant, experiment = {}):
                                         fillColor=[-1, -1, -1],
                                          lineColor=[0, 0, 0])
         if settings['custom_target_enable'] == False:
-            endCircle = Circle(win=Win,
+            endCircle = Circle(win=cfg['win'],
                                       radius=cfg['circle_radius'],
                                       lineWidth=2,
                                       edges=32,
@@ -1518,16 +1424,16 @@ def continue_experiment(fulls, participant, experiment = {}):
                                       lineColor=[0, 0, 0])
         else:
             try:
-                endCircle = ImageStim(win=Win, units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
+                endCircle = ImageStim(win=cfg['win'], units='pix', size=cfg['circle_radius']*2, image=settings['custom_target_file'])
             except:
-                endCircle = Circle(win=Win,
+                endCircle = Circle(win=cfg['win'],
                                       radius=cfg['circle_radius'],
                                       lineWidth=2,
                                       edges=32,
                                       units='pix',
                                       fillColor=[-1, -1, -1],
                                       lineColor=[0, 0, 0])
-        Mouse = event.Mouse(win=Win, visible=False)
+        Mouse = event.Mouse(win=cfg['win'], visible=False)
         screen_info_monitors = screeninfo.get_monitors()
 
     except Exception as e:
@@ -1564,7 +1470,7 @@ def continue_experiment(fulls, participant, experiment = {}):
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
         running[i]['mouse'] = cfg['mouse'] # DO WE HAVE THIS RIGHT HERE? now we do...
-        running[i]['win'] = Win
+        running[i]['win'] = cfg['win']
         running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
         running[i]['arrowFill_stim'] = arrowFill

@@ -866,7 +866,7 @@ class MyFrame(wx.Frame):
         event.Skip()
 
     def Delete_Press(self, event):  # wxGlade: MyFrame.<event_handler>
-        dlg = wx.MessageDialog(self, 'Confirm Deleting %s\n' % self.highlit_experiment,
+        dlg = wx.MessageDialog(self, 'Confirm Deleting \"%s\"?\n' % self.highlit_experiment,
                                'Delete Confirmation')
         if dlg.ShowModal() == wx.ID_OK:
             remove(self.experiment_folder + self.highlit_experiment + ".json")
@@ -974,7 +974,7 @@ class MyFrame(wx.Frame):
                 with open(path.join("data", self.current_experiment_name, participant, self.current_experiment_name + ".json"), "wb" ) as f:
                     dump(self.experiment_holder, f)
                     f.close()
-                self.experiment_run = exp.run_experiment_2(self.experiment_holder['settings']['fullscreen'], participant, self.experiment_holder)
+                self.experiment_run = exp.run_experiment(participant, self.experiment_holder)
                 if (len(self.experiment_run) != 0):
                     self.experiment_run.to_csv(path_or_buf = path.join("data", experimentFolder, dlg.GetValue(), dlg.GetValue() + "_COMPLETE.csv"), index=False)
             except Exception as e:
@@ -1449,7 +1449,7 @@ class MyFrame(wx.Frame):
         dlg = wx.MessageDialog(self, "Continue running this participant?", style=wx.CENTRE|wx.ICON_QUESTION|wx.YES_NO)
         if dlg.ShowModal() == wx.ID_YES:
             #### GET CURRENT EXPERIMENT STATE ####
-            exp.continue_experiment(self.experiment_holder['settings']['fullscreen'], self.highlit_participant, self.experiment_holder)
+            exp.continue_experiment(self.highlit_participant, self.experiment_holder)
         dlg.Destroy()
         event.Skip()
 
