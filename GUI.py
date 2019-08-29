@@ -172,7 +172,9 @@ class MyFrame(wx.Frame):
         self.pause_message_txt = wx.TextCtrl(self, wx.ID_ANY, (""))
         self.pause_check = wx.CheckBox(self, wx.ID_ANY, ("Space to continue"))
 
-
+        # Score Settings
+        self.score_check = wx.CheckBox(self, wx.ID_ANY, ("Use Scoring System"))
+        self.score_settings_button = wx.Button(self, wx.ID_ANY, ("Score Settings"))
 
         # Participant stuff (column 6)
         self.participants_statictext = wx.StaticText(self, wx.ID_ANY, "Participants")
@@ -181,7 +183,6 @@ class MyFrame(wx.Frame):
         self.continue_Button = wx.Button(self, wx.ID_ANY, ("Continue run"))
         self.recombine_Button = wx.Button(self, wx.ID_ANY, ("Recombine data"))
         self.preprocess_Button = wx.Button(self, wx.ID_ANY, ("Pre-Process"))
-
 
         self.__set_properties()
         self.__do_layout()
@@ -230,6 +231,10 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX, self.task_list_box_click, self.task_list_box)
         self.Bind(wx.EVT_BUTTON, self.preprocess_press, self.preprocess_Button)
         self.Bind(wx.EVT_LISTBOX, self.participants_list_box_click, self.participants_list_box)
+
+        # Scoring System Events
+        self.Bind(wx.EVT_CHECKBOX, self.score_check_press, self.score_check)
+        self.Bind(wx.EVT_BUTTON, self.score_settings_press, self.score_settings_button)
 #        self.Bind(wx.EVT_LISTBOX, self.group_listbox_click, self.group_listbox)
         # end wxGlade
 
@@ -321,6 +326,11 @@ class MyFrame(wx.Frame):
         ### Pause stuff
         self.pause_txt.SetMinSize((175,29))
         self.pause_message_txt.SetMinSize((175,29))
+
+        # Scoring System
+        self.score_settings_button.SetMinSize((175, 29))
+        self.score_settings_button.Disable()
+
         # end wxGlade
 
 
@@ -458,9 +468,15 @@ class MyFrame(wx.Frame):
         pause_sizer.Add(self.pause_message_txt, 0, 0, 0)
         pause_sizer.Add(self.pause_check, 0, 0, 0)
 
+        # Score System
+        score_sizer = wx.BoxSizer(wx.VERTICAL)
+        score_sizer.Add(self.score_check, 0, 0, 0)
+        score_sizer.Add(self.score_settings_button, 0, 0, 0)
+
         sizer_9 = wx.BoxSizer(wx.VERTICAL)
         sizer_9.Add(feedback_sizer, 0, wx.EXPAND, 0)
         sizer_9.Add(pause_sizer, 0, wx.EXPAND, 0)
+        sizer_9.Add(score_sizer, 0, wx.EXPAND, 0)
 
         # combine both task setting columns into 1 sizer?
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
@@ -567,7 +583,6 @@ class MyFrame(wx.Frame):
         self.rot_change_statictext.Enable(True)
         self.rotation_change_staticline.Enable(True)
 
-
 #        self.lag_static_text.Show()
 #        self.lag_txt.Show()
         ###########
@@ -627,6 +642,10 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Enable(False)
         self.pause_message_txt.Enable(False)
         self.pause_check.Enable(False)
+
+        # Scoring System
+        self.score_check.Enable(True)
+        self.score_settings_button.Enable(self.score_check.GetValue())
 
 
     def pause_experiment_show(self):
@@ -696,6 +715,10 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Enable(True)
         self.pause_message_txt.Enable(True)
         self.pause_check.Enable(True)
+
+        # Scoring System
+        self.score_check.Enable(False)
+        self.score_settings_button.Enable(False)
 
 
     def list_box_dclick(self, event):
@@ -769,6 +792,10 @@ class MyFrame(wx.Frame):
             self.pause_check.SetValue(self.current_experiment[self.highlit_task_num]['pause_button_wait'])
             self.pause_txt.SetValue(str(self.current_experiment[self.highlit_task_num]['pausetime']))
             self.pause_message_txt.SetValue(self.current_experiment[self.highlit_task_num]['pause_instruction'])
+
+            # Scoring System
+            self.score_check.SetValue(self.current_experiment[self.highlit_task_num]['use_score'])
+
 
             if (self.current_experiment[self.highlit_task_num]['rotation_change_type'] == 'gradual'):
 #                self.MIN_TRIAL_BOOL = True
@@ -1038,6 +1065,10 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = 'Counter-clockwise'
             self.current_experiment[self.highlit_task_num]['pause_instruction'] = ""
             self.current_experiment[self.highlit_task_num]['final_rotation_angle'] = 0
+
+            # Scoring System
+            self.current_experiment[self.highlit_task_num]['use_score'] = False
+
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
 #                dump(self.experiment_holder, f)
 #                f.close()
@@ -1409,6 +1440,16 @@ class MyFrame(wx.Frame):
         self.current_experiment[self.highlit_task_num]['terminal_feedback'] = event.IsChecked()
         event.Skip()
 
+    # Scoring System Events
+    def score_check_press(self, event):
+        self.current_experiment[self.highlit_task_num]['use_score'] = event.IsChecked()
+        self.score_settings_button.Enable(event.IsChecked())
+        event.Skip()
+
+    def score_settings_press(self, event):
+        scoreframe = ScoreFrame(self, wx.ID_ANY, "")
+        scoreframe.Show(True)
+        event.Skip()
 #    def rotation_angle_direction_press(self, event):
 #        self.current_experiment[self.highlit_task_num]['rotation_angle_direction'] = event.GetString()
 #        event.Skip()
@@ -2259,6 +2300,20 @@ class PreprocessFrame(wx.Frame):
         except Exception as e:
             traceback.print_exc()
         event.Skip()
+
+
+# Score System Frame
+class ScoreFrame(wx.Frame):
+    def __init__(self, *args, **kwds):
+        wx.Frame.__init__(self, *args, **kwds)
+        self.SetTitle("Scoring System Settings")
+        self.SetSize((735,250))
+
+    def __set_properties__(self):
+        print("implement me")
+
+    def __do_layout(self):
+        print("implement me")
 
 # end of class MyFrame
 class MyApp(wx.App):
