@@ -2323,98 +2323,162 @@ class PreprocessFrame(wx.Frame):
 # Score System Frame
 class ScoreFrame(wx.Frame):
     def __init__(self, *args, **kwds):
+        # begin wxGlade: scoreFrame.__init__
+        kwds["style"] = kwds.get("style", 0) | wx.CAPTION | wx.CLIP_CHILDREN | wx.MINIMIZE_BOX | wx.CLOSE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.SYSTEM_MENU
         wx.Frame.__init__(self, *args, **kwds)
-        self.SetTitle("Scoring System Settings")
-        self.SetSize((735,250))
+        self.SetSize((770, 333))
+        self.high_acc_lbl = wx.StaticText(self, wx.ID_ANY, "High Accuracy", style=wx.ALIGN_CENTER)
+        self.high_acc_pts_lbl = wx.StaticText(self, wx.ID_ANY, "Points")
+        self.high_acc_angle_lbl = wx.StaticText(self, wx.ID_ANY, "Cutoff Angle in degrees")
+        self.high_acc_cur_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Cursor Color")
+        self.high_acc_tar_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Target Color")
+        self.high_acc_pts_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
+        self.high_acc_angle_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
+        self.high_acc_cur_clr = wx.ColourPickerCtrl(self)
+        self.high_acc_tar_clr = wx.ColourPickerCtrl(self)
+        self.med_acc_lbl = wx.StaticText(self, wx.ID_ANY, "Medium Accuracy")
+        self.med_acc_pts_lbl = wx.StaticText(self, wx.ID_ANY, "Points")
+        self.med_acc_angle_lbl = wx.StaticText(self, wx.ID_ANY, "Cutoff angle in degrees")
+        self.med_acc_cur_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Cursor Color")
+        self.med_acc_tar_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Target Color")
+        self.med_acc_pts_txtctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
+        self.med_acc_angle_txtctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
+        self.med_acc_cur_clr = wx.ColourPickerCtrl(self)
+        self.med_acc_tar_clr = wx.ColourPickerCtrl(self)
+        self.low_acc_lbl = wx.StaticText(self, wx.ID_ANY, "Low Accuracy")
+        self.low_acc_pt_lbl = wx.StaticText(self, wx.ID_ANY, "Points")
+        self.low_acc_cur_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Cursor Color")
+        self.low_acc_tar_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Target Color")
+        self.low_acc_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
+        self.low_acc_cur_clr = wx.ColourPickerCtrl(self)
+        self.low_acc_tar_clr = wx.ColourPickerCtrl(self)
+        self.color_change_radio = wx.RadioBox(self, wx.ID_ANY, "Change colors when:", choices=["Halfway point is reached", "At the end of the reach"], majorDimension=2, style=wx.RA_SPECIFY_COLS)
+        self.zero_reward_check = wx.CheckBox(self, wx.ID_ANY, "Set reward to 0 at the start of a task")
 
-        # Set reward to zero at start of task
-        self.zero_reward_start = wx.CheckBox(self, wx.ID_ANY, "Set reward to 0 at the start of a task")
-
-        # Accuracy Related Variables
-        self.high_acc_text = wx.StaticText(self, wx.ID_ANY, "High Accuracy")
-        self.med_acc_text = wx.StaticText(self, wx.ID_ANY, "Medium Accuracy")
-        self.low_acc_text = wx.StaticText(self, wx.ID_ANY, "Low Accuracy")
-
-        # Cursuor and Target Colours
-        self.high_acc_cursor_clr_btn = wx.Button(self, wx.ID_ANY, "Cursor Color")
-        self.med_acc_cursor_clr_btn = wx.Button(self, wx.ID_ANY, "Cursor Color")
-        self.low_acc_cursor_clr_btn = wx.Button(self, wx.ID_ANY, "Cursor Color")
-
-        self.high_acc_target_clr_btn = wx.Button(self, wx.ID_ANY, "Target Color")
-        self.med_acc_target_clr_btn = wx.Button(self, wx.ID_ANY, "Target Color")
-        self.low_acc_target_clr_btn = wx.Button(self, wx.ID_ANY, "Target Color")
-
-        # Points
-        self.high_acc_points = wx.TextCtrl(self, wx.ID_ANY, "3")
-        self.med_acc_points = wx.TextCtrl(self, wx.ID_ANY, "2")
-        self.low_acc_points = wx.TextCtrl(self, wx.ID_ANY, "1")
-
-        # Radio
-        self.change_colors_radio = wx.RadioBox(self, wx.ID_ANY, "Change Colors When:",
-                                               choices=["Halfway point is reached",
-                                                        "At the end of the reach"],
-                                               majorDimension=1,
-                                               style=wx.RA_SPECIFY_COLS
-                                               )
-
-        self.confirm_button = wx.Button(self, wx.ID_ANY, "Confirm")
-        self.cancel_Button = wx.Button(self, wx.ID_ANY, "Cancel")
-
-        self.__set_properties__()
+        self.__set_properties()
         self.__do_layout()
 
-    def __set_properties__(self):
-        self.change_colors_radio.SetSelection(1)
+        self.Bind(wx.EVT_RADIOBOX, self.onRadioBoxClick, self.color_change_radio)
+        self.Bind(wx.EVT_CHECKBOX, self.onRewardCheckbox, self.zero_reward_check)
+
+        # High Accuracy
+        self.Bind(wx.EVT_SPINCTRL, self.onHighAccPtsSpin, self.high_acc_pts_spinctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.onHighAccAngSpin, self.high_acc_angle_spinctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.onHighAccCursorClr, self.high_acc_cur_clr)
+        self.Bind(wx.EVT_SPINCTRL, self.onHighAccTargClr, self.high_acc_tar_clr)
+
+        # Medium Accuracy
+        self.Bind(wx.EVT_SPINCTRL, self.onMedAccPtsSpin, self.med_acc_pts_txtctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.onMedAccAngSpin, self.med_acc_angle_txtctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.onMedAccCursorClr, self.med_acc_cur_clr)
+        self.Bind(wx.EVT_SPINCTRL, self.onMedAccTargClr, self.med_acc_tar_clr)
+
+        # Low Accuracy
+        self.Bind(wx.EVT_SPINCTRL, self.onLowAccPtsSpin, self.low_acc_spinctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.onLowAccCursorClr, self.low_acc_cur_clr)
+        self.Bind(wx.EVT_SPINCTRL, self.onLowAccTargClr, self.low_acc_tar_clr)
+
+        # end wxGlade
+
+    def __set_properties(self):
+        # begin wxGlade: scoreFrame.__set_properties
+        self.SetTitle("Scoring Settings")
+        self.color_change_radio.SetSelection(1)
+        # end wxGlade
 
     def __do_layout(self):
-
-        acc_col = wx.BoxSizer(wx.VERTICAL)
-
-        high_acc_row = wx.BoxSizer(wx.HORIZONTAL)
-        high_acc_row.Add(self.high_acc_text, 1)
-        high_acc_row.Add(self.high_acc_points, 1)
-        high_acc_row.Add(self.high_acc_cursor_clr_btn, 1)
-        high_acc_row.Add(self.high_acc_target_clr_btn, 1)
-
-        med_acc_row = wx.BoxSizer(wx.HORIZONTAL)
-        med_acc_row.Add(self.med_acc_text, 1)
-        med_acc_row.Add(self.med_acc_points, 1)
-        med_acc_row.Add(self.med_acc_cursor_clr_btn, 1)
-        med_acc_row.Add(self.med_acc_target_clr_btn, 1)
-
-        low_acc_row = wx.BoxSizer(wx.HORIZONTAL)
-        low_acc_row.Add(self.low_acc_text, 1)
-        low_acc_row.Add(self.low_acc_points, 1)
-        low_acc_row.Add(self.low_acc_cursor_clr_btn, 1)
-        low_acc_row.Add(self.low_acc_target_clr_btn, 1)
-
-        acc_col.Add(high_acc_row, 0, wx.CENTER, 20)
-        acc_col.Add(med_acc_row, 0, wx.CENTER, 20)
-        acc_col.Add(low_acc_row, 0, wx.CENTER, 20)
-
-        extra_options_col = wx.BoxSizer(wx.VERTICAL)
-        extra_options_col.Add(self.change_colors_radio, 0, wx.TOP, 2)
-        extra_options_col.Add(self.zero_reward_start, 0, wx.BOTTOM, 2)
-
-        btn_row = wx.BoxSizer(wx.HORIZONTAL)
-        btn_row.Add(self.confirm_button, 0, wx.ALL | wx.EXPAND, 20)
-        btn_row.Add(self.cancel_Button, 0, wx.ALL | wx.EXPAND, 20)
-
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        mainSizer.Add(acc_col)
-        mainSizer.Add(extra_options_col)
-        mainSizer.Add(btn_row)
-
-        self.SetSizer(mainSizer)
-        mainSizer.Fit(self)
+        # begin wxGlade: scoreFrame.__do_layout
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.optionsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.changeColorSizer = wx.BoxSizer(wx.VERTICAL)
+        self.accuracySizer = wx.BoxSizer(wx.VERTICAL)
+        self.low_acc_gridsizer = wx.FlexGridSizer(2, 3, 5, 5)
+        self.med_acc_gridsizer = wx.FlexGridSizer(2, 4, 5, 5)
+        self.high_acc_gridsizer = wx.FlexGridSizer(2, 4, 5, 5)
+        self.accuracySizer.Add(self.high_acc_lbl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_pts_lbl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_angle_lbl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_cur_clr_lbl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_tar_clr_lbl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_pts_spinctrl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_angle_spinctrl, 0, 0, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_cur_clr, 0, wx.EXPAND, 0)
+        self.high_acc_gridsizer.Add(self.high_acc_tar_clr, 1, wx.EXPAND, 0)
+        self.accuracySizer.Add(self.high_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        self.accuracySizer.Add(self.med_acc_lbl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_pts_lbl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_angle_lbl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_cur_clr_lbl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_tar_clr_lbl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_pts_txtctrl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_angle_txtctrl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_cur_clr, 0, wx.EXPAND, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_tar_clr, 1, wx.EXPAND, 0)
+        self.accuracySizer.Add(self.med_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        self.accuracySizer.Add(self.low_acc_lbl, 0, 0, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_pt_lbl, 0, 0, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_cur_clr_lbl, 0, 0, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_tar_clr_lbl, 0, 0, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_spinctrl, 0, 0, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_cur_clr, 0, wx.EXPAND, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_tar_clr, 1, wx.EXPAND, 0)
+        self.accuracySizer.Add(self.low_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        self.optionsSizer.Add(self.accuracySizer, 1, wx.ALL | wx.EXPAND, 10)
+        self.changeColorSizer.Add(self.color_change_radio, 0, 0, 0)
+        self.changeColorSizer.Add(self.zero_reward_check, 0, wx.ALL | wx.EXPAND, 10)
+        self.optionsSizer.Add(self.changeColorSizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.mainSizer.Add(self.optionsSizer, 1, wx.EXPAND, 0)
+        self.SetSizer(self.mainSizer)
         self.Layout()
-        self.Center()
+        self.Centre()
+        # end wxGlade
 
+    def onRadioBoxClick(self, event):  # wxGlade: scoreFrame.<event_handler>
+        print("Event handler 'onRadioBoxClick' not implemented!")
+        event.Skip()
 
+    def onRewardCheckbox(self, event):  # wxGlade: scoreFrame.<event_handler>
+        print("Event handler 'onRewardCheckbox' not implemented!")
+        event.Skip()
 
+    # High Accuracy
+    def onHighAccPtsSpin(self, event):
+        event.Skip()
 
+    def onHighAccAngSpin(self, event):
+        event.Skip()
 
+    def onHighAccCursorClr(self, event):
+        event.Skip()
+
+    def onHighAccTargClr(self, event):
+        event.Skip()
+
+    # Medium Accuracy
+    def onMedAccPtsSpin(self, event):
+        event.Skip()
+
+    def onMedAccAngSpin(self, event):
+        event.Skip()
+
+    def onMedAccCursorClr(self, event):
+        event.Skip()
+
+    def onMedAccTargClr(self, event):
+        event.Skip()
+
+    # Low Accuracy
+    def onLowAccPtsSpin(self, event):
+        event.Skip()
+
+    def onLowAccAngSpin(self, event):
+        event.Skip()
+
+    def onLowAccCursorClr(self, event):
+        event.Skip()
+
+    def onLowAccTargClr(self, event):
+        event.Skip()
 
 # end of class MyFrame
 class MyApp(wx.App):
