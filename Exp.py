@@ -1,4 +1,3 @@
-# with functions that run a trial sequence as passed to it, and stores the data appropriately
 from psychopy.visual import Window, Circle, ShapeStim, TextStim, ImageStim
 from psychopy import event, core
 from os import path, listdir
@@ -1139,6 +1138,9 @@ def run_experiment(participant, experiment = {}):
         setParticipantSeed(participant_seed + str(i)) # this should not be done every task or trial, just once per experiment/participant, otherwise stuff is not reproducible
 
         fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
+        if (running[i]['use_score']):
+            running[i]['score_system'] = {}
+
         if (running[i]['trial_type'] != 'pause'):
 #            if running[i]['num_targets'] > 1:
 #                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
@@ -1487,6 +1489,10 @@ def continue_experiment(participant, experiment = {}):
             targetList = [running[i]['min_angle']]
         setParticipantSeed(participant_seed + str(i))
         fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
+
+        if (running[i]['use_score']):
+            running[i]['score_system'] = {}
+
         if (running[i]['trial_type'] != 'pause'):
             for trial_num in range ((participant_state[1])*continued, int(running[i]['num_trials'])):
                 continued = 0
