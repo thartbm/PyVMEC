@@ -1065,10 +1065,20 @@ class MyFrame(wx.Frame):
             # Scoring System
             self.current_experiment[self.highlit_task_num]['use_score'] = False
 
+            # Reward name
+            self.current_experiment[self.highlit_task_num]['score_name'] = 'Score'
+
+            # Scoring should be at the halfway point or end of the reach
+            self.current_experiment[self.highlit_task_num]['score_method'] = 'endReach'
+
             # Zero out reward at the start of each task
             self.current_experiment[self.highlit_task_num]['score_zero_reward'] = False
 
             # Scoring for each accuracy, their cursor and target colours, and cutoff angles
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy'] = {}
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy'] = {}
+            self.current_experiment[self.highlit_task_num]['score_low_accuracy'] = {}
+
             self.current_experiment[self.highlit_task_num]['score_high_accuracy']['points'] = 3
             self.current_experiment[self.highlit_task_num]['score_med_accuracy']['points'] = 1
             self.current_experiment[self.highlit_task_num]['score_low_accuracy']['points'] = 0
@@ -1078,14 +1088,14 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['score_med_accuracy']['cutoff'] = 10
 
             # Colours for the cursor for each accuracy
-            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['cursor_colour'] = {0, 0, 0}
-            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['cursor_color'] = {0, 0, 0}
-            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['cursor_color'] = {0, 0, 0}
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['cursor_color'] = [127, 127, 127]
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['cursor_color'] = [127, 127, 127]
+            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['cursor_color'] = [127, 127, 127]
 
             # Colours for the target for each accuracy
-            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['target_color'] = {0, 0, 0}
-            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['target_color'] = {0, 0, 0}
-            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['target_color'] = {0, 0, 0}
+            self.current_experiment[self.highlit_task_num]['score_high_accuracy']['target_color'] = [127, 127, 127]
+            self.current_experiment[self.highlit_task_num]['score_med_accuracy']['target_color'] = [127, 127, 127]
+            self.current_experiment[self.highlit_task_num]['score_low_accuracy']['target_color'] = [127, 127, 127]
 
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
 #                dump(self.experiment_holder, f)
@@ -2319,40 +2329,69 @@ class PreprocessFrame(wx.Frame):
             traceback.print_exc()
         event.Skip()
 
+# Converts the scoring method from string to it or vice versa
+def getScoringType(scoringType, toString):
+    if toString:
+        if scoringType == 0:
+            return 'halfawy'
+        elif scoringType == 1:
+            return 'endReach'
+    else:
+        if scoringType == 'halfway':
+            return 0
+        elif scoringType == 'endReach':
+            return 1
 
 # Score System Frame
 class ScoreFrame(wx.Frame):
     def __init__(self, *args, **kwds):
+        # Global clamps
+        self.SCORE_MIN_POINTS = -100
+        self.SCORE_MAX_POINTS = 100
+        self.SCORE_MIN_DEGREES = 1
+        self.SCORE_MAX_DEGREES = 90
+
         # begin wxGlade: scoreFrame.__init__
-        kwds["style"] = kwds.get("style", 0) | wx.CAPTION | wx.CLIP_CHILDREN | wx.MINIMIZE_BOX | wx.CLOSE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.SYSTEM_MENU
+        kwds["style"] = kwds.get("style", 0) \
+                        | wx.CAPTION | wx.CLIP_CHILDREN | wx.MINIMIZE_BOX \
+                        | wx.CLOSE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.SYSTEM_MENU
         wx.Frame.__init__(self, *args, **kwds)
-        self.SetSize((770, 333))
+        self.SetSize((840, 333))
         self.high_acc_lbl = wx.StaticText(self, wx.ID_ANY, "High Accuracy", style=wx.ALIGN_CENTER)
         self.high_acc_pts_lbl = wx.StaticText(self, wx.ID_ANY, "Points")
-        self.high_acc_angle_lbl = wx.StaticText(self, wx.ID_ANY, "Cutoff Angle in degrees")
         self.high_acc_cur_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Cursor Color")
         self.high_acc_tar_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Target Color")
-        self.high_acc_pts_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
-        self.high_acc_angle_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
-        self.high_acc_cur_clr = wx.ColourPickerCtrl(self)
-        self.high_acc_tar_clr = wx.ColourPickerCtrl(self)
+        self.high_acc_pts_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0",
+                                                 min=self.SCORE_MIN_POINTS, max=self.SCORE_MAX_POINTS)
+        self.high_acc_cur_clr = wx.ColourPickerCtrl(self, wx.ID_ANY)
+        self.high_acc_tar_clr = wx.ColourPickerCtrl(self, wx.ID_ANY)
+        self.high_acc_angle_lbl = wx.StaticText(self, wx.ID_ANY, "Cutoff angle to score {points} points")
+        self.high_acc_angle_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0",
+                                                   min=self.SCORE_MIN_DEGREES, max=self.SCORE_MAX_DEGREES - 1)
         self.med_acc_lbl = wx.StaticText(self, wx.ID_ANY, "Medium Accuracy")
         self.med_acc_pts_lbl = wx.StaticText(self, wx.ID_ANY, "Points")
-        self.med_acc_angle_lbl = wx.StaticText(self, wx.ID_ANY, "Cutoff angle in degrees")
         self.med_acc_cur_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Cursor Color")
         self.med_acc_tar_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Target Color")
-        self.med_acc_pts_txtctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
-        self.med_acc_angle_txtctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
-        self.med_acc_cur_clr = wx.ColourPickerCtrl(self)
-        self.med_acc_tar_clr = wx.ColourPickerCtrl(self)
+        self.med_acc_pts_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0",
+                                                min=self.SCORE_MIN_POINTS, max=self.SCORE_MAX_POINTS)
+        self.med_acc_cur_clr = wx.ColourPickerCtrl(self, wx.ID_ANY)
+        self.med_acc_tar_clr = wx.ColourPickerCtrl(self, wx.ID_ANY)
+        self.med_acc_angle_lbl = wx.StaticText(self, wx.ID_ANY, "Cutoff angle to score {points} points")
+        self.med_acc_angle_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0",
+                                                  min=self.SCORE_MIN_DEGREES + 1, max=self.SCORE_MAX_DEGREES)
         self.low_acc_lbl = wx.StaticText(self, wx.ID_ANY, "Low Accuracy")
         self.low_acc_pt_lbl = wx.StaticText(self, wx.ID_ANY, "Points")
         self.low_acc_cur_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Cursor Color")
         self.low_acc_tar_clr_lbl = wx.StaticText(self, wx.ID_ANY, "Target Color")
-        self.low_acc_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0", min=0, max=100)
-        self.low_acc_cur_clr = wx.ColourPickerCtrl(self)
-        self.low_acc_tar_clr = wx.ColourPickerCtrl(self)
-        self.color_change_radio = wx.RadioBox(self, wx.ID_ANY, "Change colors when:", choices=["Halfway point is reached", "At the end of the reach"], majorDimension=2, style=wx.RA_SPECIFY_COLS)
+        self.low_acc_pts_spinctrl = wx.SpinCtrl(self, wx.ID_ANY, "0",
+                                                min=self.SCORE_MIN_POINTS, max=self.SCORE_MAX_POINTS)
+        self.low_acc_cur_clr = wx.ColourPickerCtrl(self, wx.ID_ANY)
+        self.low_acc_tar_clr = wx.ColourPickerCtrl(self, wx.ID_ANY)
+        self.reward_name_lbl = wx.StaticText(self, wx.ID_ANY, "Reward Name:")
+        self.reward_name_txtctrl = wx.TextCtrl(self, wx.ID_ANY, "")
+        self.color_change_radio = wx.RadioBox(self, wx.ID_ANY, "Change colors when:",
+                                              choices=["Halfway point is reached", "At the end of the reach"],
+                                              majorDimension=2, style=wx.RA_SPECIFY_COLS)
         self.zero_reward_check = wx.CheckBox(self, wx.ID_ANY, "Set reward to 0 at the start of a task")
 
         self.__set_properties()
@@ -2360,23 +2399,24 @@ class ScoreFrame(wx.Frame):
 
         self.Bind(wx.EVT_RADIOBOX, self.onRadioBoxClick, self.color_change_radio)
         self.Bind(wx.EVT_CHECKBOX, self.onRewardCheckbox, self.zero_reward_check)
+        self.Bind(wx.EVT_TEXT, self.onRewardNameChange, self.reward_name_txtctrl)
 
         # High Accuracy
         self.Bind(wx.EVT_SPINCTRL, self.onHighAccPtsSpin, self.high_acc_pts_spinctrl)
         self.Bind(wx.EVT_SPINCTRL, self.onHighAccAngSpin, self.high_acc_angle_spinctrl)
-        self.Bind(wx.EVT_SPINCTRL, self.onHighAccCursorClr, self.high_acc_cur_clr)
-        self.Bind(wx.EVT_SPINCTRL, self.onHighAccTargClr, self.high_acc_tar_clr)
+        self.Bind(wx.EVT_COLOURPICKER_CHANGED, self.onHighAccCursorClr, self.high_acc_cur_clr)
+        self.Bind(wx.EVT_COLOURPICKER_CHANGED, self.onHighAccTargClr, self.high_acc_tar_clr)
 
         # Medium Accuracy
-        self.Bind(wx.EVT_SPINCTRL, self.onMedAccPtsSpin, self.med_acc_pts_txtctrl)
-        self.Bind(wx.EVT_SPINCTRL, self.onMedAccAngSpin, self.med_acc_angle_txtctrl)
-        self.Bind(wx.EVT_SPINCTRL, self.onMedAccCursorClr, self.med_acc_cur_clr)
-        self.Bind(wx.EVT_SPINCTRL, self.onMedAccTargClr, self.med_acc_tar_clr)
+        self.Bind(wx.EVT_SPINCTRL, self.onMedAccPtsSpin, self.med_acc_pts_spinctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.onMedAccAngSpin, self.med_acc_angle_spinctrl)
+        self.Bind(wx.EVT_COLOURPICKER_CHANGED, self.onMedAccCursorClr, self.med_acc_cur_clr)
+        self.Bind(wx.EVT_COLOURPICKER_CHANGED, self.onMedAccTargClr, self.med_acc_tar_clr)
 
         # Low Accuracy
-        self.Bind(wx.EVT_SPINCTRL, self.onLowAccPtsSpin, self.low_acc_spinctrl)
-        self.Bind(wx.EVT_SPINCTRL, self.onLowAccCursorClr, self.low_acc_cur_clr)
-        self.Bind(wx.EVT_SPINCTRL, self.onLowAccTargClr, self.low_acc_tar_clr)
+        self.Bind(wx.EVT_SPINCTRL, self.onLowAccPtsSpin, self.low_acc_pts_spinctrl)
+        self.Bind(wx.EVT_COLOURPICKER_CHANGED, self.onLowAccCursorClr, self.low_acc_cur_clr)
+        self.Bind(wx.EVT_COLOURPICKER_CHANGED, self.onLowAccTargClr, self.low_acc_tar_clr)
 
         # end wxGlade
 
@@ -2384,6 +2424,108 @@ class ScoreFrame(wx.Frame):
         # begin wxGlade: scoreFrame.__set_properties
         self.SetTitle("Scoring Settings")
         self.color_change_radio.SetSelection(1)
+
+        # Set values for each parameter
+
+        # Reward name
+        self.reward_name_txtctrl.SetValue(
+            self.Parent.current_experiment[
+                self.Parent.highlit_task_num]['score_name']
+        )
+
+        # Points
+        self.high_acc_pts_spinctrl.SetValue(
+            self.Parent.current_experiment[
+                self.Parent.highlit_task_num]['score_high_accuracy']['points']
+        )
+
+        self.high_acc_angle_lbl.SetLabel('Cutoff angle to score ' + str(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['points']
+        ) + ' points')
+
+        # Angle cutoff
+        self.high_acc_angle_spinctrl.SetValue(
+            self.Parent.current_experiment[
+                self.Parent.highlit_task_num]['score_high_accuracy']['cutoff']
+        )
+
+        # Cursor Clr
+        self.high_acc_cur_clr.SetColour(wx.Colour(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cursor_color'][0],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cursor_color'][1],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cursor_color'][2]
+        ))
+
+        # Target Clr
+        self.high_acc_tar_clr.SetColour(wx.Colour(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['target_color'][0],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['target_color'][1],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['target_color'][2]
+        ))
+
+        # Medium Acc
+
+        # Points
+        self.med_acc_pts_spinctrl.SetValue(
+            self.Parent.current_experiment[
+                self.Parent.highlit_task_num]['score_med_accuracy']['points']
+        )
+
+        self.med_acc_angle_lbl.SetLabel('Cutoff angle to score ' + str(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['points']
+        ) + ' points')
+
+        self.med_acc_angle_spinctrl.SetValue(
+            self.Parent.current_experiment[
+                self.Parent.highlit_task_num]['score_med_accuracy']['cutoff']
+        )
+
+        # Cursor Clr
+        self.med_acc_cur_clr.SetColour(wx.Colour(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cursor_color'][0],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cursor_color'][1],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cursor_color'][2]
+        ))
+
+        # Target Clr
+        self.med_acc_tar_clr.SetColour(wx.Colour(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['target_color'][0],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['target_color'][1],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['target_color'][2]
+        ))
+
+        # Low Acc
+
+        # Points
+        self.low_acc_pts_spinctrl.SetValue(
+            self.Parent.current_experiment[
+                self.Parent.highlit_task_num]['score_low_accuracy']['points']
+        )
+
+        # Cursor Clr
+        self.low_acc_cur_clr.SetColour(wx.Colour(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['cursor_color'][0],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['cursor_color'][1],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['cursor_color'][2]
+        ))
+
+        # Target Clr
+        self.low_acc_tar_clr.SetColour(wx.Colour(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['target_color'][0],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['target_color'][1],
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['target_color'][2]
+        ))
+
+        # Radio Box
+        self.color_change_radio.SetSelection(getScoringType(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_method'], False)
+        )
+
+        # Checkbox
+        self.zero_reward_check.SetValue(
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_zero_reward']
+        )
+
         # end wxGlade
 
     def __do_layout(self):
@@ -2391,42 +2533,60 @@ class ScoreFrame(wx.Frame):
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.optionsSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.changeColorSizer = wx.BoxSizer(wx.VERTICAL)
+        self.rewardSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.accuracySizer = wx.BoxSizer(wx.VERTICAL)
         self.low_acc_gridsizer = wx.FlexGridSizer(2, 3, 5, 5)
-        self.med_acc_gridsizer = wx.FlexGridSizer(2, 4, 5, 5)
-        self.high_acc_gridsizer = wx.FlexGridSizer(2, 4, 5, 5)
+        med_static_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        med_acc_ang_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.med_acc_gridsizer = wx.FlexGridSizer(2, 3, 5, 5)
+        high_static_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        high_acc_ang_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.high_acc_gridsizer = wx.FlexGridSizer(2, 3, 5, 5)
         self.accuracySizer.Add(self.high_acc_lbl, 0, 0, 0)
         self.high_acc_gridsizer.Add(self.high_acc_pts_lbl, 0, 0, 0)
-        self.high_acc_gridsizer.Add(self.high_acc_angle_lbl, 0, 0, 0)
         self.high_acc_gridsizer.Add(self.high_acc_cur_clr_lbl, 0, 0, 0)
         self.high_acc_gridsizer.Add(self.high_acc_tar_clr_lbl, 0, 0, 0)
         self.high_acc_gridsizer.Add(self.high_acc_pts_spinctrl, 0, 0, 0)
-        self.high_acc_gridsizer.Add(self.high_acc_angle_spinctrl, 0, 0, 0)
         self.high_acc_gridsizer.Add(self.high_acc_cur_clr, 0, wx.EXPAND, 0)
         self.high_acc_gridsizer.Add(self.high_acc_tar_clr, 1, wx.EXPAND, 0)
         self.accuracySizer.Add(self.high_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        high_acc_ang_sizer.Add(self.high_acc_angle_lbl, 0, wx.ALIGN_CENTER, 0)
+        high_acc_ang_sizer.Add(self.high_acc_angle_spinctrl, 0, wx.LEFT, 20)
+        self.accuracySizer.Add(high_acc_ang_sizer, 1, wx.EXPAND, 0)
+        static_line_1 = wx.StaticLine(self, wx.ID_ANY)
+        static_line_1.SetMinSize((1, 2))
+        high_static_sizer.Add(static_line_1, 1, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.accuracySizer.Add(high_static_sizer, 1, wx.EXPAND, 0)
         self.accuracySizer.Add(self.med_acc_lbl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_pts_lbl, 0, 0, 0)
-        self.med_acc_gridsizer.Add(self.med_acc_angle_lbl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_cur_clr_lbl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_tar_clr_lbl, 0, 0, 0)
-        self.med_acc_gridsizer.Add(self.med_acc_pts_txtctrl, 0, 0, 0)
-        self.med_acc_gridsizer.Add(self.med_acc_angle_txtctrl, 0, 0, 0)
+        self.med_acc_gridsizer.Add(self.med_acc_pts_spinctrl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_cur_clr, 0, wx.EXPAND, 0)
         self.med_acc_gridsizer.Add(self.med_acc_tar_clr, 1, wx.EXPAND, 0)
         self.accuracySizer.Add(self.med_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        med_acc_ang_sizer.Add(self.med_acc_angle_lbl, 0, wx.ALIGN_CENTER, 0)
+        med_acc_ang_sizer.Add(self.med_acc_angle_spinctrl, 0, wx.LEFT, 20)
+        self.accuracySizer.Add(med_acc_ang_sizer, 1, wx.EXPAND, 0)
+        static_line_2 = wx.StaticLine(self, wx.ID_ANY)
+        static_line_2.SetMinSize((1, 2))
+        med_static_sizer.Add(static_line_2, 1, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.accuracySizer.Add(med_static_sizer, 1, wx.EXPAND, 0)
         self.accuracySizer.Add(self.low_acc_lbl, 0, 0, 0)
         self.low_acc_gridsizer.Add(self.low_acc_pt_lbl, 0, 0, 0)
         self.low_acc_gridsizer.Add(self.low_acc_cur_clr_lbl, 0, 0, 0)
         self.low_acc_gridsizer.Add(self.low_acc_tar_clr_lbl, 0, 0, 0)
-        self.low_acc_gridsizer.Add(self.low_acc_spinctrl, 0, 0, 0)
+        self.low_acc_gridsizer.Add(self.low_acc_pts_spinctrl, 0, 0, 0)
         self.low_acc_gridsizer.Add(self.low_acc_cur_clr, 0, wx.EXPAND, 0)
         self.low_acc_gridsizer.Add(self.low_acc_tar_clr, 1, wx.EXPAND, 0)
         self.accuracySizer.Add(self.low_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
         self.optionsSizer.Add(self.accuracySizer, 1, wx.ALL | wx.EXPAND, 10)
-        self.changeColorSizer.Add(self.color_change_radio, 0, 0, 0)
-        self.changeColorSizer.Add(self.zero_reward_check, 0, wx.ALL | wx.EXPAND, 10)
-        self.optionsSizer.Add(self.changeColorSizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.rewardSizer.Add(self.reward_name_lbl, 0, wx.ALIGN_CENTER | wx.RIGHT, 5)
+        self.rewardSizer.Add(self.reward_name_txtctrl, 0, wx.ALIGN_CENTER, 7)
+        self.changeColorSizer.Add(self.rewardSizer, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.changeColorSizer.Add(self.color_change_radio, 0, wx.ALL, 0)
+        self.changeColorSizer.Add(self.zero_reward_check, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.optionsSizer.Add(self.changeColorSizer, 1, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 0)
         self.mainSizer.Add(self.optionsSizer, 1, wx.EXPAND, 0)
         self.SetSizer(self.mainSizer)
         self.Layout()
@@ -2434,50 +2594,88 @@ class ScoreFrame(wx.Frame):
         # end wxGlade
 
     def onRadioBoxClick(self, event):  # wxGlade: scoreFrame.<event_handler>
-        print("Event handler 'onRadioBoxClick' not implemented!")
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_method'] = \
+            getScoringType(event.GetInt(), True)
         event.Skip()
 
     def onRewardCheckbox(self, event):  # wxGlade: scoreFrame.<event_handler>
-        print("Event handler 'onRewardCheckbox' not implemented!")
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_zero_reward'] = \
+            self.zero_reward_check.GetValue()
+        event.Skip()
+
+    def onRewardNameChange(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_name'] = \
+            self.reward_name_txtctrl.GetValue()
         event.Skip()
 
     # High Accuracy
     def onHighAccPtsSpin(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['points'] = event.GetInt()
+        self.high_acc_angle_lbl.SetLabel('Cutoff angle to score ' + str(event.GetInt()) + ' points')
         event.Skip()
 
     def onHighAccAngSpin(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cutoff'] = event.GetInt()
+
+        # Adjust angle of medium accuracy if high accuracy exceeds medium accuracy
+        if event.GetInt() >= self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cutoff']:
+            # Adjust medium accuracy
+            self.med_acc_angle_spinctrl.SetValue(self.high_acc_angle_spinctrl.GetValue() + 1)
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cutoff'] = \
+                self.med_acc_angle_spinctrl.GetValue()
+
         event.Skip()
 
     def onHighAccCursorClr(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cursor_color'] = \
+            event.GetColour().Get(includeAlpha=False)
         event.Skip()
 
     def onHighAccTargClr(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['target_color'] = \
+            event.GetColour().Get(includeAlpha=False)
         event.Skip()
 
     # Medium Accuracy
     def onMedAccPtsSpin(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['points'] = event.GetInt()
+        self.med_acc_angle_lbl.SetLabel('Cutoff angle to score ' + str(event.GetInt()) + ' points')
         event.Skip()
 
     def onMedAccAngSpin(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cutoff'] = event.GetInt()
+
+        # If medium accuracy is lower than high accuracy, adjust accordingly
+        if event.GetInt() <= self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cutoff']:
+            # Adjust high accuracy
+            self.high_acc_angle_spinctrl.SetValue(self.med_acc_angle_spinctrl.GetValue() - 1)
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_high_accuracy']['cutoff'] = \
+                self.high_acc_angle_spinctrl.GetValue()
         event.Skip()
 
     def onMedAccCursorClr(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['cursor_color'] = \
+            event.GetColour().Get(includeAlpha=False)
         event.Skip()
 
     def onMedAccTargClr(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_med_accuracy']['target_color'] = \
+            event.GetColour().Get(includeAlpha=False)
         event.Skip()
 
     # Low Accuracy
     def onLowAccPtsSpin(self, event):
-        event.Skip()
-
-    def onLowAccAngSpin(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['points'] = event.GetInt()
         event.Skip()
 
     def onLowAccCursorClr(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['cursor_color'] = \
+            event.GetColour().Get(includeAlpha=False)
         event.Skip()
 
     def onLowAccTargClr(self, event):
+        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_low_accuracy']['target_color'] = \
+            event.GetColour().Get(includeAlpha=False)
         event.Skip()
 
 # end of class MyFrame
