@@ -24,19 +24,6 @@ def addWorkSpaceLimits(screen):
     cfg = {}
     s = screeninfo.get_monitors()
 
-    # why all this complicated code?
-    #if (len(s) == 1 and screen == 0):
-    #    screen_width = root.winfo_screenwidth()
-    #    screen_height = root.winfo_screenheight()
-    #elif(len(s) > 1 and screen == 0):
-    #    screen_width = int(str(s[0]).strip('monitor(').partition('x')[0])
-    #    screen_height = int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])
-    #    cfg['main_screen_dimensions'] = [int(str(s[1]).strip('monitor(').partition('x')[0]), int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])]
-    #else:
-    #    screen_width = int(str(s[1]).strip('monitor(').partition('x')[0])
-    #    screen_height = int(str(s[1]).strip('monitor(').partition('x')[2].partition('+')[0])
-    #    cfg['main_screen_dimensions'] = [int(str(s[0]).strip('monitor(').partition('x')[0]), int(str(s[0]).strip('monitor(').partition('x')[2].partition('+')[0])]
-
     screen_width = s[screen].width
     screen_height = s[screen].height
     cfg['main_screen_dimensions'] = [screen_width, screen_height]
@@ -64,7 +51,6 @@ def addWorkSpaceLimits(screen):
     cfg['screen_dimensions'] = [screen_width, screen_height]
     cfg['winType'] = 'pyglet'
 
-
     return cfg
 
 # Configures the window for the experiment
@@ -85,57 +71,6 @@ def configureWindow(cfg, experiment):
 
     return
 
-# this try/except:
-# 1: has to add the psychopy mouse object in the except statement
-# 2: should be in a function to add a mouse object to the overall cfg
-# 3: be called once, with no testing of which mouse object to use at any later point
-
-# there is no window object yet? how does this make sense?
-
-#cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
-#
-#try:
-#    class myMouse:
-#        Xlib = CDLL("libX11.so.6")
-#        display = Xlib.XOpenDisplay(None)
-#        if display == 0: sys.exit(2)
-#        w = Xlib.XRootWindow(display, c_int(0))
-#        (root_id, child_id) = (c_uint32(), c_uint32())
-#        (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
-#        mask = c_uint()
-#
-#        width = cfg['main_screen_dimensions'][0]
-#        height = cfg['main_screen_dimensions'][1]
-#
-#        x_offset = cfg['main_screen_offset'][0]
-#        y_offset = cfg['main_screen_offset'][1]
-#
-#        def Pos(self):
-#            ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
-#            if ret == 0: sys.exit(1)
-#            return [self.root_x.value - (self.width/2) - x_offset, -1 * (self.root_y.value - (self.height/2) - y_offset), time()] # c_int can't be used for regular Python math, their values are ints - and we return the current time
-#except:
-#    # create an identically named object with identical behavior based on PsychoPy?
-#    print ('not using xLib')
-#
-# 	 	class myMouse:
-#
-# 		    def Pos(self):
-# 		    	#print('PsychoPy mouse')
-# 		     	[X,Y] = cfg['psyMouse'].getPos()
-# 		     	return [X,Y,time()]
-#
-#cfg['mouse'] = myMouse()
-
-
-
-
-
-# function not used?
-#def moveMouse(x,y):
-#    myMouse.setPos([x,y])
-#    myWin.winHandle._mouse_x = x  # hack to change pyglet window
-#    myWin.winHandle._mouse_y = y
 
 def myRounder(x, base):
     return int(base * round(float(x)/base))
@@ -187,37 +122,39 @@ def shuffleTargets4task(targets, blocks):
       taskTargets = taskTargets + targets
     return(taskTargets)
 
-# I could be wrong, but it seems to me that all of the following stuff can be done without (big) libraries/modules
-# so we can reduce the annoyance of the many files that need to be copied every time someone uses this in class...
 
 def cart2pol(coord=[]):
     rho = sqrt(coord[0]**2 + coord[1]**2)
     phi = arctan2(coord[1], coord[0])
     return [rho, phi]
 
+
 def pol2cart(rho, phi):
     x = rho * cos(phi)
     y = rho * sin(phi)
     return(x, y)
 
+
 def get_dist(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return linalg.norm(vector)
-    # is this better than just doing pythagoras in 1 line?
+
 
 def get_vect(select_pos, target_pos):
     vector = [target_pos[0] - select_pos[0], target_pos[1] - select_pos[1]]
     return vector
-    # replace with target_pos - select_pos ? # hmmm... doesn't work in Python
+
 
 def get_uvect(vector): # what is sthis for?
     uvect = vector/linalg.norm(vector)
     return uvect
 
+
 def get_vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
     scalar_proj = dot(moving_vect, static_uvect)
     return scalar_proj*static_uvect
+
 
 def get_clamped_vector(moving_vect, static_vect):
     moving_magnitude = linalg.norm(moving_vect)
@@ -225,10 +162,12 @@ def get_clamped_vector(moving_vect, static_vect):
     clamped_vector = moving_magnitude*static_uvect
     return clamped_vector
 
+
 def vector_projection(moving_vect, static_vect):
     static_uvect = get_uvect(static_vect)
     scalar_proj = dot(moving_vect, static_uvect)/(linalg.norm(static_vect))
     return list(scalar_proj*static_uvect)
+
 
 def angle_split(min_angle, max_angle, num_splits):
     angles = []
@@ -268,7 +207,6 @@ def angle_split(min_angle, max_angle, num_splits):
 
 
 def trial_runner(cfg={}):
-
     try:
         myWin=cfg['win'] # excellent, all the copies in running[] are not used? oh no... cfg is now running
         if (cfg['trial_type'] == 'pause'): # why does a TRIAL runner have code for a pause TASK?
@@ -277,9 +215,7 @@ def trial_runner(cfg={}):
             counter_text = TextStim(myWin, text=str(cfg['pausetime']), flipVert=cfg['flip_text'], pos=(0, 40*cfg['flipscreen']), color=( 1, 1, 1))
             instruction_text = TextStim(myWin, text=instruction, pos=(0,0), flipVert=cfg['flip_text'], color=( 1, 1, 1))
             end_text = TextStim(myWin, text="Press space to continue", pos=(0,-40*cfg['flipscreen']), flipVert=cfg['flip_text'], color=( 1, 1, 1))
-#            pyautogui.moveTo(root.winfo_screenwidth() - 50, root.winfo_screenheight() - 50)
-            #pyautogui.click() # does this need some coordinates?
-            #counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
+
             while ((core.getTime() - cfg['time']) < cfg['pausetime']):
                 counter_text.setText("{:0.0f}".format((cfg['pausetime'] - (core.getTime() - cfg['time']))))
                 instruction_text.draw()
@@ -292,40 +228,10 @@ def trial_runner(cfg={}):
                 end_text.draw()
                 myWin.flip()
                 event.waitKeys(keyList=['space'])
-                #### IF USING PYGAME ####
-    #            pev.clear()
-    #            while True:
-    #                event = pev.wait()
-    #                if event.type == QUIT:
-    #                    quit()
-    #                    sys.exit()
-    #                elif event.type == KEYDOWN:
-    #                    if event.key == K_SPACE:
-    #                        return None
             return None
 
         end_X = cfg['starting_pos'][0] + (cfg['target_distance'] * math.cos(math.radians(cfg['target_angle'])))
         end_Y = (cfg['starting_pos'][1] + ((cfg['target_distance'] * math.sin(math.radians(cfg['target_angle']))))) * cfg['flipscreen'] #- cfg['active_height']/2)*cfg['flipscreen']
-        ### Creates Mouse object
-
-        #print('creating mouse object for EVERY TRIAL (!), and long after the workspace setup is done???')
-        # oh wait... it seems that the trial_runner doesn't run a trial, but a whole task
-        # still
-
-        #if (cfg['poll_type'] == 'psychopy'):
-        #    myMouse = cfg['mouse']
-        #    ### Gets current CPU Time
-        #    myTime = cfg['time']
-        #elif (cfg['poll_type'] == 'x11'):
-        #    myMouse = cfg['x11_mouse']
-        #    ### Gets current CPU Time....
-        #    myTime = myMouse.Pos()[2]
-
-        # WHY?! why are we getting time samples asynchronously from the mouse samples? it makes no sense...
-        # only do this when also getting the mouse position at the same time... this completely undoes the only advantage of the X11 system: more accurately timed samples
-
-        # myMouse should not be used:
-        # cfg['mouse'] should be used....
 
         # set distance criterion for reaching target depending on if icons are used or not
         dist_criterion = cfg['circle_radius']
@@ -333,20 +239,19 @@ def trial_runner(cfg={}):
             ### Creates cursor circle Object
             myCircle = cfg['cursor_circle']
             testCircle = cfg['test_circle']
-            ### Creates a Target circle
             endCircle = cfg['end_circle']
         elif (cfg['custom_stim_enable'] == True):
             rng = choice(cfg['custom_stim'])
-            #print rng
             myCircle = rng[0]
             endCircle = rng[1]
             dist_criterion = 2 * dist_criterion
+
         ### Creates a circle object to be used as starting point
         startCircle = cfg['start_circle']
 
         ### Define Parameters here
         startPos = cfg['starting_pos'] # start circle should be at starting pos, but this is never explicitly set nor implicitly assumed in this function (trial_runner which is a task_runner)
-        # which if these two are we using?
+
         arrow=cfg['arrow_stim']
         arrowFill=cfg['arrowFill_stim']
 
@@ -372,6 +277,7 @@ def trial_runner(cfg={}):
         velocity = 0
         pixels_per_sample = 0
         pos_buffer = 0
+
         ### Instantiating return dictionary and arrays within it
         timePos_dict = {}
         timeArray = []
@@ -379,8 +285,10 @@ def trial_runner(cfg={}):
         mouseposYArray = []
         cursorposXArray = []
         cursorposYArray = []
+
         ### target circle position
         endCircle.setPos(endPos)
+
         ### starting circle
         startCircle.setPos(startPos)
         arrow.setPos(startPos)
@@ -397,34 +305,18 @@ def trial_runner(cfg={}):
 
     # is this while loop creating frames and storing samples until the trial is finished?
     # why is there a limit of 2 minutes here? what happens if someone does not get to the target in 2 minutes? do they go to the next trial... it seems better to me to exit the experiment without saving data, so we can 'continue run' and don't waste lots of disk space
-    #print('starting sample/frame loop')
     while (core.getTime() - cfg['time']) < 120:
         try:
             # Pressing escape will exit the experiment
             if event.getKeys(keyList=['escape']):
                 myWin.close()
                 return 'escaped'
-            ### mouse Position
-            #print('getting mouse position:')
-
-            ##print('deciding on mouse object again?')
-            #if (cfg['poll_type'] == 'psychopy'):
-            #    mousePos = [myMouse.getPos()[0], myMouse.getPos()[1]*cfg['flipscreen']]
-            #    current_pos = mousePos
-            #    current_timestamp = core.getTime() - myTime
-            #elif (cfg['poll_type'] == 'x11'):
-            #    # whyyy?
-            #    # the mouse object is called 3 separate times to get the X coordinate, the Y coordinate and the time?
-            #    # one call is better!
-            #    # and it ensures that the time sample is better matched to the position coordinates...
-            #    mousePos = [myMouse.Pos()[0], myMouse.Pos()[1]*cfg['flipscreen']] # screen flipping should be done in the mouse object?
-            #    current_pos = mousePos
-            #    current_timestamp = myMouse.Pos()[2] - myTime
 
             mousePos = cfg['mouse'].Pos()
 
             current_pos = [mousePos[0], mousePos[1]]
             current_timestamp = mousePos[2]
+
             #### SPECIAL CURSOR CONFIGURATIONS ####
             if (prev_timestamp != 0):
                 change_in_time = current_timestamp - prev_timestamp
@@ -458,42 +350,15 @@ def trial_runner(cfg={}):
                     circle_pos = [rotated_X, rotated_Y] # SAME HERE?
             elif (cfg['trial_type'] == 'error_clamp'):
                 circle_pos = current_pos
-                #vector_proj_array = get_clamped_vector(get_vect(startPos, mousePos), get_vect(startPos, endPos))
-                #vector_proj = ndarray.tolist(vector_proj_array)
-                #rotated_X_clamped, rotated_Y_clamped = vector_rotate([vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - startPos[1]], startPos, cfg['current_rotation_angle'])
 
                 home_dist = get_dist(current_pos, startPos)
                 target_dist = get_dist(current_pos, endPos)
 
                 cursor_angle = cfg['target_angle'] + cfg['current_rotation_angle']
-                #if (target_dist > cfg['target_distance']) :
-                #  cursor_angle = cursor_angle + 180
 
                 rotated_X_clamped = (math.cos(math.radians(cursor_angle)) * home_dist) + startPos[0]
                 rotated_Y_clamped = ((math.sin(math.radians(cursor_angle)) * home_dist) + startPos[1]) * cfg['flipscreen']
 
-                # we still have to multiply by flipscreen?
-
-
-#                    cursor_direction_vector = vector_projection(get_vect(startPos, mousePos), get_vect(startPos, endPos))
-#                    clamped_X_vector = vector_proj[0]
-#                    clamped_Y_vector = vector_proj[1]
-#                    if (phase_1 == False):
-#                        active_X = circle_pos[0]
-#                        active_Y = circle_pos[1]
-#                    else:
-##                        if (active_Y < startPos[1] - 20 and clamped_Y_vector < 0):
-##                            active_X = active_X - clamped_X_vector
-##                            active_Y = active_Y - clamped_Y_vector
-##                        else:
-##                            active_X = prev_X_cursor + clamped_X_vector
-##                            active_Y = prev_Y_cursor + clamped_Y_vector
-#                        active_X = vector_proj[0]
-#                        active_Y = vector_proj[1]
-#                    circle_pos_clamped = [vector_proj[0] + (cfg['screen_on']*(cfg['screen_dimensions'][0]/2)), vector_proj[1] - cfg['active_height']/2]
-                # whyyy?
-                # we are calculating this position when we don't even know if it's needed?
-                # only do this for clamped (&& rotation !=0) trials?
                 circle_pos_clamped = [rotated_X_clamped, rotated_Y_clamped]
         except e:
             print('error in main mouse/cursor position block:')
@@ -502,43 +367,34 @@ def trial_runner(cfg={}):
 
         # SET CURSOR POSITIONS
         try:
-                    if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == False and stabilize == True):
-                        circle_pos = circle_pos_clamped
-                    if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == True and stabilize == True):
-                        # wut?
-                        # if you are not on the zeroeth screen, we subtract half the window width?
-                        # that does not correct for the size in the vitual desktop... and this should be done in the X11 mouse object (but not the PsychoPy mouse object, as PsychoPy does it for you)
-                        # circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
-                        circle_pos = [circle_pos[0], circle_pos[1]] # circle pos = circle pos?
-                    elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
-                        circle_pos = startPos
-                        stabilize = True
-                    if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
-                        #circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
-                        circle_pos = [circle_pos[0], circle_pos[1]]
-                    if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
-                        # what is this for?
-                        # does this put the cursor in the lower corner at the start of the experiment? whyyyy?
-                        circle_pos[0] = circle_pos[0] # (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
-                    myCircle.setPos(circle_pos)
-                    # should we not set the cursor position for the
-#                    testCircle.setPos([circle_pos[0] +cfg['screen_dimensions'][0]/2, circle_pos[1]])
+            if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == False and stabilize == True):
+                circle_pos = circle_pos_clamped
+            if (cfg['trial_type'] == 'error_clamp' and phase_1 == True and phase_2 == True and stabilize == True):
+                # if you are not on the zeroeth screen, we subtract half the window width?
+                # that does not correct for the size in the vitual desktop... and this should be done in the X11 mouse object (but not the PsychoPy mouse object, as PsychoPy does it for you)
+                # circle_pos = [circle_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2), circle_pos[1]]
+                circle_pos = [circle_pos[0], circle_pos[1]] # circle pos = circle pos?
+            elif (cfg['trial_type'] == 'error_clamp' and phase_1 == True and stabilize == False):
+                circle_pos = startPos
+                stabilize = True
+            if cfg['trial_type'] != 'error_clamp' or (cfg['trial_type'] == 'error_clamp' and phase_1 == False):
+                circle_pos = [circle_pos[0], circle_pos[1]]
+            if (cfg['screen_on'] == 1 and mousePos[0] <= -screen_edge):
+                # does this put the cursor in the lower corner at the start of the experiment? whyyyy?
+                circle_pos[0] = circle_pos[0] # (-((root.winfo_screenwidth - cfg['screen_dimensions'][0])/2)) + 50
+            myCircle.setPos(circle_pos)
            ########################### SPECIAL ARROW CONDITIONS #########################
-                    if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')):
+            if (cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')):
 
-                        # everything should be calculated relative to the home position, so that one of the first things to do on every sample is calculated the relative position of stuff
-                        # where does current_pos come from... don't we need circle_pos?
-                        relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
+                # everything should be calculated relative to the home position, so that one of the first things to do on every sample is calculated the relative position of stuff
+                # where does current_pos come from... don't we need circle_pos?
+                relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
 
-                        orientation = -myRounder(math.degrees(cart2pol(relPos)[1]),45)
+                orientation = -myRounder(math.degrees(cart2pol(relPos)[1]),45)
 
-                        # ori is in degrees, and like a clock: 0 is upward, positive is clockwise
-                        arrow.ori = orientation
-                        arrowFill.ori = orientation
-
-                        # previous section:
-                        #arrow.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
-                        #arrowFill.ori = -myRounder(math.degrees(cart2pol([current_pos[0] - cfg['screen_on']*(cfg['screen_dimensions'][0]/2),current_pos[1] + cfg['active_height']/2])[1]), 45)
+                # ori is in degrees, and like a clock: 0 is upward, positive is clockwise
+                arrow.ori = orientation
+                arrowFill.ori = orientation
         except e:
             print('Cursor Position Error:')
             print(e)
@@ -553,7 +409,6 @@ def trial_runner(cfg={}):
             if (show_target == True):
                 endCircle.draw()   # target position
             if (show_arrow == True):
-                #print('drawing black and gray arrows on top of each other?')
                 arrow.draw()
                 arrowFill.draw()
             if (show_cursor == True):
@@ -563,7 +418,6 @@ def trial_runner(cfg={}):
             print(e)
             pass
 
-        # PHASE 1
         # phase 1 is getting to the home position (usually over very soon)
         try:
             if (phase_1 == False):
@@ -587,8 +441,7 @@ def trial_runner(cfg={}):
                         show_home = False
                         if (cfg['terminal_feedback'] == True):
                             show_cursor = False
-    ################################ PHASE 2 #####################################
-        # phase 2 is getting to the target
+            # phase 2 is getting to the target
             if (phase_1 == True and phase_2 == False):
                 if (cfg['trial_type'] == 'cursor'):
                     if (get_dist(circle_pos, endPos) < dist_criterion and velocity < 35 and cfg['terminal_feedback'] == False):
@@ -596,74 +449,48 @@ def trial_runner(cfg={}):
                         show_home = True
                         show_target = False
 
-
-                    #if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
                     if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
-                        #timer = core.getTime() # this time is not what we need...
                         terminal_start_time = time()
                         phase_2 = True
                         show_home = True
                         show_target = False # why is the target switched of now? owww... because the terminal feedback is handled by it's own loop, not in the main loop... not good
-                        #show_target = True  # it should be switched of with the feedback
-                        # no, the feedback should be just beyond the target, according to the terminal_multiplier, and this should be shown whenever people reach as far as the target is...
-                        # end_point = circle_pos
 
                         relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
-                        #print(relPos)
-                        #print(cart2pol(relPos))
+
                         terminal_feedback_angle = math.degrees(cart2pol(relPos)[1])
                         terminal_distance = cfg['target_distance'] * cfg['terminal_multiplier']
                         terminal_X = (math.cos(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[0]
                         terminal_Y = ((math.sin(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[1]) * cfg['flipscreen'] # cfg['flipscreen'] is actually running[i]['flipscreen'], and *always* 1
+
                         myCircle.pos = [terminal_X, terminal_Y]
+
                         # the rest of the experiment should continue working while displaying this... that is... why do we go into another while loop?
                         end_point = circle_pos # this is for determining where a reach ended, and how far people have moved from it (for showing arrow feedback)
 
-                        #print('time:')
-                        #print(current_timestamp)
-                        #print(terminal_start_time)
-                        #print(current_timestamp - terminal_start_time)
-
                         show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
-                        #print(show_terminal)
 
                         while (show_terminal):
-
                             # show feedback:
                             endCircle.draw()
                             myCircle.draw()
                             myWin.flip()
-                            #print('flipped window, still in terminal feedback loop')
                             # collect data:
 
                             mousePos = cfg['mouse'].Pos()
                             current_pos = [mousePos[0], mousePos[1]]
                             current_timestamp = mousePos[2]
-                            #print('got mouse position and time, still in terminal feedback loop')
                             timeArray.append(current_timestamp) # what is myTime?
                             mouseposXArray.append(current_pos[0])
                             mouseposYArray.append(current_pos[1] - startPos[1])
                             cursorposXArray.append(rotated_X)
                             cursorposYArray.append(rotated_Y - startPos[1])
-                            #print('stored data in vectors, still in terminal feedback loop')
 
                             show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
-
-                            #print(show_terminal)
-
-                        #print('show terminal loop ended...')
-                        #print((current_timestamp - terminal_start_time) < cfg['terminal_feedback_time'])
-
                 if (cfg['trial_type'] == 'no_cursor'):
-                    ##### STOP WATCH ####
-#                    if (pixels_per_sample <= 1 and timerSet == False):
-#                        timer_timestamp = current_timestamp
-#                        timerSet = True
-#                    stop_time = current_timestamp - timer_timestamp
-                    #                    print(cursor_angle)
                     if (pixels_per_sample > 1 and timerSet == True):
                         timerSet = False
                         stop_time = 0
+
                     if (get_dist(circle_pos, startPos) > cfg['circle_radius'] and nc_check_1 == False):
                         nc_check_1 = True
 
@@ -692,7 +519,6 @@ def trial_runner(cfg={}):
                             show_home = True
                             show_cursor = False
                             show_target = False
-                    #elif (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['terminal_multiplier']*get_dist(startPos, endPos)) and phase_1 == True):
                     # why is the logic for terminal feedback implemented twice?
                     elif (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
                         timer = core.getTime()
@@ -709,57 +535,25 @@ def trial_runner(cfg={}):
                         myCircle.pos = [terminal_X, terminal_Y]
                         end_point = circle_pos
 
-
-
-                        #print('time:')
-                        #print(current_timestamp)
-                        #print(terminal_start_time)
-                        #print(current_timestamp - terminal_start_time)
-
                         show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
-                        #print(show_terminal)
 
                         while (show_terminal):
-
                             # show feedback:
                             endCircle.draw()
                             myCircle.draw()
                             myWin.flip()
-                            #print('flipped window, still in terminal feedback loop')
-                            # collect data:
 
+                            # collect data:
                             mousePos = cfg['mouse'].Pos()
                             current_pos = [mousePos[0], mousePos[1]]
                             current_timestamp = mousePos[2]
-                            #print('got mouse position and time, still in terminal feedback loop')
                             timeArray.append(current_timestamp) # what is myTime?
                             mouseposXArray.append(current_pos[0])
                             mouseposYArray.append(current_pos[1] - startPos[1])
                             cursorposXArray.append(rotated_X)
                             cursorposYArray.append(rotated_Y - startPos[1])
-                            #print('stored data in vectors, still in terminal feedback loop')
 
                             show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
-
-                            #print(show_terminal)
-
-                        #print('show terminal loop ended...')
-                        #print((current_timestamp - terminal_start_time) < cfg['terminal_feedback_time'])
-
-                        #while ((core.getTime() - timer) > cfg['terminal_feedback_time']):
-                        #    myCircle.draw()
-                        #    if (cfg['poll_type'] == 'psychopy'):
-                        #        timeArray.append(core.getTime() - myTime)
-                        #        mouseposXArray.append(myMouse.getPos()[0])
-                        #        mouseposYArray.append(myMouse.getPos()[1] + startPos[1])
-                        #    elif (cfg['poll_type'] == 'x11'):
-                        #        timeArray.append(myMouse.Pos()[2] - myTime)
-                        #        mouseposXArray.append(myMouse.Pos()[0])
-                        #        mouseposYArray.append(myMouse.Pos()[1] + startPos[1])
-                        #    cursorposXArray.append(rotated_X)
-                        #    cursorposYArray.append(rotated_Y + startPos[1])
-                        #    #print('one flip statement') #### ??????????
-                        #    myWin.flip()
 
     ############################ DATA COLLECTION #################################
             prev_timestamp = current_timestamp
@@ -777,19 +571,10 @@ def trial_runner(cfg={}):
                     mouseposYArray.append(current_pos[1]*cfg['flipscreen'] - startPos[1])
                     cursorposXArray.append(circle_pos[0])
                     cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] - startPos[1])
-            #print('another flip statement?')
             myWin.flip()
-    ################################ PHASE 3 #####################################
-        # phase 3 is getting back to the home position
-            if (phase_1 == True and phase_2 == True):
 
-#                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) <= get_dist(startPos,endPos)/2):
-#                    show_arrow = True
-#                    show_arrowFill = True
-#
-#                if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, startPos) > get_dist(startPos, endPos)/2):
-#                    show_arrow = False
-#                    show_arrowFill = False
+            # phase 3 is getting back to the home position
+            if (phase_1 == True and phase_2 == True):
                 if ((cfg['trial_type'] == 'no_cursor' or (cfg['trial_type'] == 'cursor' and cfg['terminal_feedback'] == True) or (cfg['trial_type'] == 'error_clamp')) and get_dist(circle_pos, end_point) >= get_dist(startPos,endPos)/10):
                     # where is the angle for the arrow calculated?
                     # why isn't the arrow drawn now?
@@ -861,7 +646,7 @@ def run_experiment(participant, experiment = {}):
     task_save = DataFrame({})
     running = deepcopy(experiment['experiment']) # why copy this? set up a window, a mouse object and add those, plus a task-index to your cfg, then simply loop through the tasks, and throw that to a run-task function?
     settings = deepcopy(experiment['settings']) # same here...
-#    participant_state = deepcopy(experiment['participant'][participant]['state'])
+
     cfg = {}
     #### Generate seed ####
     participant_seed = participant + settings['experiment_folder'] # where is this used? seeding the random-number generator *once* is sufficient, and cleaner
@@ -878,40 +663,7 @@ def run_experiment(participant, experiment = {}):
 
     configureWindow(cfg, experiment)
 
-    # now set up the mouse object?
-
     cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
-
-    # try:
-    #     class myMouse:
-    #         Xlib = CDLL("libX11.so.6")
-    #         display = Xlib.XOpenDisplay(None)
-    #         if display == 0: sys.exit(2)
-    #         w = Xlib.XRootWindow(display, c_int(0))
-    #         (root_id, child_id) = (c_uint32(), c_uint32())
-    #         (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
-    #         mask = c_uint()
-    #
-    #         width = cfg['main_screen_dimensions'][0]
-    #         height = cfg['main_screen_dimensions'][1]
-    #
-    #         x_offset = cfg['main_screen_offset'][0]
-    #         y_offset = cfg['main_screen_offset'][1]
-    #
-    #         def Pos(self):
-    #             ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
-    #             if ret == 0: sys.exit(1)
-    #             return [self.root_x.value - (self.width/2) - self.x_offset, -1 * (self.root_y.value - (self.height/2) - self.y_offset), time()] # c_int can't be used for regular Python math, their values are ints - and we return the current time
-    # except:
-    #     # create an identically named object with identical behavior based on PsychoPy?
-    #     print ('not using xLib')
-        #
-        # class myMouse:
-        #
-        #     def Pos(self):
-        #         #print('PsychoPy mouse')
-        #         [X,Y] = cfg['psyMouse'].getPos()
-        #         return [X,Y,time()]
 
     class myMouse:
         def Pos(self):
@@ -992,7 +744,6 @@ def run_experiment(participant, experiment = {}):
         # the following bits of code should never be used anymore... but the experiment doesn't work if I comment them out...
         # from here ... (to: 'to here')
 
-        #print('using obsolete custom cursor/target/home settings?')
         if settings['custom_cursor_enable'] == False: # we only use 'custom_stim_enable'
             myCircle = Circle(win=cfg['win'],
                                      radius=cfg['circle_radius'],
@@ -1078,17 +829,11 @@ def run_experiment(participant, experiment = {}):
             running[i]['flip_text'] = False
 
         # this should not be done for every task, but ONCE for the whole experiment
-        #try:
-        #    running[i]['x11_mouse'] = myMouse()
-        #except:
-        #    running[i]['poll_type'] = 'psychopy' # this is always set to psychopy!
         running[i]['mouse'] = cfg['mouse']
 
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
 
-
-        # whyyyy?
         # this info seems to be useless for any purpose?
         if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
             running[i]['screen_on'] = 1
@@ -1107,17 +852,13 @@ def run_experiment(participant, experiment = {}):
         running[i]['test_circle'] = testCircle
         running[i]['start_circle'] = startCircle
         running[i]['end_circle'] = endCircle
-        #print('always using psychopy mouse object?')
-        #running[i]['mouse'] = Mouse # this should come from the cfg object, and not be created many times over, also: it will now always be the psychopy mouse object, never the X11 one...
         # also, it's already been set (maybe by Marius)
-        #print('making another copy of the Window object?')
         running[i]['win'] = cfg['win'] # copying the window object this way may be the cause of window-closing problems... even if there is just 1 task, you might end up having 2 window objects
         # all those non-reference copies of the Window object should be destroyed explicitly... can be solved by not creating the "running" dictionary, but just passing "cfg" along, as instructed/expected
         # saves memory and code as well
         running[i]['circle_radius'] = cfg['circle_radius']
         running[i]['arrow_stim'] = arrow
         running[i]['arrowFill_stim'] = arrowFill
-        #print('storing task_num even when creating a config for separate tasks?')
         running[i]['task_num'] = i + 1
         running[i]['max_distance'] = cfg['active_height']     # why calculate these two at all?
         running[i]['min_distance'] = cfg['active_height']/2   # it will always be 1 normalized screen unit * the target distance set by the experimenter
@@ -1132,9 +873,7 @@ def run_experiment(participant, experiment = {}):
         elif running[i]['num_targets'] == 1:
             targetList = [running[i]['min_angle']]
 
-
         #### FIRST SEED FOR TARGET ANGLES ####
-        #print('seeding random number generator?')
         setParticipantSeed(participant_seed + str(i)) # this should not be done every task or trial, just once per experiment/participant, otherwise stuff is not reproducible
 
         fulltargetList = shuffleTargets4task(targetList, blocks=int(running[i]['num_trials']/running[i]['num_targets']))
@@ -1142,25 +881,15 @@ def run_experiment(participant, experiment = {}):
             running[i]['score_system'] = {}
 
         if (running[i]['trial_type'] != 'pause'):
-#            if running[i]['num_targets'] > 1:
-#                targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
-#            elif running[i]['num_targets'] == 1:
-#                targetList = [running[i]['min_angle']]
             for trial_num in range (0, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
-#                if (running[i]['rotatipos=cfg['home_pos']on_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
-#                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + running[i]['rotation_direction']
-#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
-#                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-
                 # deciding the rotation angle this way sounds like a lot of work, in order to store it in a way that is hard to retrieve later on?
                 if (running[i]['rotation_change_type'] == 'gradual'):
                     running[i]['current_rotation_angle'] = rotation[trial_num]
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-#                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 try:
                     chosen_target = fulltargetList[trial_num]
                 except:
@@ -1168,15 +897,10 @@ def run_experiment(participant, experiment = {}):
                 running[i]['target_angle'] = chosen_target
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
-#                try:
                 exp = trial_runner(running[i]) # but this runs a whole task, not a single trial, right? since we are going from the experiment runner straight to task... is the function misnamed or is the code not organized?
 
-#                except:
-#                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
-#                    experiment['participant'][participant]['angles'] = targetList
-#                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return DataFrame({})
                 else:
                     # is this where the data is saved?
@@ -1185,10 +909,6 @@ def run_experiment(participant, experiment = {}):
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     task_save = concat([task_save, df_exp])
                     end_exp = concat([end_exp, df_exp])
-#                    experiment['participant'][participant]['angles'] = targetList
-#                    experiment['participant'][participant]['state'] = [i, trial_num]
-#                    targetList.remove(chosen_target)
-
 
                     with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
                         # the experiment settings are stored after every trial?
@@ -1199,19 +919,13 @@ def run_experiment(participant, experiment = {}):
             exp = trial_runner(running[i])
             # why not run a pause task function now?
 
-#        if (running[i]['trial_type'] != 'pause'):
-#            task_save.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_Complete" + ".csv"), index=False)
         task_save = DataFrame({})
     running[i]['win'].close()
     return end_exp
 
 def get_participant_state(participant, experiment = {}):
     tasks_uncut = experiment['experiment']
-#    tasks = []
-#    num_pause = 0
-#    for task in tasks_uncut:
-#        if task['trial_type'] != 'pause':running[i]['win'] = Win # copying the window object this way may be the cause of window-closing problems...
-#            tasks.append(task)
+
     for task_num, task in enumerate(tasks_uncut):
         if task['trial_type'] != 'pause':
             for trialnum in range(0, task['num_trials']):
@@ -1280,36 +994,10 @@ def continue_experiment(participant, experiment = {}):
 
     cfg['psyMouse'] = event.Mouse(visible = False, newPos = None, win = cfg['win'])
 
-    try:
-        class myMouse:
-            Xlib = CDLL("libX11.so.6")
-            display = Xlib.XOpenDisplay(None)
-            if display == 0: sys.exit(2)
-            w = Xlib.XRootWindow(display, c_int(0))
-            (root_id, child_id) = (c_uint32(), c_uint32())
-            (root_x, root_y, win_x, win_y) = (c_int(), c_int(), c_int(), c_int())
-            mask = c_uint()
-
-            width = cfg['main_screen_dimensions'][0]
-            height = cfg['main_screen_dimensions'][1]
-
-            x_offset = cfg['main_screen_offset'][0]
-            y_offset = cfg['main_screen_offset'][1]
-
-            def Pos(self):
-                ret = self.Xlib.XQueryPointer(self.display, c_uint32(self.w), byref(self.root_id), byref(self.child_id), byref(self.root_x), byref(self.root_y), byref(self.win_x), byref(self.win_y), byref(self.mask))
-                if ret == 0: sys.exit(1)
-                return [self.root_x.value - (self.width/2) - self.x_offset, -1 * (self.root_y.value - (self.height/2) - self.y_offset), time()] # c_int can't be used for regular Python math, their values are ints - and we return the current time
-    except:
-        # create an identically named object with identical behavior based on PsychoPy?
-        print ('not using xLib')
-
-        class myMouse:
-
-            def Pos(self):
-                #print('PsychoPy mouse')
-                [X,Y] = cfg['psyMouse'].getPos()
-                return [X,Y,time()]
+    class myMouse:
+        def Pos(self):
+            [X,Y] = cfg['psyMouse'].getPos()
+            return [X,Y,time()]
 
     cfg['mouse'] = myMouse()
 
@@ -1448,10 +1136,6 @@ def continue_experiment(participant, experiment = {}):
         else:
             running[i]['flipscreen'] = 1
             running[i]['flip_text'] = False
-        #try:
-        #    running[i]['x11_mouse'] = myMouse()
-        #except:
-        #    running[i]['poll_type'] = 'psychopy'
         if settings['custom_stim_enable'] == True:
             running[i]['custom_stim'] = custom_stim_holder
         if (len(screen_info_monitors) > 1 and settings['screen'] == 1):
@@ -1482,7 +1166,6 @@ def continue_experiment(participant, experiment = {}):
         running[i]['starting_pos'] = (0, (-cfg['active_height']/2)*running[i]['flipscreen'])
         if running[i]['rotation_change_type'] == 'gradual':
             rotation = generate_rotation_list(running[i]['rotation_angle'], running[i]['final_rotation_angle'], running[i]['num_trials'])
-#        running[i]['current_rotation_angle'] = participant_state[1]
         if running[i]['num_targets'] > 1:
             targetList = angle_split(running[i]['min_angle'], running[i]['max_angle'], running[i]['num_targets'])
         elif running[i]['num_targets'] == 1:
@@ -1499,16 +1182,10 @@ def continue_experiment(participant, experiment = {}):
                 running[i]['trial_num'] = trial_num + 1
                 if (len(targetList) == 0):
                     targetList = list(fulltargetList)
-#                if (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] != running[i]['rotation_angle'] and trial_num > 0):
-#                    running[i]['current_rotation_angle'] = running[i]['current_rotation_angle'] + 1
-#                elif (running[i]['rotation_change_type'] == 'gradual' and running[i]['current_rotation_angle'] == running[i]['rotation_angle'] and trial_num > 0):
-#                    running[i]['current_rotation_angle'] = running[i]['rotation_angle']
                 if (running[i]['rotation_change_type'] == 'gradual'):
                     running[i]['current_rotation_angle'] = rotation[trial_num]
                 elif (running[i]['rotation_change_type'] == 'abrupt'):
                     running[i]['current_rotation_angle'] = running[i]['rotation_angle']
-#                print running[i]['current_rotation_angle'], running[i]['rotation_angle']
-#                print running[i]['rotation_change_type'], running[i]['current_rotation_angle'], running[i]['rotation_angle'], 'trial_num: ', trial_num, running[i]['num_trials']
                 try:
                     chosen_target = fulltargetList[trial_num]
                 except:
@@ -1516,23 +1193,16 @@ def continue_experiment(participant, experiment = {}):
                 running[i]['target_angle'] = chosen_target
                 running[i]['target_distance'] = int(running[i]['max_distance']*running[i]['target_distance_ratio'])
                 running[i]['time'] = core.getTime()
-#                try:
                 exp = trial_runner(running[i])
 
-#                except:
-#                    print "Exception in running trial_runner function"
                 if exp == 'escaped':
                     running[i]['win'].close()
-#                    experiment['participant'][participant]['angles'] = targetList
-#                    experiment['participant'][participant]['state'] = [i, trial_num]
                     return end_exp
                 else:
                     df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     end_exp = concat([end_exp, df_exp])
-#                    experiment['participant'][participant]['angles'] = targetList
-#                    experiment['participant'][participant]['state'] = [i, trial_num]
-#                    targetList.remove(chosen_target)
+
                     with open(path.join("experiments", settings['experiment_folder'] + ".json"), "wb") as f:
                         dump(experiment, f)
                         f.close()
