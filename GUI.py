@@ -2333,7 +2333,7 @@ class PreprocessFrame(wx.Frame):
 def getScoringType(scoringType, toString):
     if toString:
         if scoringType == 0:
-            return 'halfawy'
+            return 'halfway'
         elif scoringType == 1:
             return 'endReach'
     else:
