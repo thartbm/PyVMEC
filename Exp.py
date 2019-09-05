@@ -233,8 +233,8 @@ def trial_runner(cfg={}):
         # Scoring System
         if (cfg['use_score']):
             score_text = TextStim(myWin, text=cfg['score_name'] + ': ' + str(cfg['score_points']),
-                                  pos=(cfg['screen_dimensions'][0] * 0.30,
-                                       cfg['screen_dimensions'][1] * 0.40),
+                                  pos=(cfg['starting_pos'][0],
+                                       cfg['starting_pos'][1] - 40),
                                   color=(1, 1, 1))
 
         end_X = cfg['starting_pos'][0] + (cfg['target_distance'] * math.cos(math.radians(cfg['target_angle'])))
