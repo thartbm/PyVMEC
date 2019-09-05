@@ -503,8 +503,8 @@ def trial_runner(cfg={}):
                         # target and cursor at the end. Feedback is essentially only displayed
                         # when the participant is going back to the home position
                         if (cfg['score_method'] == 'endReach' and cfg['use_score']):
-                            myCircle.fillColor = cfg[scoreType]['cursor_color']
-                            endCircle.fillColor = cfg[scoreType]['target_color']
+                            myCircle.lineColor = myCircle.fillColor = cfg[scoreType]['cursor_color']
+                            endCircle.lineColor = endCircle.fillColor = cfg[scoreType]['target_color']
                             score_text.text = cfg['score_name'] + ': ' + str(cfg['score_points'])
 
                     if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
@@ -530,8 +530,8 @@ def trial_runner(cfg={}):
                         while (show_terminal):
                             # Update cursor and target colours, as well as score text upon terminal feedback
                             if (cfg['use_score']):
-                                myCircle.fillColor = cfg[scoreType]['cursor_color']
-                                endCircle.fillColor = cfg[scoreType]['target_color']
+                                myCircle.lineColor = myCircle.fillColor = cfg[scoreType]['cursor_color']
+                                endCircle.lineColor = endCircle.fillColor = cfg[scoreType]['target_color']
                                 score_text.text = cfg['score_name'] + ': ' + str(cfg['score_points'])
                                 score_text.draw()
 
