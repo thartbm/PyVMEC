@@ -957,13 +957,13 @@ def run_experiment(participant, experiment = {}):
         # Set default points value
         running[i]['score_points'] = 0
 
+        # If we are not resetting the score to 0 for this task, and this task
+        # is not the first one, copy the previous task's score value over
+        if ((not running[i]['score_zero_reward'] or running[i]['trial_type'] == 'pause') and i != 0):
+            running[i]['score_points'] = running[i - 1]['score_points']
+
         # Use the scoring system if the box is checked in the GUI
         if (running[i]['use_score']):
-            # If we are not resetting the score to 0 for this task, and this task
-            # is not the first one, copy the previous task's score value over
-            if (not running[i]['score_zero_reward'] and i != 0):
-                running[i]['score_points'] = running[i - 1]['score_points']
-
             # Converts the RGB 0:255 value to -1:1 value which Psychopy uses
             running[i]['score_high_accuracy']['cursor_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_high_accuracy']['cursor_color']], -1, 1).tolist()
             running[i]['score_med_accuracy']['cursor_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_med_accuracy']['cursor_color']], -1, 1).tolist()
@@ -972,6 +972,7 @@ def run_experiment(participant, experiment = {}):
             running[i]['score_high_accuracy']['target_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_high_accuracy']['target_color']], -1, 1).tolist()
             running[i]['score_med_accuracy']['target_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_med_accuracy']['target_color']], -1, 1).tolist()
             running[i]['score_low_accuracy']['target_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_low_accuracy']['target_color']], -1, 1).tolist()
+
         if (running[i]['trial_type'] != 'pause'):
             for trial_num in range (0, int(running[i]['num_trials'])):
                 running[i]['trial_num'] = trial_num + 1
