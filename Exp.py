@@ -677,7 +677,7 @@ def trial_runner(cfg={}):
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                     timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
-                    timePos_dict['score'] = pointsArray
+                    timePos_dict['accuracy_reward'] = pointsArray
 
                     return timePos_dict
 
@@ -704,7 +704,7 @@ def trial_runner(cfg={}):
                         timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                         timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
-                        timePos_dict['score'] = pointsArray
+                        timePos_dict['accuracy_reward'] = pointsArray
 
                         return timePos_dict
         except e:
@@ -998,7 +998,7 @@ def run_experiment(participant, experiment = {}):
                 else:
                     # is this where the data is saved?
                     # would make more sense to me to do that in the trial function, as it is the trial data that is being stored?
-                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'score'])
+                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'accuracy_reward'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     task_save = concat([task_save, df_exp])
                     end_exp = concat([end_exp, df_exp])
@@ -1314,7 +1314,7 @@ def continue_experiment(participant, experiment = {}):
                     running[i]['win'].close()
                     return end_exp
                 else:
-                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'score'])
+                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'accuracy_reward'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     end_exp = concat([end_exp, df_exp])
 
