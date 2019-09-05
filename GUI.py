@@ -169,8 +169,8 @@ class MyFrame(wx.Frame):
         self.pause_check = wx.CheckBox(self, wx.ID_ANY, ("Space to continue"))
 
         # Score Settings
-        self.score_check = wx.CheckBox(self, wx.ID_ANY, ("Use Scoring System"))
-        self.score_settings_button = wx.Button(self, wx.ID_ANY, ("Score Settings"))
+        self.score_check = wx.CheckBox(self, wx.ID_ANY, ("Accuracy Rewards"))
+        self.score_settings_button = wx.Button(self, wx.ID_ANY, ("Settings"))
 
         # Participant stuff (column 6)
         self.participants_statictext = wx.StaticText(self, wx.ID_ANY, "Participants")
@@ -267,7 +267,6 @@ class MyFrame(wx.Frame):
         self.Run_Button.SetMinSize((175, 29))
 
 
-
         # Participant stuff
         self.participants_list_box.SetMinSize((175,350)) #################################
         self.participants_list_box.SetSelection(0)
@@ -324,11 +323,9 @@ class MyFrame(wx.Frame):
         self.pause_message_txt.SetMinSize((175,29))
 
         # Scoring System
-        self.score_settings_button.SetMinSize((175, 29))
         self.score_settings_button.Disable()
 
         # end wxGlade
-
 
 
     def __do_layout(self):
@@ -465,8 +462,8 @@ class MyFrame(wx.Frame):
         pause_sizer.Add(self.pause_check, 0, 0, 0)
 
         # Score System
-        score_sizer = wx.BoxSizer(wx.VERTICAL)
-        score_sizer.Add(self.score_check, 0, 0, 0)
+        score_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        score_sizer.Add(self.score_check, 0, wx.ALIGN_CENTER, 0)
         score_sizer.Add(self.score_settings_button, 0, 0, 0)
 
         sizer_9 = wx.BoxSizer(wx.VERTICAL)
@@ -625,6 +622,14 @@ class MyFrame(wx.Frame):
             self.terminalfeedback_Radio.Enable(False)
             self.terminalfeedback_Radio_staticline.Enable(False)
 
+            # Scoring System
+            self.score_check.Enable(False)
+            self.score_settings_button.Enable(False)
+        else:
+            # Scoring System
+            self.score_check.Enable(True)
+            self.score_settings_button.Enable(True)
+
         #self.pause_static_text.Hide()
         #self.pause_txt.Hide()
         #self.PM_static_text.Hide()
@@ -638,10 +643,6 @@ class MyFrame(wx.Frame):
         self.PM_static_text.Enable(False)
         self.pause_message_txt.Enable(False)
         self.pause_check.Enable(False)
-
-        # Scoring System
-        self.score_check.Enable(True)
-        self.score_settings_button.Enable(self.score_check.GetValue())
 
 
     def pause_experiment_show(self):
@@ -2549,14 +2550,14 @@ class ScoreFrame(wx.Frame):
         self.high_acc_gridsizer.Add(self.high_acc_pts_spinctrl, 0, 0, 0)
         self.high_acc_gridsizer.Add(self.high_acc_cur_clr, 0, wx.EXPAND, 0)
         self.high_acc_gridsizer.Add(self.high_acc_tar_clr, 1, wx.EXPAND, 0)
-        self.accuracySizer.Add(self.high_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        self.accuracySizer.Add(self.high_acc_gridsizer, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
         high_acc_ang_sizer.Add(self.high_acc_angle_lbl, 0, wx.ALIGN_CENTER, 0)
-        high_acc_ang_sizer.Add(self.high_acc_angle_spinctrl, 0, wx.LEFT, 20)
-        self.accuracySizer.Add(high_acc_ang_sizer, 1, wx.EXPAND, 0)
+        high_acc_ang_sizer.Add(self.high_acc_angle_spinctrl, 0, wx.ALIGN_CENTER | wx.LEFT, 5)
+        self.accuracySizer.Add(high_acc_ang_sizer, 0, wx.EXPAND, 0)
         static_line_1 = wx.StaticLine(self, wx.ID_ANY)
         static_line_1.SetMinSize((1, 2))
         high_static_sizer.Add(static_line_1, 1, wx.ALIGN_CENTER | wx.ALL, 0)
-        self.accuracySizer.Add(high_static_sizer, 1, wx.EXPAND, 0)
+        self.accuracySizer.Add(high_static_sizer, 0, wx.EXPAND, 0)
         self.accuracySizer.Add(self.med_acc_lbl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_pts_lbl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_cur_clr_lbl, 0, 0, 0)
@@ -2564,14 +2565,14 @@ class ScoreFrame(wx.Frame):
         self.med_acc_gridsizer.Add(self.med_acc_pts_spinctrl, 0, 0, 0)
         self.med_acc_gridsizer.Add(self.med_acc_cur_clr, 0, wx.EXPAND, 0)
         self.med_acc_gridsizer.Add(self.med_acc_tar_clr, 1, wx.EXPAND, 0)
-        self.accuracySizer.Add(self.med_acc_gridsizer, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+        self.accuracySizer.Add(self.med_acc_gridsizer, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
         med_acc_ang_sizer.Add(self.med_acc_angle_lbl, 0, wx.ALIGN_CENTER, 0)
-        med_acc_ang_sizer.Add(self.med_acc_angle_spinctrl, 0, wx.LEFT, 20)
-        self.accuracySizer.Add(med_acc_ang_sizer, 1, wx.EXPAND, 0)
+        med_acc_ang_sizer.Add(self.med_acc_angle_spinctrl, 0, wx.ALIGN_CENTER | wx.LEFT, 5)
+        self.accuracySizer.Add(med_acc_ang_sizer, 0, wx.EXPAND, 0)
         static_line_2 = wx.StaticLine(self, wx.ID_ANY)
         static_line_2.SetMinSize((1, 2))
         med_static_sizer.Add(static_line_2, 1, wx.ALIGN_CENTER | wx.ALL, 0)
-        self.accuracySizer.Add(med_static_sizer, 1, wx.EXPAND, 0)
+        self.accuracySizer.Add(med_static_sizer, 0, wx.EXPAND, 0)
         self.accuracySizer.Add(self.low_acc_lbl, 0, 0, 0)
         self.low_acc_gridsizer.Add(self.low_acc_pt_lbl, 0, 0, 0)
         self.low_acc_gridsizer.Add(self.low_acc_cur_clr_lbl, 0, 0, 0)
@@ -2591,6 +2592,7 @@ class ScoreFrame(wx.Frame):
         self.SetSizer(self.mainSizer)
         self.Layout()
         self.Centre()
+        self.Fit()
         # end wxGlade
 
     def onRadioBoxClick(self, event):  # wxGlade: scoreFrame.<event_handler>
