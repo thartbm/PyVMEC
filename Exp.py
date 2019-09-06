@@ -129,6 +129,21 @@ def cart2pol(coord=[]):
     return [rho, phi]
 
 
+def rotateTrajectory(X, Y, angle_deg):
+    # create rotation matrix to rotate the X,Y coordinates
+    th = (angle_deg / 180.) * pi
+    R = array([[cos(th), -sin(th)], [sin(th), cos(th)]])
+
+    # put coordinates in a matrix as well
+    coords = array([X, Y])
+
+    # rotate the coordinates
+    Rcoords = dot(R, coords)
+
+    # return the rotated reach
+    return Rcoords
+
+
 def pol2cart(rho, phi):
     x = rho * cos(phi)
     y = rho * sin(phi)
@@ -232,7 +247,12 @@ def trial_runner(cfg={}):
 
         # Scoring System
         if (cfg['use_score']):
-            score_text = TextStim(myWin, text=cfg['score_name'] + ': ' + str(cfg['score_points']),
+            if (cfg['score_zero_reward']):
+                cur_score = cfg['cur_score']
+            else:
+                cur_score = cfg['score_points']
+
+            score_text = TextStim(myWin, text=cfg['score_name'] + ': ' + str(cur_score),
                                   pos=(cfg['starting_pos'][0],
                                        cfg['starting_pos'][1] - 40),
                                   color=(1, 1, 1))
@@ -309,9 +329,6 @@ def trial_runner(cfg={}):
         if (cfg['use_score']):
             myCircle.lineColor = myCircle.fillColor = [0, 0, 0]
             endCircle.lineColor = endCircle.fillColor = [0, 0, 0]
-
-        # Array for storing the score during the task
-        pointsArray = []
 
     except Exception as e:
         print "error in Block 1" # what is block 1?
@@ -472,27 +489,29 @@ def trial_runner(cfg={}):
                         scoreCalculated = True
 
                         # Get angle between target and cursor
-                        targDeg = math.degrees(cart2pol([endPos[0] - startPos[0], endPos[1] - startPos[1]])[1])
-                        circleDeg = math.degrees(cart2pol([circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]])[1])
-                        deg = abs(circleDeg - targDeg)
+                        adjustedCirclePos = rotateTrajectory(circle_pos[0] - startPos[0], circle_pos[1] - startPos[1],
+                                                             -1 * cfg['target_angle']).tolist()
+
+                        circleDeg = abs(math.degrees(arctan2(adjustedCirclePos[1], adjustedCirclePos[0])))
 
                         # Assign a score based off the cutoff angle for each accuracy type
-                        if (deg <= cfg['score_high_accuracy']['cutoff']):
+                        if (circleDeg <= cfg['score_high_accuracy']['cutoff']):
                             scoreType = 'score_high_accuracy'
-                        elif (deg <= cfg['score_med_accuracy']['cutoff']):
+                        elif (circleDeg <= cfg['score_med_accuracy']['cutoff']):
                             scoreType = 'score_med_accuracy'
                         else:
                             scoreType = 'score_low_accuracy'
 
                         # Add the specified amount of points for that accuracy level
                         cfg['score_points'] += cfg[scoreType]['points']
+                        cfg['cur_score'] += cfg[scoreType]['points']
 
                         # If we are using the halfway point to show feedback, change the colours for
                         # target and cursor. Also update the text
                         if (cfg['score_method'] == 'halfway'):
                             myCircle.lineColor = myCircle.fillColor = cfg[scoreType]['cursor_color']
                             endCircle.lineColor = endCircle.fillColor = cfg[scoreType]['target_color']
-                            score_text.text = cfg['score_name'] + ': ' + str(cfg['score_points'])
+                            score_text.text = cfg['score_name'] + ': ' + str(cfg['cur_score'])
                 if (cfg['trial_type'] == 'cursor'):
                     if (get_dist(circle_pos, endPos) < dist_criterion and velocity < 35 and cfg['terminal_feedback'] == False):
                         phase_2 = True
@@ -532,7 +551,7 @@ def trial_runner(cfg={}):
                             if (cfg['use_score']):
                                 myCircle.lineColor = myCircle.fillColor = cfg[scoreType]['cursor_color']
                                 endCircle.lineColor = endCircle.fillColor = cfg[scoreType]['target_color']
-                                score_text.text = cfg['score_name'] + ': ' + str(cfg['score_points'])
+                                score_text.text = cfg['score_name'] + ': ' + str(cfg['cur_score'])
                                 score_text.draw()
 
                             # show feedback:
@@ -550,8 +569,6 @@ def trial_runner(cfg={}):
                             mouseposYArray.append(current_pos[1] - startPos[1])
                             cursorposXArray.append(rotated_X)
                             cursorposYArray.append(rotated_Y - startPos[1])
-
-                            pointsArray.append(cfg['score_points'])
 
                             show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
                 if (cfg['trial_type'] == 'no_cursor'):
@@ -594,8 +611,6 @@ def trial_runner(cfg={}):
                         show_home = True
                         show_target = False
                         relPos = [circle_pos[0] - startPos[0], circle_pos[1] - startPos[1]]
-                        #print(relPos)
-                        #print(cart2pol(relPos))
                         terminal_feedback_angle = math.degrees(cart2pol(relPos)[1])
                         terminal_distance = cfg['target_distance'] * cfg['terminal_multiplier']
                         terminal_X = (math.cos(math.radians(terminal_feedback_angle)) * terminal_distance) + startPos[0]
@@ -621,8 +636,6 @@ def trial_runner(cfg={}):
                             cursorposXArray.append(rotated_X)
                             cursorposYArray.append(rotated_Y - startPos[1])
 
-                            pointsArray.append(cfg['score_points'])
-
                             show_terminal = (current_timestamp - terminal_start_time) < cfg['terminal_feedback_time']
 
     ############################ DATA COLLECTION #################################
@@ -641,8 +654,6 @@ def trial_runner(cfg={}):
                     mouseposYArray.append(current_pos[1]*cfg['flipscreen'] - startPos[1])
                     cursorposXArray.append(circle_pos[0])
                     cursorposYArray.append(circle_pos[1]*cfg['flipscreen'] - startPos[1])
-
-                    pointsArray.append(cfg['score_points'])
             myWin.flip()
 
             # phase 3 is getting back to the home position
@@ -677,7 +688,12 @@ def trial_runner(cfg={}):
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                     timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
-                    timePos_dict['accuracy_reward'] = pointsArray
+                    timePos_dict['accuracy_reward'] = [cfg['score_points']] * len(mouseposXArray)
+
+                    if (cfg['use_score']):
+                        timePos_dict['accuracy_reward_bool'] = ['True'] * len(mouseposXArray)
+                    else:
+                        timePos_dict['accuracy_reward_bool'] = ['False'] * len(mouseposXArray)
 
                     return timePos_dict
 
@@ -704,7 +720,12 @@ def trial_runner(cfg={}):
                         timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                         timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
-                        timePos_dict['accuracy_reward'] = pointsArray
+                        timePos_dict['accuracy_reward'] = [cfg['score_points']] * len(mouseposXArray)
+
+                        if (cfg['use_score']):
+                            timePos_dict['accuracy_reward_bool'] = ['True'] * len(mouseposXArray)
+                        else:
+                            timePos_dict['accuracy_reward_bool'] = ['False'] * len(mouseposXArray)
 
                         return timePos_dict
         except e:
@@ -959,8 +980,13 @@ def run_experiment(participant, experiment = {}):
 
         # If we are not resetting the score to 0 for this task, and this task
         # is not the first one, copy the previous task's score value over
-        if ((not running[i]['score_zero_reward'] or running[i]['trial_type'] == 'pause') and i != 0):
+        if i != 0:
             running[i]['score_points'] = running[i - 1]['score_points']
+
+        if (running[i]['score_zero_reward']):
+            running[i]['cur_score'] = 0
+        else:
+            running[i]['cur_score'] = running[i]['score_points']
 
         # Use the scoring system if the box is checked in the GUI
         if (running[i]['use_score']):
@@ -999,7 +1025,7 @@ def run_experiment(participant, experiment = {}):
                 else:
                     # is this where the data is saved?
                     # would make more sense to me to do that in the trial function, as it is the trial data that is being stored?
-                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'accuracy_reward'])
+                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'accuracy_reward', 'accuracy_reward_bool'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     task_save = concat([task_save, df_exp])
                     end_exp = concat([end_exp, df_exp])
@@ -1270,27 +1296,26 @@ def continue_experiment(participant, experiment = {}):
         # Set default points value
         running[i]['score_points'] = 0
 
+        # If we are not resetting the score to 0 for this task, and this task
+        # is not the first one, copy the previous task's score value over
+        if i != 0:
+            running[i]['score_points'] = running[i - 1]['score_points']
+
+        if (running[i]['score_zero_reward']):
+            running[i]['cur_score'] = 0
+        else:
+            running[i]['cur_score'] = running[i]['score_points']
+
         # Use the scoring system if the box is checked in the GUI
         if (running[i]['use_score']):
-            # If we are not resetting the score to 0 for this task, and this task
-            # is not the first one, copy the previous task's score value over
-            if (not running[i]['score_zero_reward'] and i != 0):
-                running[i]['score_points'] = running[i - 1]['score_points']
-
             # Converts the RGB 0:255 value to -1:1 value which Psychopy uses
-            running[i]['score_high_accuracy']['cursor_color'] = clip(
-                [(x / float(127)) - 1 for x in running[i]['score_high_accuracy']['cursor_color']], -1, 1).tolist()
-            running[i]['score_med_accuracy']['cursor_color'] = clip(
-                [(x / float(127)) - 1 for x in running[i]['score_med_accuracy']['cursor_color']], -1, 1).tolist()
-            running[i]['score_low_accuracy']['cursor_color'] = clip(
-                [(x / float(127)) - 1 for x in running[i]['score_low_accuracy']['cursor_color']], -1, 1).tolist()
+            running[i]['score_high_accuracy']['cursor_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_high_accuracy']['cursor_color']], -1, 1).tolist()
+            running[i]['score_med_accuracy']['cursor_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_med_accuracy']['cursor_color']], -1, 1).tolist()
+            running[i]['score_low_accuracy']['cursor_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_low_accuracy']['cursor_color']], -1, 1).tolist()
 
-            running[i]['score_high_accuracy']['target_color'] = clip(
-                [(x / float(127)) - 1 for x in running[i]['score_high_accuracy']['target_color']], -1, 1).tolist()
-            running[i]['score_med_accuracy']['target_color'] = clip(
-                [(x / float(127)) - 1 for x in running[i]['score_med_accuracy']['target_color']], -1, 1).tolist()
-            running[i]['score_low_accuracy']['target_color'] = clip(
-                [(x / float(127)) - 1 for x in running[i]['score_low_accuracy']['target_color']], -1, 1).tolist()
+            running[i]['score_high_accuracy']['target_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_high_accuracy']['target_color']], -1, 1).tolist()
+            running[i]['score_med_accuracy']['target_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_med_accuracy']['target_color']], -1, 1).tolist()
+            running[i]['score_low_accuracy']['target_color'] = clip([(x / float(127)) - 1 for x in running[i]['score_low_accuracy']['target_color']], -1, 1).tolist()
 
         if (running[i]['trial_type'] != 'pause'):
             for trial_num in range ((participant_state[1])*continued, int(running[i]['num_trials'])):
@@ -1315,7 +1340,7 @@ def continue_experiment(participant, experiment = {}):
                     running[i]['win'].close()
                     return end_exp
                 else:
-                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'accuracy_reward'])
+                    df_exp = DataFrame(exp, columns=['task_num','task_name', 'trial_type', 'trial_num', 'terminalfeedback_bool','rotation_angle','targetangle_deg','targetdistance_percmax','homex_px','homey_px','targetx_px','targety_px', 'time_s', 'mousex_px', 'mousey_px', 'cursorx_px', 'cursory_px', 'accuracy_reward', 'accuracy_reward_bool'])
                     df_exp.to_csv(path_or_buf = path.join("data", settings['experiment_folder'], participant, running[i]['task_name'] + "_" + str(trial_num) + ".csv"), index=False)
                     end_exp = concat([end_exp, df_exp])
 
