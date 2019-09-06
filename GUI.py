@@ -624,11 +624,12 @@ class MyFrame(wx.Frame):
 
             # Scoring System
             self.score_check.Enable(False)
+            self.score_check.SetValue(False)
             self.score_settings_button.Enable(False)
         else:
             # Scoring System
             self.score_check.Enable(True)
-            self.score_settings_button.Enable(True)
+            self.score_settings_button.Enable(self.score_check.GetValue())
 
         #self.pause_static_text.Hide()
         #self.pause_txt.Hide()
@@ -1097,6 +1098,9 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['score_high_accuracy']['target_color'] = [127, 127, 127]
             self.current_experiment[self.highlit_task_num]['score_med_accuracy']['target_color'] = [127, 127, 127]
             self.current_experiment[self.highlit_task_num]['score_low_accuracy']['target_color'] = [127, 127, 127]
+
+            self.score_check.SetValue(False)
+            self.score_settings_button.Enable(False)
 
 #            with open(self.experiment_folder + self.current_experiment_name + ".json", "wb") as f:
 #                dump(self.experiment_holder, f)
