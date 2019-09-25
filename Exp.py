@@ -247,12 +247,13 @@ def trial_runner(cfg={}):
 
         # Scoring System
         if (cfg['use_score']):
-            if (cfg['score_zero_reward']):
-                cur_score = cfg['cur_score']
-            else:
-                cur_score = cfg['score_points']
+            # if isinstance(cfg['set_start_reward'], int):
+            #     cur_score = cfg['set_start_reward']
+            # else:
+            #cur_score = cfg['cur_score']
+                #cur_score = cfg['score_points']
 
-            score_text = TextStim(myWin, text=cfg['score_name'] + ': ' + str(cur_score),
+            score_text = TextStim(myWin, text=cfg['score_name'] + ': ' + str(cfg['cur_score']),
                                   pos=(cfg['starting_pos'][0],
                                        cfg['starting_pos'][1] - 40),
                                   color=(1, 1, 1))
@@ -451,6 +452,7 @@ def trial_runner(cfg={}):
                 myCircle.draw()    # cursor
             # Show the score text only in cursor and error-clamp
             if (cfg['use_score'] and cfg['trial_type'] != 'no_cursor' and cfg['trial_type'] != 'pause'):
+                # trial_type should never be pause and end up in this bit of code...
                 score_text.draw()
         except e:
             print('Failed to show object: ')
@@ -503,7 +505,7 @@ def trial_runner(cfg={}):
                             scoreType = 'score_low_accuracy'
 
                         # Add the specified amount of points for that accuracy level
-                        cfg['score_points'] += cfg[scoreType]['points']
+                        #cfg['score_points'] += cfg[scoreType]['points']
                         cfg['cur_score'] += cfg[scoreType]['points']
 
                         # If we are using the halfway point to show feedback, change the colours for
@@ -524,7 +526,8 @@ def trial_runner(cfg={}):
                         if (cfg['score_method'] == 'endReach' and cfg['use_score']):
                             myCircle.lineColor = myCircle.fillColor = cfg[scoreType]['cursor_color']
                             endCircle.lineColor = endCircle.fillColor = cfg[scoreType]['target_color']
-                            score_text.text = cfg['score_name'] + ': ' + str(cfg['score_points'])
+                            score_text.text = cfg['score_name'] + ': ' + str(cfg['cur_score'])
+                            #score_text.text = cfg['score_name'] + ': ' + str(cfg['score_points'])
 
                     if (cfg['terminal_feedback'] == True and (get_dist(circle_pos, startPos) >= cfg['target_distance']) and phase_1 == True):
                         terminal_start_time = time()
@@ -688,7 +691,8 @@ def trial_runner(cfg={}):
                     timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                     timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
-                    timePos_dict['accuracy_reward'] = [cfg['score_points']] * len(mouseposXArray)
+                    #timePos_dict['accuracy_reward'] = [cfg['score_points']] * len(mouseposXArray)
+                    timePos_dict['accuracy_reward'] = [cfg['cur_score']] * len(mouseposXArray)
 
                     if (cfg['use_score']):
                         timePos_dict['accuracy_reward_bool'] = ['True'] * len(mouseposXArray)
@@ -720,7 +724,8 @@ def trial_runner(cfg={}):
                         timePos_dict['terminalfeedback_bool'] = cfg['terminal_feedback']
                         timePos_dict['targetdistance_percmax'] = int(cfg['target_distance_ratio']*100)
 
-                        timePos_dict['accuracy_reward'] = [cfg['score_points']] * len(mouseposXArray)
+                        #timePos_dict['accuracy_reward'] = [cfg['score_points']] * len(mouseposXArray)
+                        timePos_dict['accuracy_reward'] = [cfg['cur_score']] * len(mouseposXArray)
 
                         if (cfg['use_score']):
                             timePos_dict['accuracy_reward_bool'] = ['True'] * len(mouseposXArray)
@@ -983,8 +988,8 @@ def run_experiment(participant, experiment = {}):
         if i != 0:
             running[i]['score_points'] = running[i - 1]['score_points']
 
-        if (running[i]['score_zero_reward']):
-            running[i]['cur_score'] = 0
+        if isinstance(running[i]['set_start_reward'], int):
+            running[i]['cur_score'] = running[i]['set_start_reward']
         else:
             running[i]['cur_score'] = running[i]['score_points']
 
@@ -1301,8 +1306,8 @@ def continue_experiment(participant, experiment = {}):
         if i != 0:
             running[i]['score_points'] = running[i - 1]['score_points']
 
-        if (running[i]['score_zero_reward']):
-            running[i]['cur_score'] = 0
+        if isinstance(running[i]['set_start_reward'], int):
+            running[i]['cur_score'] = running[i]['set_start_reward']
         else:
             running[i]['cur_score'] = running[i]['score_points']
 

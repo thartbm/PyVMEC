@@ -1074,7 +1074,7 @@ class MyFrame(wx.Frame):
             self.current_experiment[self.highlit_task_num]['score_method'] = 'endReach'
 
             # Zero out reward at the start of each task
-            self.current_experiment[self.highlit_task_num]['score_zero_reward'] = False
+            self.current_experiment[self.highlit_task_num]['set_start_reward'] = 'FALSE'
 
             # Scoring for each accuracy, their cursor and target colours, and cutoff angles
             self.current_experiment[self.highlit_task_num]['score_high_accuracy'] = {}
@@ -1654,244 +1654,244 @@ class MyFrame(wx.Frame):
                 file_list.append(self.current_experiment[i]['task_name'] + '_' + str(j))
 ############################### SETTINGS Panel ##############################
 
-class SettingsFrame(wx.Frame):
-    def __init__(self, *args, **kwds):
-        wx.Frame.__init__(self, *args, **kwds)
-        ### Empty image preset ###
-        self.empty_image = wx.EmptyImage(35,35)
-        ### OPTION STATES ###
-        self.fullscreen_state = self.Parent.experiment_holder['settings']['fullscreen']
-        self.flipscreen_state = self.Parent.experiment_holder['settings']['flipscreen']
-        self.waitblanking_state = self.Parent.experiment_holder['settings']['waitblanking']
-        self.viewscale_state = self.Parent.experiment_holder['settings']['viewscale']
-        self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
-        self.enable_custom_target_state = self.Parent.experiment_holder['settings']['custom_target_enable']
-        self.custom_target_file_state = self.Parent.experiment_holder['settings']['custom_target_file']
-        self.enable_custom_cursor_state = self.Parent.experiment_holder['settings']['custom_cursor_enable']
-        self.custom_cursor_file_state = self.Parent.experiment_holder['settings']['custom_cursor_file']
-        self.enable_custom_home_state = self.Parent.experiment_holder['settings']['custom_home_enable']
-        self.custom_home_file_state = self.Parent.experiment_holder['settings']['custom_home_file']
-
-
-        ###############
-        self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
-        self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
-        self.waitblanking_toggle = wx.CheckBox(self, wx.ID_ANY, "wait for blanking")
-
-        # ADD TWO sliders... or should it be textboxes?
-        self.viewscaleX_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
-        self.viewscaleY_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
-
-        self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
-        self.enable_custom_target = wx.CheckBox(self, wx.ID_ANY, "Enable custom target")
-        self.custom_target_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
-        self.custom_target_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
-        self.enable_custom_cursor = wx.CheckBox(self, wx.ID_ANY, "Enable custom cursor")
-        self.custom_cursor_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
-        self.custom_cursor_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
-        self.enable_custom_home = wx.CheckBox(self, wx.ID_ANY, "Enable custom home")
-        self.custom_home_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
-        self.custom_home_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
-
-
-
-        self.apply_button = wx.Button(self, wx.ID_ANY, "Apply Changes")
-        self.cancel_button = wx.Button(self, wx.ID_ANY, "Cancel")
-        self.Bind(wx.EVT_CHECKBOX, self.fullscreen_toggle_press, self.fullscreen_toggle)
-        self.Bind(wx.EVT_CHECKBOX, self.flipscreen_toggle_press, self.flipscreen_toggle)
-        self.Bind(wx.EVT_CHECKBOX, self.waitblanking_toggle_press, self.waitblanking_toggle)
-
-        self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleX_slider)
-        self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleY_slider)
-
-        self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
-        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_target_press, self.enable_custom_target)
-        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_target_file_choose, self.custom_target_file)
-        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_cursor_press, self.enable_custom_cursor)
-        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_cursor_file_choose, self.custom_cursor_file)
-        self.Bind(wx.EVT_CHECKBOX, self.enable_custom_home_press, self.enable_custom_home)
-        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_home_file_choose, self.custom_home_file)
-
-        self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)
-        self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
-
-        self.__set_properties()
-        self.__do_layout()
-
-    def __set_properties(self):
-        self.SetTitle("Settings")
-        self.SetSize((200,350))
-        self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
-        self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
-        self.waitblanking_toggle.SetValue(self.Parent.experiment_holder['settings']['waitblanking'])
-        self.viewscaleX_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][0]*100)
-        self.viewscaleY_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][1]*100)
-        self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
-        self.enable_custom_target.SetValue(self.Parent.experiment_holder['settings']['custom_target_enable'])
-        self.enable_custom_home.SetValue(self.Parent.experiment_holder['settings']['custom_home_enable'])
-        self.enable_custom_cursor.SetValue(self.Parent.experiment_holder['settings']['custom_cursor_enable'])
-        self.custom_target_file.SetPath(self.Parent.experiment_holder['settings']['custom_target_file'])
-        self.custom_home_file.SetPath(self.Parent.experiment_holder['settings']['custom_home_file'])
-        self.custom_cursor_file.SetPath(self.Parent.experiment_holder['settings']['custom_cursor_file'])
-
-        if self.Parent.experiment_holder['settings']['custom_target_file'] != "":
-            image = wx.Image(self.Parent.experiment_holder['settings']['custom_target_file'], wx.BITMAP_TYPE_ANY)
-            image.Rescale(35,35)
-            self.custom_target_preview.SetBitmap(wx.BitmapFromImage(image))
-        else:
-            self.custom_target_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
-
-        if self.Parent.experiment_holder['settings']['custom_home_file'] != "":
-            image = wx.Image(self.Parent.experiment_holder['settings']['custom_home_file'], wx.BITMAP_TYPE_ANY)
-            image.Rescale(35,35)
-            self.custom_home_preview.SetBitmap(wx.BitmapFromImage(image))
-        else:
-            self.custom_home_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
-
-        if self.Parent.experiment_holder['settings']['custom_cursor_file'] != "":
-            image = wx.Image(self.Parent.experiment_holder['settings']['custom_cursor_file'], wx.BITMAP_TYPE_ANY)
-            image.Rescale(35,35)
-            self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(image))
-        else:
-            self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
-
-
-        if self.enable_custom_target_state == False:
-            self.custom_target_file.Disable()
-            self.custom_target_preview.Disable()
-        elif self.enable_custom_target_state == True:
-            self.custom_target_file.Enable()
-            self.custom_target_preview.Enable()
-
-        if self.enable_custom_home_state == False:
-            self.custom_home_file.Disable()
-            self.custom_home_preview.Disable()
-        elif self.enable_custom_home_state == True:
-            self.custom_home_file.Enable()
-            self.custom_home_preview.Enable()
-
-        if self.enable_custom_cursor_state == False:
-            self.custom_cursor_file.Disable()
-            self.custom_cursor_preview.Disable()
-        elif self.enable_custom_cursor_state == True:
-            self.custom_cursor_file.Enable()
-            self.custom_cursor_preview.Enable()
-    def __do_layout(self):
-        horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
-        vertical_1 = wx.BoxSizer(wx.VERTICAL)
-        vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
-        vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
-        vertical_1.Add(self.waitblanking_toggle, 0, wx.TOP, 2)
-        vertical_1.Add(self.viewscaleX_slider, 0, wx.EXPAND | wx.ALL, 2)
-        vertical_1.Add(self.viewscaleY_slider, 0, wx.EXPAND | wx.ALL, 2)
-        vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
-        vertical_1.Add(self.enable_custom_target, 0, wx.TOP, 2)
-        horizontal_1 = wx.BoxSizer(wx.HORIZONTAL)
-        horizontal_1.Add(self.custom_target_preview,0, wx.LEFT, 2)
-        horizontal_1.Add(self.custom_target_file, 0, wx.RIGHT, 2)
-        vertical_1.Add(horizontal_1)
-        vertical_1.Add(self.enable_custom_home, 0, wx.TOP, 2)
-        horizontal_2 = wx.BoxSizer(wx.HORIZONTAL)
-        horizontal_2.Add(self.custom_home_preview,0, wx.LEFT, 2)
-        horizontal_2.Add(self.custom_home_file, 0, wx.RIGHT, 2)
-        vertical_1.Add(horizontal_2)
-        vertical_1.Add(self.enable_custom_cursor, 0, wx.TOP, 2)
-        horizontal_3 = wx.BoxSizer(wx.HORIZONTAL)
-        horizontal_3.Add(self.custom_cursor_preview, 0, wx.LEFT, 2)
-        horizontal_3.Add(self.custom_cursor_file, 0, wx.RIGHT, 2)
-        vertical_1.Add(horizontal_3)
-
-        vertical_1.Add(self.apply_button, 0, wx.BOTTOM, 2)
-        vertical_1.Add(self.cancel_button, 0, wx.BOTTOM, 2)
-        horizontal_main.Add(vertical_1, 1, 0, 0)
-
-        self.SetSizer(horizontal_main)
-        self.Layout()
-
-    def fullscreen_toggle_press(self, event):
-        self.fullscreen_state = event.IsChecked()
-        event.Skip()
-    def flipscreen_toggle_press(self, event):
-        self.flipscreen_state = event.IsChecked()
-        event.Skip()
-    #def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
-    #    self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
-    #    self.experiment_holder['settings']['viewscale'] = self.viewscale_state
-    #    event.Skip()
-
-    def collect_return_movement_toggle_press(self, event):
-        self.collect_return_movement_state = event.IsChecked()
-        event.Skip()
-
-    def enable_custom_target_press(self, event):
-        self.enable_custom_target_state = event.IsChecked()
-        if self.enable_custom_target_state == False:
-            self.custom_target_file.Disable()
-            self.custom_target_preview.Disable()
-        elif self.enable_custom_target_state == True:
-            self.custom_target_file.Enable()
-            self.custom_target_preview.Enable()
-        event.Skip()
-
-    def custom_target_file_choose(self, event):
-        self.custom_target_file_state = event.GetPath()
-        image = wx.Image(self.custom_target_file_state, wx.BITMAP_TYPE_ANY)
-        image.Rescale(35,35)
-        self.custom_target_preview.SetBitmap(wx.BitmapFromImage(image))
-        event.Skip()
-
-    def enable_custom_home_press(self, event):
-        self.enable_custom_home_state = event.IsChecked()
-        if self.enable_custom_home_state == False:
-            self.custom_home_file.Disable()
-            self.custom_home_preview.Disable()
-        elif self.enable_custom_home_state == True:
-            self.custom_home_file.Enable()
-            self.custom_home_preview.Enable()
-        event.Skip()
-
-    def custom_home_file_choose(self, event):
-        self.custom_home_file_state = event.GetPath()
-        image = wx.Image(self.custom_home_file_state, wx.BITMAP_TYPE_ANY)
-        image.Rescale(35,35)
-        self.custom_home_preview.SetBitmap(wx.BitmapFromImage(image))
-        event.Skip()
-
-    def enable_custom_cursor_press(self, event):
-        self.enable_custom_cursor_state = event.IsChecked()
-        if self.enable_custom_cursor_state == False:
-            self.custom_cursor_file.Disable()
-            self.custom_cursor_preview.Disable()
-        elif self.enable_custom_cursor_state == True:
-            self.custom_cursor_file.Enable()
-            self.custom_cursor_preview.Enable()
-        event.Skip()
-
-    def custom_cursor_file_choose(self, event):
-        self.custom_cursor_file_state = event.GetPath()
-        image = wx.Image(self.custom_cursor_file_state, wx.BITMAP_TYPE_ANY)
-        image.Rescale(35,35)
-        self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(image))
-        event.Skip()
-
-    def apply_button_press(self, event):
-        self.Parent.experiment_holder['settings']['fullscreen'] = self.fullscreen_state
-        self.Parent.experiment_holder['settings']['flipscreen'] = self.flipscreen_state
-        self.Parent.experiment_holder['settings']['waitblanking'] = self.waitblanking_state
-        self.Parent.experiment_holder['settings']['viewscale'] = self.viewscale_state
-        self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state
-        self.Parent.experiment_holder['settings']['custom_target_enable'] = self.enable_custom_target_state
-        self.Parent.experiment_holder['settings']['custom_target_file'] = self.custom_target_file_state
-        self.Parent.experiment_holder['settings']['custom_home_enable'] = self.enable_custom_home_state
-        self.Parent.experiment_holder['settings']['custom_home_file'] = self.custom_home_file_state
-        self.Parent.experiment_holder['settings']['custom_cursor_enable'] = self.enable_custom_cursor_state
-        self.Parent.experiment_holder['settings']['custom_cursor_file'] = self.custom_cursor_file_state
-
-        self.Destroy()
-        event.Skip()
-    def cancel_button_press(self, event):
-        self.Destroy()
-        event.Skip()
+# class SettingsFrame(wx.Frame):
+#     def __init__(self, *args, **kwds):
+#         wx.Frame.__init__(self, *args, **kwds)
+#         ### Empty image preset ###
+#         self.empty_image = wx.EmptyImage(35,35)
+#         ### OPTION STATES ###
+#         self.fullscreen_state = self.Parent.experiment_holder['settings']['fullscreen']
+#         self.flipscreen_state = self.Parent.experiment_holder['settings']['flipscreen']
+#         self.waitblanking_state = self.Parent.experiment_holder['settings']['waitblanking']
+#         self.viewscale_state = self.Parent.experiment_holder['settings']['viewscale']
+#         self.collect_return_movement_state = self.Parent.experiment_holder['settings']['return_movement']
+#         self.enable_custom_target_state = self.Parent.experiment_holder['settings']['custom_target_enable']
+#         self.custom_target_file_state = self.Parent.experiment_holder['settings']['custom_target_file']
+#         self.enable_custom_cursor_state = self.Parent.experiment_holder['settings']['custom_cursor_enable']
+#         self.custom_cursor_file_state = self.Parent.experiment_holder['settings']['custom_cursor_file']
+#         self.enable_custom_home_state = self.Parent.experiment_holder['settings']['custom_home_enable']
+#         self.custom_home_file_state = self.Parent.experiment_holder['settings']['custom_home_file']
+#
+#
+#         ###############
+#         self.fullscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Fullscreen")
+#         self.flipscreen_toggle = wx.CheckBox(self, wx.ID_ANY, "Flip-Screen")
+#         self.waitblanking_toggle = wx.CheckBox(self, wx.ID_ANY, "wait for blanking")
+#
+#         # ADD TWO sliders... or should it be textboxes?
+#         self.viewscaleX_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+#         self.viewscaleY_slider = wx.Slider(self, wx.ID_ANY, minValue = 30, maxValue = 130, value = 100, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
+#
+#         self.collect_return_movement_toggle = wx.CheckBox(self, wx.ID_ANY, "Collect return movement")
+#         self.enable_custom_target = wx.CheckBox(self, wx.ID_ANY, "Enable custom target")
+#         self.custom_target_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
+#         self.custom_target_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
+#         self.enable_custom_cursor = wx.CheckBox(self, wx.ID_ANY, "Enable custom cursor")
+#         self.custom_cursor_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
+#         self.custom_cursor_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
+#         self.enable_custom_home = wx.CheckBox(self, wx.ID_ANY, "Enable custom home")
+#         self.custom_home_file = wx.FilePickerCtrl(self, wx.ID_ANY, path="", style=wx.FLP_USE_TEXTCTRL, wildcard = "PNG and JPEG and BMP and JPG files (*.png;*.jpeg;*.bmp;*.jpg)|*.png;*.jpeg;*.bmp;*.jpg")
+#         self.custom_home_preview = wx.StaticBitmap(self, wx.ID_ANY, bitmap=wx.BitmapFromImage(self.empty_image), size=[35,35])
+#
+#
+#
+#         self.apply_button = wx.Button(self, wx.ID_ANY, "Apply Changes")
+#         self.cancel_button = wx.Button(self, wx.ID_ANY, "Cancel")
+#         self.Bind(wx.EVT_CHECKBOX, self.fullscreen_toggle_press, self.fullscreen_toggle)
+#         self.Bind(wx.EVT_CHECKBOX, self.flipscreen_toggle_press, self.flipscreen_toggle)
+#         self.Bind(wx.EVT_CHECKBOX, self.waitblanking_toggle_press, self.waitblanking_toggle)
+#
+#         self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleX_slider)
+#         self.Bind(wx.EVT_SLIDER, self.viewscale_slide, self.viewscaleY_slider)
+#
+#         self.Bind(wx.EVT_CHECKBOX, self.collect_return_movement_toggle_press, self.collect_return_movement_toggle)
+#         self.Bind(wx.EVT_CHECKBOX, self.enable_custom_target_press, self.enable_custom_target)
+#         self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_target_file_choose, self.custom_target_file)
+#         self.Bind(wx.EVT_CHECKBOX, self.enable_custom_cursor_press, self.enable_custom_cursor)
+#         self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_cursor_file_choose, self.custom_cursor_file)
+#         self.Bind(wx.EVT_CHECKBOX, self.enable_custom_home_press, self.enable_custom_home)
+#         self.Bind(wx.EVT_FILEPICKER_CHANGED, self.custom_home_file_choose, self.custom_home_file)
+#
+#         self.Bind(wx.EVT_BUTTON, self.apply_button_press, self.apply_button)
+#         self.Bind(wx.EVT_BUTTON, self.cancel_button_press, self.cancel_button)
+#
+#         self.__set_properties()
+#         self.__do_layout()
+#
+#     def __set_properties(self):
+#         self.SetTitle("Settings")
+#         self.SetSize((200,350))
+#         self.fullscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['fullscreen'])
+#         self.flipscreen_toggle.SetValue(self.Parent.experiment_holder['settings']['flipscreen'])
+#         self.waitblanking_toggle.SetValue(self.Parent.experiment_holder['settings']['waitblanking'])
+#         self.viewscaleX_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][0]*100)
+#         self.viewscaleY_slider.SetValue(self.Parent.experiment_holder['settings']['viewscale'][1]*100)
+#         self.collect_return_movement_toggle.SetValue(self.Parent.experiment_holder['settings']['return_movement'])
+#         self.enable_custom_target.SetValue(self.Parent.experiment_holder['settings']['custom_target_enable'])
+#         self.enable_custom_home.SetValue(self.Parent.experiment_holder['settings']['custom_home_enable'])
+#         self.enable_custom_cursor.SetValue(self.Parent.experiment_holder['settings']['custom_cursor_enable'])
+#         self.custom_target_file.SetPath(self.Parent.experiment_holder['settings']['custom_target_file'])
+#         self.custom_home_file.SetPath(self.Parent.experiment_holder['settings']['custom_home_file'])
+#         self.custom_cursor_file.SetPath(self.Parent.experiment_holder['settings']['custom_cursor_file'])
+#
+#         if self.Parent.experiment_holder['settings']['custom_target_file'] != "":
+#             image = wx.Image(self.Parent.experiment_holder['settings']['custom_target_file'], wx.BITMAP_TYPE_ANY)
+#             image.Rescale(35,35)
+#             self.custom_target_preview.SetBitmap(wx.BitmapFromImage(image))
+#         else:
+#             self.custom_target_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
+#
+#         if self.Parent.experiment_holder['settings']['custom_home_file'] != "":
+#             image = wx.Image(self.Parent.experiment_holder['settings']['custom_home_file'], wx.BITMAP_TYPE_ANY)
+#             image.Rescale(35,35)
+#             self.custom_home_preview.SetBitmap(wx.BitmapFromImage(image))
+#         else:
+#             self.custom_home_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
+#
+#         if self.Parent.experiment_holder['settings']['custom_cursor_file'] != "":
+#             image = wx.Image(self.Parent.experiment_holder['settings']['custom_cursor_file'], wx.BITMAP_TYPE_ANY)
+#             image.Rescale(35,35)
+#             self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(image))
+#         else:
+#             self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(self.empty_image))
+#
+#
+#         if self.enable_custom_target_state == False:
+#             self.custom_target_file.Disable()
+#             self.custom_target_preview.Disable()
+#         elif self.enable_custom_target_state == True:
+#             self.custom_target_file.Enable()
+#             self.custom_target_preview.Enable()
+#
+#         if self.enable_custom_home_state == False:
+#             self.custom_home_file.Disable()
+#             self.custom_home_preview.Disable()
+#         elif self.enable_custom_home_state == True:
+#             self.custom_home_file.Enable()
+#             self.custom_home_preview.Enable()
+#
+#         if self.enable_custom_cursor_state == False:
+#             self.custom_cursor_file.Disable()
+#             self.custom_cursor_preview.Disable()
+#         elif self.enable_custom_cursor_state == True:
+#             self.custom_cursor_file.Enable()
+#             self.custom_cursor_preview.Enable()
+#     def __do_layout(self):
+#         horizontal_main = wx.BoxSizer(wx.HORIZONTAL)
+#         vertical_1 = wx.BoxSizer(wx.VERTICAL)
+#         vertical_1.Add(self.fullscreen_toggle, 0, wx.TOP, 2)
+#         vertical_1.Add(self.flipscreen_toggle, 0, wx.TOP, 2)
+#         vertical_1.Add(self.waitblanking_toggle, 0, wx.TOP, 2)
+#         vertical_1.Add(self.viewscaleX_slider, 0, wx.EXPAND | wx.ALL, 2)
+#         vertical_1.Add(self.viewscaleY_slider, 0, wx.EXPAND | wx.ALL, 2)
+#         vertical_1.Add(self.collect_return_movement_toggle, 0, wx.TOP, 2)
+#         vertical_1.Add(self.enable_custom_target, 0, wx.TOP, 2)
+#         horizontal_1 = wx.BoxSizer(wx.HORIZONTAL)
+#         horizontal_1.Add(self.custom_target_preview,0, wx.LEFT, 2)
+#         horizontal_1.Add(self.custom_target_file, 0, wx.RIGHT, 2)
+#         vertical_1.Add(horizontal_1)
+#         vertical_1.Add(self.enable_custom_home, 0, wx.TOP, 2)
+#         horizontal_2 = wx.BoxSizer(wx.HORIZONTAL)
+#         horizontal_2.Add(self.custom_home_preview,0, wx.LEFT, 2)
+#         horizontal_2.Add(self.custom_home_file, 0, wx.RIGHT, 2)
+#         vertical_1.Add(horizontal_2)
+#         vertical_1.Add(self.enable_custom_cursor, 0, wx.TOP, 2)
+#         horizontal_3 = wx.BoxSizer(wx.HORIZONTAL)
+#         horizontal_3.Add(self.custom_cursor_preview, 0, wx.LEFT, 2)
+#         horizontal_3.Add(self.custom_cursor_file, 0, wx.RIGHT, 2)
+#         vertical_1.Add(horizontal_3)
+#
+#         vertical_1.Add(self.apply_button, 0, wx.BOTTOM, 2)
+#         vertical_1.Add(self.cancel_button, 0, wx.BOTTOM, 2)
+#         horizontal_main.Add(vertical_1, 1, 0, 0)
+#
+#         self.SetSizer(horizontal_main)
+#         self.Layout()
+#
+#     def fullscreen_toggle_press(self, event):
+#         self.fullscreen_state = event.IsChecked()
+#         event.Skip()
+#     def flipscreen_toggle_press(self, event):
+#         self.flipscreen_state = event.IsChecked()
+#         event.Skip()
+#     #def viewscale_slide(self, event):  # wxGlade: MyFrame.<event_handler>
+#     #    self.viewscale_state = [self.viewscaleX_slider/100., self.viewscaleY_slider/100.]
+#     #    self.experiment_holder['settings']['viewscale'] = self.viewscale_state
+#     #    event.Skip()
+#
+#     def collect_return_movement_toggle_press(self, event):
+#         self.collect_return_movement_state = event.IsChecked()
+#         event.Skip()
+#
+#     def enable_custom_target_press(self, event):
+#         self.enable_custom_target_state = event.IsChecked()
+#         if self.enable_custom_target_state == False:
+#             self.custom_target_file.Disable()
+#             self.custom_target_preview.Disable()
+#         elif self.enable_custom_target_state == True:
+#             self.custom_target_file.Enable()
+#             self.custom_target_preview.Enable()
+#         event.Skip()
+#
+#     def custom_target_file_choose(self, event):
+#         self.custom_target_file_state = event.GetPath()
+#         image = wx.Image(self.custom_target_file_state, wx.BITMAP_TYPE_ANY)
+#         image.Rescale(35,35)
+#         self.custom_target_preview.SetBitmap(wx.BitmapFromImage(image))
+#         event.Skip()
+#
+#     def enable_custom_home_press(self, event):
+#         self.enable_custom_home_state = event.IsChecked()
+#         if self.enable_custom_home_state == False:
+#             self.custom_home_file.Disable()
+#             self.custom_home_preview.Disable()
+#         elif self.enable_custom_home_state == True:
+#             self.custom_home_file.Enable()
+#             self.custom_home_preview.Enable()
+#         event.Skip()
+#
+#     def custom_home_file_choose(self, event):
+#         self.custom_home_file_state = event.GetPath()
+#         image = wx.Image(self.custom_home_file_state, wx.BITMAP_TYPE_ANY)
+#         image.Rescale(35,35)
+#         self.custom_home_preview.SetBitmap(wx.BitmapFromImage(image))
+#         event.Skip()
+#
+#     def enable_custom_cursor_press(self, event):
+#         self.enable_custom_cursor_state = event.IsChecked()
+#         if self.enable_custom_cursor_state == False:
+#             self.custom_cursor_file.Disable()
+#             self.custom_cursor_preview.Disable()
+#         elif self.enable_custom_cursor_state == True:
+#             self.custom_cursor_file.Enable()
+#             self.custom_cursor_preview.Enable()
+#         event.Skip()
+#
+#     def custom_cursor_file_choose(self, event):
+#         self.custom_cursor_file_state = event.GetPath()
+#         image = wx.Image(self.custom_cursor_file_state, wx.BITMAP_TYPE_ANY)
+#         image.Rescale(35,35)
+#         self.custom_cursor_preview.SetBitmap(wx.BitmapFromImage(image))
+#         event.Skip()
+#
+#     def apply_button_press(self, event):
+#         self.Parent.experiment_holder['settings']['fullscreen'] = self.fullscreen_state
+#         self.Parent.experiment_holder['settings']['flipscreen'] = self.flipscreen_state
+#         self.Parent.experiment_holder['settings']['waitblanking'] = self.waitblanking_state
+#         self.Parent.experiment_holder['settings']['viewscale'] = self.viewscale_state
+#         self.Parent.experiment_holder['settings']['return_movement'] = self.collect_return_movement_state
+#         self.Parent.experiment_holder['settings']['custom_target_enable'] = self.enable_custom_target_state
+#         self.Parent.experiment_holder['settings']['custom_target_file'] = self.custom_target_file_state
+#         self.Parent.experiment_holder['settings']['custom_home_enable'] = self.enable_custom_home_state
+#         self.Parent.experiment_holder['settings']['custom_home_file'] = self.custom_home_file_state
+#         self.Parent.experiment_holder['settings']['custom_cursor_enable'] = self.enable_custom_cursor_state
+#         self.Parent.experiment_holder['settings']['custom_cursor_file'] = self.custom_cursor_file_state
+#
+#         self.Destroy()
+#         event.Skip()
+#     def cancel_button_press(self, event):
+#         self.Destroy()
+#         event.Skip()
 
 ###################### SETTINGS FRAME VERSION 2 #####################
 class SettingsFrameV2(wx.Frame):
@@ -2397,13 +2397,15 @@ class ScoreFrame(wx.Frame):
         self.color_change_radio = wx.RadioBox(self, wx.ID_ANY, "Change colors when:",
                                               choices=["Halfway point is reached", "At the end of the reach"],
                                               majorDimension=2, style=wx.RA_SPECIFY_COLS)
-        self.zero_reward_check = wx.CheckBox(self, wx.ID_ANY, "Set reward to 0 at the start of a task")
-
+        self.set_reward_check = wx.CheckBox(self, wx.ID_ANY, "Start task with reward:")
+        self.start_reward = wx.SpinCtrl(self, wx.ID_ANY, 'name', min=-1000, max=1000, initial=0, style=wx.SP_ARROW_KEYS | wx.SP_WRAP)
+        # HERE!
         self.__set_properties()
         self.__do_layout()
 
         self.Bind(wx.EVT_RADIOBOX, self.onRadioBoxClick, self.color_change_radio)
-        self.Bind(wx.EVT_CHECKBOX, self.onRewardCheckbox, self.zero_reward_check)
+        self.Bind(wx.EVT_CHECKBOX, self.onSetRewardCheckbox, self.set_reward_check)
+        self.Bind(wx.EVT_SPINCTRL, self.onSetRewardCheckbox, self.start_reward)
         self.Bind(wx.EVT_TEXT, self.onRewardNameChange, self.reward_name_txtctrl)
 
         # High Accuracy
@@ -2526,10 +2528,13 @@ class ScoreFrame(wx.Frame):
             self.Parent.current_experiment[self.Parent.highlit_task_num]['score_method'], False)
         )
 
-        # Checkbox
-        self.zero_reward_check.SetValue(
-            self.Parent.current_experiment[self.Parent.highlit_task_num]['score_zero_reward']
-        )
+        # Checkbox HERE!
+        if isinstance(self.Parent.current_experiment[self.Parent.highlit_task_num]['set_start_reward'], int):
+            self.set_reward_check.SetValue(True)
+            self.start_reward.SetValue(self.Parent.current_experiment[self.Parent.highlit_task_num]['set_start_reward'])
+        else:
+            self.set_reward_check.SetValue(False)
+            self.start_reward.SetValue(0)
 
         # end wxGlade
 
@@ -2590,7 +2595,8 @@ class ScoreFrame(wx.Frame):
         self.rewardSizer.Add(self.reward_name_txtctrl, 0, wx.ALIGN_CENTER, 7)
         self.changeColorSizer.Add(self.rewardSizer, 0, wx.ALIGN_CENTER | wx.ALL, 0)
         self.changeColorSizer.Add(self.color_change_radio, 0, wx.ALL, 0)
-        self.changeColorSizer.Add(self.zero_reward_check, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.changeColorSizer.Add(self.set_reward_check, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.changeColorSizer.Add(self.start_reward, 0, 0, 0)
         self.optionsSizer.Add(self.changeColorSizer, 1, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 0)
         self.mainSizer.Add(self.optionsSizer, 1, wx.EXPAND, 0)
         self.SetSizer(self.mainSizer)
@@ -2604,9 +2610,13 @@ class ScoreFrame(wx.Frame):
             getScoringType(event.GetInt(), True)
         event.Skip()
 
-    def onRewardCheckbox(self, event):  # wxGlade: scoreFrame.<event_handler>
-        self.Parent.current_experiment[self.Parent.highlit_task_num]['score_zero_reward'] = \
-            self.zero_reward_check.GetValue()
+    def onSetRewardCheckbox(self, event):  # wxGlade: scoreFrame.<event_handler>
+        if (self.set_reward_check.GetValue()):
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['set_start_reward'] = \
+            self.start_reward.GetValue()
+        else:
+            self.Parent.current_experiment[self.Parent.highlit_task_num]['set_start_reward'] = 'FALSE'
+            # HERE!
         event.Skip()
 
     def onRewardNameChange(self, event):
