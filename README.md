@@ -1,6 +1,8 @@
 # PyVMEC
 A Python-based GUI to create and run visuo-motor experiments.
 
+Pseudo-compiled versions, manuals and more: https://osf.io/ynw49/
+
 ## Environment:
 
 - Python 2.7 *Application created and tested working on Python 2.7.15*
@@ -24,5 +26,8 @@ Experiment window not showing any objects, or window not appearing at all:
 
 ## Developers:
 
-Marius 't Hart [https://github.com/thartbm] - current
-Julius Martin [https://github.com/juliusjgm12] - September 2017 to December 2018
+- Marius 't Hart [https://github.com/thartbm]
+- Julius Martin [https://github.com/juliusjgm12] - September 2017 to December 2018
+
+> End-of-life Note:
+> Development of the code has stopped in 2020, for several reasons (Python 2.7's end of life, pseudo-compilation on Window was imperfect, and the framework could not be used as the base for some new features). However, a second version of PyVMEC is planned.
