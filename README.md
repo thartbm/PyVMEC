@@ -1,3 +1,5 @@
+New project here: [https://github.com/thartbm/PyVMEC2](https://github.com/thartbm/PyVMEC2)
+
 # PyVMEC
 A Python-based GUI to create and run visuo-motor experiments.
 
